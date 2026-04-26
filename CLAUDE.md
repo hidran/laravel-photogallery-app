@@ -34,14 +34,22 @@ Two deployable artifacts. They communicate via JSON. Tokens (Sanctum) are stored
 ## Critical rules
 
 1. **`SPEC.md` is authoritative.** Before modifying any model, endpoint, resource, or component, read the relevant section. Cite the section number in commit messages when relevant.
-2. **Follow data models exactly.** Column types, nullability, defaults, indexes, and FK actions are defined in `SPEC.md §4`. Do NOT invent fields. Do NOT change FK behavior. The circular FK between `albums.cover_photo_id` and `photos.id` is resolved by a dedicated migration — preserve the migration order in §3.2.
-3. **Follow API contracts exactly.** Request shapes, response shapes, error codes, query parameter validation — all defined in `SPEC.md §6`. Do NOT add or rename fields. Do NOT change wrapping conventions (single-resource is `{data: ...}`; favorite-toggle and auth are unwrapped — these are intentional).
+2. **Follow data models exactly.** Column types, nullability, defaults, indexes, and FK actions are defined in `SPEC.md §4`. Do NOT invent fields. Do NOT change FK behavior. The circular FK between `albums.cover_photo_id` and `photos.id` is resolved by a dedicated migration — preserve the migration order in §3.2. Every photo and album has `user_id` (ownership) — see §1 tenancy.
+3. **Follow API contracts exactly.** Request shapes, response shapes, error codes, query parameter validation — all defined in `SPEC.md §6`. Do NOT add or rename fields. **Every endpoint wraps its payload in `{data: ...}`** — auth, favorite, batch, all of them (§6.0). Favorite is `PUT`/`DELETE` on `/photos/{id}/favorite`, never POST-toggle (§6.2).
 4. **Ask before deviating.** If something in the spec seems wrong or impractical, surface the conflict, propose options, wait for confirmation. Do NOT silently change behavior to "improve" it.
-5. **No `tailwind.config.js`, no `postcss.config.js`, no `autoprefixer`.** Tailwind v4 with the Vite plugin only. Theme tokens go inside `@theme { ... }` in `src/index.css`. Repeat: this is non-negotiable.
-6. **All file I/O goes through `Storage::disk('photos')`.** Never use `File::`, `fopen`, `copy`, or `move_uploaded_file` for photo files. The disk is swapped between `local` and `s3` via env — direct paths break production.
+5. **Tailwind v4 setup is non-negotiable.** No `tailwind.config.js`, no `postcss.config.js`, no `autoprefixer`. Theme tokens go inside `@theme { ... }` in `src/index.css`. Full details in **SPEC.md §8.12** — that's the source of truth.
+6. **Two photo disks. All file I/O goes through them.**
+   - `Storage::disk('photos')` — public-read, holds sized variants only (thumbnails/medium/large)
+   - `Storage::disk('photos_private')` — private, holds originals only; URLs always signed (5 min TTL)
+
+   Never use `File::`, `fopen`, `copy`, or `move_uploaded_file`. Never put originals on the public disk. Driver flips between `local` and `s3` via `PHOTOS_DRIVER` env.
 7. **All UI strings live in `frontend/src/data/`.** No hardcoded English strings inside JSX. Components import from `data/copy.ts`.
-8. **UUIDs everywhere.** Every primary key uses `HasUuids`. Stored as `CHAR(36)`. Never use auto-increment integers for application tables.
-9. **Tests run before commits.** `php artisan test` (backend) and `npm test -- --run` (frontend) must be green. Hooks enforce formatting; tests are on you.
+8. **UUID v7 primary keys.** Every model uses the `HasUuidV7` trait (overrides `HasUuids`). Stored as `CHAR(36)`. v7 is sortable by creation time — required for cursor pagination in §6.0.
+9. **Authorization, not just authentication.** Every mutating controller method calls `$this->authorize($action, $model)` and `$request->user()->tokenCan('photos:write'|'albums:write')`. Auth ≠ authz; both are required.
+10. **Wrap multi-write operations in `DB::transaction(...)`.** Photo upload (insert + tag attach + batch dispatch), photo update (update + tag sync), album with cover. Backend conventions list in §6.4a.
+11. **Eager-load explicitly.** Every list/show endpoint declares `with([...])` and `withCount([...])`. N+1 is treated as a bug. Caught by `Beyondcode\QueryDetector` in tests.
+12. **Tests run before commits, and the test gates in §15.2 apply per task type.** `php artisan test` (backend) and `npm test -- --run` (frontend) must be green. Hooks enforce formatting; tests are on you.
+13. **One task = one commit, conventional format.** See SPEC.md §15.3 for format. Squash-merge on PR.
 
 ---
 
@@ -120,41 +128,16 @@ npm install -D @tailwindcss/vite tailwindcss@^4 \
                prettier eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-plugin-react-hooks
 ```
 
-### Tailwind v4 setup — DO THIS EXACTLY
+### Tailwind v4 setup
 
-`vite.config.ts`:
-```ts
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
-
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: {
-    proxy: {
-      '/api':     { target: 'http://localhost:8000', changeOrigin: true },
-      '/storage': { target: 'http://localhost:8000', changeOrigin: true },
-    },
-  },
-});
-```
-
-`src/index.css`:
-```css
-@import "tailwindcss";
-
-@theme {
-  --color-brand-500: oklch(0.65 0.2 270);
-  --font-sans: "Inter", system-ui, sans-serif;
-}
-```
+Authoritative content lives in **SPEC.md §8.12** (the `vite.config.ts` and `src/index.css` templates). Don't duplicate it here — drift is a real risk. Only the rule remains here:
 
 **Forbidden in this project:**
 - `tailwind.config.js` — Tailwind v4 does not need it
 - `postcss.config.js` — `@tailwindcss/vite` handles PostCSS internally
 - `autoprefixer` — built into the Tailwind v4 engine
 
-If you find yourself typing any of those filenames, stop and re-read this section.
+If you find yourself typing any of those filenames, stop and re-read SPEC.md §8.12.
 
 Run locally:
 ```bash
@@ -195,30 +178,33 @@ npx playwright test    # E2E
 
 ## Queue & storage configuration
 
-Same code, different env. `config/filesystems.php` defines a `photos` disk that resolves to `local` or `s3` based on `PHOTOS_DISK`. `QUEUE_CONNECTION` swaps between `database` and `sqs`. **Never hardcode disk or queue names — always read env / use `Storage::disk('photos')`.**
+Same code, different env. `config/filesystems.php` defines two disks (`photos` public, `photos_private` private) that both resolve to `local` or `s3` based on `PHOTOS_DRIVER`. `QUEUE_CONNECTION` swaps between `database` and `sqs`. **Never hardcode disk or queue names** — always use `Storage::disk('photos')` or `Storage::disk('photos_private')`.
 
 | Env var | Local dev | Production |
 |---|---|---|
 | `QUEUE_CONNECTION` | `database` | `sqs` |
 | `FILESYSTEM_DISK` | `photos` | `photos` |
-| `PHOTOS_DISK` | `public` | `s3` |
+| `PHOTOS_DRIVER` | `local` | `s3` |
 | `SQS_KEY` / `SQS_SECRET` / `SQS_PREFIX` / `SQS_QUEUE` / `SQS_REGION` | — | required |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_DEFAULT_REGION` / `AWS_BUCKET` / `AWS_URL` | — | required |
-| `SANCTUM_TOKEN_EXPIRATION` | `null` (or 30d) | `43200` (30 days, in minutes) |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_DEFAULT_REGION` | — | required |
+| `AWS_BUCKET_PUBLIC` / `AWS_BUCKET_PRIVATE` / `AWS_URL` | — | required (two buckets — see §11.4) |
+| `SANCTUM_TOKEN_EXPIRATION` | `1440` (24h, in min) | `1440` (24h) |
+| `DB_PERSISTENT_CONNECTIONS` | `false` | `false` (mandatory for SQS workers) |
 
 Local worker:
 ```bash
-php artisan queue:work --queue=default --tries=3 --timeout=120
+php artisan queue:work --queue=default --tries=3 --timeout=180 --memory=512
 ```
 
 Production worker (under Supervisor):
 ```bash
-php artisan queue:work sqs --queue=photogallerypro --tries=3 --timeout=120 --sleep=3
+php artisan queue:work sqs --queue=photogallerypro --tries=3 --timeout=180 --sleep=3 --memory=512
 ```
 
 When migrating to AWS:
 - Edit `.env` only — no code changes.
-- S3 bucket needs CORS config allowing the production frontend origin.
+- **Two S3 buckets:** `AWS_BUCKET_PUBLIC` (CloudFront-fronted, holds sized variants) and `AWS_BUCKET_PRIVATE` (Block Public Access ON, holds originals; signed URLs only).
+- Public bucket needs CORS config allowing the production frontend origin.
 - SQS queue is **standard**, not FIFO.
 - Run `backend/scripts/smoke-aws.php` before flipping production traffic.
 
