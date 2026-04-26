@@ -117,21 +117,142 @@ Build these resources:
 - Frontend (Vitest): hooks, keyboard navigation, upload validation
 - E2E (Playwright): full user workflows across frontend + API
 
-## What I need you to generate
-Create a SPEC.md file with:
-1. Project overview
-2. Complete tech stack table with versions
-3. Full folder/file architecture for both backend/ and frontend/
-4. Database schema (all tables with columns, types, constraints)
-5. Eloquent relationships
-6. API endpoints table (method, URL, description, query params)
-7. Filament resources specification (tables, forms, filters, actions, widgets)
-8. Frontend component specifications
-9. Authentication details
-10. Error handling specification
-11. Image processing pipeline specification (sizes, queue config, env switching)
-12. Testing plan checklist
-13. Step-by-step Claude Code build workflow
+## Engineering Principles
+The generated code MUST follow these principles. Include them as a
+mandatory section in the SPEC.md and reference them in every phase:
 
-Make it detailed enough that Claude Code can build each section by reading
-the spec — no guessing required.
+### SOLID
+- **Single Responsibility:** Each controller method does ONE thing.
+  Image processing logic does NOT live in the controller — it goes in
+  the ProcessPhoto job. File path generation does NOT live in the model —
+  it goes in a dedicated PhotoStorageService.
+- **Open/Closed:** Use Laravel's contract bindings. Image processing
+  should accept any ImageProcessorInterface — current implementation
+  uses Intervention Image v3, but swapping to Imagick or libvips
+  shouldn't require touching the job.
+- **Liskov Substitution:** Storage drivers (local/S3) are interchangeable
+  through Storage facade — never use direct file paths.
+- **Interface Segregation:** Don't create god-interfaces. Photo doesn't
+  need to implement Searchable, Taggable, Uploadable, Favoritable as
+  one interface — split them or use Eloquent traits.
+- **Dependency Inversion:** Inject dependencies via constructor.
+  PhotoController receives PhotoRepository, not raw queries.
+  ProcessPhoto job receives ImageProcessor service, not new ImageManager().
+
+### REST
+- **Resources, not actions:** /photos (not /getPhotos or /create-photo)
+- **HTTP verbs map to operations:** GET (read), POST (create),
+  PUT (full update), PATCH (partial update), DELETE (remove)
+- **Status codes:** 200 (OK), 201 (Created), 204 (No Content),
+  400 (Bad Request), 401 (Unauthorized), 403 (Forbidden),
+  404 (Not Found), 409 (Conflict — duplicate album name),
+  422 (Validation Error), 429 (Rate Limit), 500 (Server Error)
+- **Stateless:** Every request contains all info needed
+  (Sanctum token in Authorization header)
+- **HATEOAS-light:** Include relevant links in responses
+  (photo.album_url, photo.tags as nested resources)
+- **Idempotency:** PUT and DELETE must be idempotent.
+  POST /photos creates a new resource. PATCH /photos/{id}/favorite
+  is intentionally not idempotent (toggle).
+- **Versioning:** /api/v1/ prefix from day one
+- **Pagination:** Cursor or page-based, with metadata
+  (current_page, total, per_page, last_page, links)
+- **Filtering via query params:** /photos?tag=nature&album_id=xxx
+  (NOT in path: /photos/by-tag/nature)
+- **Consistent response envelope:**
+  Success: { "data": {...}, "meta": {...} }
+  Error: { "message": "...", "errors": {...} }
+
+### KISS (Keep It Simple)
+- **No premature abstraction:** Don't create a Repository pattern
+  if you only have one Eloquent model usage. Use the model directly.
+- **No premature optimization:** Don't add Redis caching before
+  measuring if the database is slow.
+- **Standard Laravel patterns:** Use Eloquent, Form Requests,
+  API Resources, Policies — NOT custom middleware stacks for
+  things Laravel already provides.
+- **Readable over clever:** A 10-line method that's obvious beats
+  a 3-line method using closures within closures.
+- **Convention over configuration:** Follow Laravel naming
+  (PhotoController, PhotosTable, PhotoFactory). Don't invent
+  new conventions.
+- **One concept per file:** Don't mix the Photo model with its
+  Observer in the same file.
+
+### DRY (Don't Repeat Yourself)
+- **Extract Form Requests for validation rules** (StorePhotoRequest)
+- **Extract API Resources for response formatting** (PhotoResource)
+- **Use Eloquent scopes for repeated query patterns**
+  (Photo::favorites(), Photo::byTag('nature'))
+- **Frontend: extract custom hooks** (usePhotos, useAlbums)
+- **Frontend: ALL text content in src/data/content.js** (no hardcoded strings)
+
+### Other Standards
+- **PSR-12** for PHP code style (enforced by Laravel Pint)
+- **Type declarations** on all PHP method parameters and return types
+- **No N+1 queries** — always use eager loading: Photo::with('album', 'tags')
+- **Database transactions** for multi-step operations
+- **Authorization via Policies** (PhotoPolicy, AlbumPolicy)
+- **Validation via Form Requests** (never inline $request->validate())
+- **No business logic in controllers** — extract to services or jobs
+- **No business logic in Eloquent models** — keep models focused on
+  data + relationships. Business logic goes in Action classes,
+  Services, or Jobs.
+
+## What I need you to generate
+Generate FOUR files (this is the modern spec-driven pattern — separating
+WHAT, HOW, and EXECUTION makes parallel agent work much more effective):
+
+### 1. CLAUDE.md — Project Constitution
+Tech stack with versions, engineering principles (SOLID, REST, KISS, DRY)
+with concrete examples for THIS project, parallelization rules, code
+conventions. Include meta-rule: "Always read docs/REQUIREMENTS.md and
+docs/DESIGN.md before implementing tasks. Always update docs/TASKS.md
+checkboxes after completing work."
+
+### 2. docs/REQUIREMENTS.md — What to Build (Business Layer)
+User stories, features in plain language, acceptance criteria,
+constraints. Could be shown to a non-technical stakeholder.
+NO technical decisions, NO database schemas, NO code.
+
+### 3. docs/DESIGN.md — How to Build It (Engineering Layer)
+- Complete tech stack table with versions
+- Full folder/file architecture for backend/ and frontend/
+  (including services/, actions/, policies/ directories)
+- Database schema — every table with all columns, types,
+  constraints, indexes, ON DELETE behavior
+- Eloquent relationships
+- API contracts — every endpoint with HTTP verb, URL, request body,
+  response shape, status codes, query parameters (RESTful design)
+- Filament resources specification
+- Frontend component specifications
+- Service interfaces (ImageProcessor, PhotoStorage — for DIP)
+- Authentication strategy
+- Error handling specification with EXACT status codes per scenario
+- Image processing pipeline specification
+
+### 4. docs/TASKS.md — Execution Plan (Agent Layer)
+Atomic tasks (each ≤ 30 minutes of work). Each task has:
+- **ID** (T001, T002, ...)
+- **Title** and short description
+- **Status** checkbox `[ ]`
+- **Owner** — which agent (backend-dev, frontend-dev, code-reviewer)
+- **Depends on** — which task IDs must finish first
+- **Parallel with** — which task IDs can run simultaneously
+- **Reads** — which sections of REQUIREMENTS/DESIGN to consult
+- **Acceptance criteria** — how to verify the task is done
+
+Group tasks into 13 phases (one per build workflow phase).
+Total project: 80-120 atomic tasks.
+
+CRITICAL: For each task, identify parallelization opportunities.
+Tasks in backend/ and frontend/ are ALWAYS parallel.
+Independent resources (PhotoResource, AlbumResource, TagResource)
+are parallel. Independent components (Navbar, Sidebar, GalleryGrid,
+PhotoModal) are parallel. Backend tests and frontend tests are parallel.
+
+Sequential dependencies that MUST be respected:
+- Migrations → Models → Seeders
+- Models → Controllers, Resources, Form Requests, Policies
+- API → Frontend API service layer
+- Components → App.jsx wiring
