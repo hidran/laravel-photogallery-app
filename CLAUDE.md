@@ -1,242 +1,276 @@
 # CLAUDE.md — PhotoGallery Pro
 
-> Project memory for Claude Code. Loaded every session. The authoritative source for *what* to build is `SPEC.md` at the repo root — this file is *how* to work in the repo.
+> The project constitution. Loaded into every Claude Code session. **Authoritative for HOW we work**; defers to `docs/REQUIREMENTS.md` (what to build) and `docs/DESIGN.md` (technical blueprint) for content. Atomic work lives in `docs/TASKS.md`.
+
+---
+
+## Documentation map
+
+| File | Purpose | When to read |
+|---|---|---|
+| `CLAUDE.md` (this file) | How we work — rules, principles, style | Every session, automatic |
+| `docs/REQUIREMENTS.md` | What we're building, in plain language | Before starting any task — read the relevant feature |
+| `docs/DESIGN.md` | Technical blueprint — schemas, contracts, file paths | Before implementing — read the section the task references |
+| `docs/TASKS.md` | 80+ atomic tasks across 13 phases | Pick a task; check it off when done |
+| `docs/SPEC-REVIEW.md` | Decision log explaining why architectural choices were made | When you disagree with a rule and want context |
 
 ---
 
 ## Project overview
 
-PhotoGallery Pro is a full-stack photo gallery: users upload photos (JPG/PNG/WebP, ≤10 MB), organize them into albums, tag them, and browse via a masonry-grid React SPA with lightbox + keyboard navigation. The backend is a Laravel 13 REST API under `/api/v1` with a Filament v5 admin panel mounted at `/admin`. Image resizing and EXIF extraction run as queued background jobs so uploads return immediately. Same code runs locally (DB queue + local disk) and in production (SQS + S3) — only env vars change.
+PhotoGallery Pro is a full-stack photo gallery: users upload photos (JPG/PNG/WebP, ≤10 MB each, up to 20 at a time), organize them into albums, tag them, and browse via a masonry-grid React SPA with lightbox + keyboard navigation. The backend is a Laravel 13 REST API under `/api/v1` with a Filament v5 admin panel mounted at `/admin`. Image resizing and EXIF extraction run as queued background jobs so uploads return immediately. Same code runs locally (DB queue + local disk) and in production (SQS + S3) — only env vars change.
 
 ---
 
-## Architecture
+## Tech stack (with install commands)
 
-```
-laravelapp/
-├── SPEC.md            ← single source of truth — read first, every session
-├── CLAUDE.md          ← this file
-├── backend/           ← Laravel 13 API + Filament admin (PHP 8.3+)
-│   ├── app/{Models,Http,Jobs,Services,Filament,Observers}
-│   ├── routes/api.php (prefix /v1)
-│   ├── database/migrations
-│   └── tests/{Feature,Unit}        ← Pest
-└── frontend/          ← React 19 SPA (Node 20+)
-    ├── src/{api,components,hooks,pages,data,types}
-    ├── tests/        ← Vitest
-    └── e2e/          ← Playwright
+### Backend (`backend/` — Laravel 13)
+
+| Component | Version | Notes |
+|---|---|---|
+| PHP | 8.3+ | Strict types where practical |
+| Laravel | 13.x | Skeleton via `composer create-project` |
+| Filament | 5.x | Mounted at `/admin`, `web` guard |
+| Sanctum | 4.x | **Token mode** (24h TTL) — see DESIGN.md §9 |
+| Intervention Image | 3.x | Via `intervention/image-laravel` |
+| Pest | 3.x | Feature + unit tests |
+
+```bash
+# Scaffold
+composer create-project laravel/laravel backend "^13.0"
+cd backend
+
+# Runtime deps
+composer require filament/filament "^5.0" \
+                 intervention/image-laravel "^3.0" \
+                 laravel/sanctum "^4.0" \
+                 league/flysystem-aws-s3-v3 "^3.0"
+
+# Dev deps
+composer require --dev laravel/pint rector/rector pestphp/pest \
+                       beyondcode/laravel-query-detector
+
+# Required Laravel migrations
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+php artisan queue:table
+php artisan queue:failed-table
+php artisan queue:batches-table
+# CRITICAL: edit Sanctum migration so tokenable_id is CHAR(36) — see DESIGN.md §4.6
 ```
 
-Two deployable artifacts. They communicate via JSON. Tokens (Sanctum) are stored in `localStorage` under `pgp_token`.
+### Frontend (`frontend/` — React 19 + Vite 6)
+
+| Component | Version | Notes |
+|---|---|---|
+| Node | 20 LTS+ | |
+| React | 19.x | Function components only |
+| Vite | 6.x | With `@vitejs/plugin-react` |
+| Tailwind CSS | **4.x** | Via `@tailwindcss/vite` only |
+| React Router | 7.x | Data router API |
+| TanStack Query | 5.x | Server state, caching, polling |
+| Axios | 1.x | With auth + error interceptors |
+| Vitest + RTL | latest | |
+| Playwright | latest | E2E |
+
+```bash
+# Scaffold
+npm create vite@latest frontend -- --template react-ts
+cd frontend
+
+# Runtime deps
+npm install react-router-dom@^7 \
+            @tanstack/react-query@^5 \
+            axios@^1 \
+            lucide-react \
+            sonner \
+            react-focus-lock
+
+# Dev deps
+npm install -D @tailwindcss/vite tailwindcss@^4 \
+               vitest @testing-library/react @testing-library/user-event \
+               @testing-library/jest-dom jsdom \
+               @playwright/test \
+               prettier eslint @typescript-eslint/eslint-plugin \
+               @typescript-eslint/parser eslint-plugin-react-hooks \
+               vite-bundle-visualizer
+```
 
 ---
 
 ## Critical rules
 
-1. **`SPEC.md` is authoritative.** Before modifying any model, endpoint, resource, or component, read the relevant section. Cite the section number in commit messages when relevant.
-2. **Follow data models exactly.** Column types, nullability, defaults, indexes, and FK actions are defined in `SPEC.md §4`. Do NOT invent fields. Do NOT change FK behavior. The circular FK between `albums.cover_photo_id` and `photos.id` is resolved by a dedicated migration — preserve the migration order in §3.2. Every photo and album has `user_id` (ownership) — see §1 tenancy.
-3. **Follow API contracts exactly.** Request shapes, response shapes, error codes, query parameter validation — all defined in `SPEC.md §6`. Do NOT add or rename fields. **Every endpoint wraps its payload in `{data: ...}`** — auth, favorite, batch, all of them (§6.0). Favorite is `PUT`/`DELETE` on `/photos/{id}/favorite`, never POST-toggle (§6.2).
-4. **Ask before deviating.** If something in the spec seems wrong or impractical, surface the conflict, propose options, wait for confirmation. Do NOT silently change behavior to "improve" it.
-5. **Tailwind v4 setup is non-negotiable.** No `tailwind.config.js`, no `postcss.config.js`, no `autoprefixer`. Theme tokens go inside `@theme { ... }` in `src/index.css`. Full details in **SPEC.md §8.12** — that's the source of truth.
-6. **Two photo disks. All file I/O goes through them.**
-   - `Storage::disk('photos')` — public-read, holds sized variants only (thumbnails/medium/large)
-   - `Storage::disk('photos_private')` — private, holds originals only; URLs always signed (5 min TTL)
+These are **non-negotiable**. Violations require an explicit user override.
 
-   Never use `File::`, `fopen`, `copy`, or `move_uploaded_file`. Never put originals on the public disk. Driver flips between `local` and `s3` via `PHOTOS_DRIVER` env.
-7. **All UI strings live in `frontend/src/data/`.** No hardcoded English strings inside JSX. Components import from `data/copy.ts`.
-8. **UUID v7 primary keys.** Every model uses the `HasUuidV7` trait (overrides `HasUuids`). Stored as `CHAR(36)`. v7 is sortable by creation time — required for cursor pagination in §6.0.
-9. **Authorization, not just authentication.** Every mutating controller method calls `$this->authorize($action, $model)` and `$request->user()->tokenCan('photos:write'|'albums:write')`. Auth ≠ authz; both are required.
-10. **Wrap multi-write operations in `DB::transaction(...)`.** Photo upload (insert + tag attach + batch dispatch), photo update (update + tag sync), album with cover. Backend conventions list in §6.4a.
-11. **Eager-load explicitly.** Every list/show endpoint declares `with([...])` and `withCount([...])`. N+1 is treated as a bug. Caught by `Beyondcode\QueryDetector` in tests.
-12. **Tests run before commits, and the test gates in §15.2 apply per task type.** `php artisan test` (backend) and `npm test -- --run` (frontend) must be green. Hooks enforce formatting; tests are on you.
-13. **One task = one commit, conventional format.** See SPEC.md §15.3 for format. Squash-merge on PR.
+### Workflow rules
 
----
+1. **Always read `docs/REQUIREMENTS.md` and `docs/DESIGN.md` before implementing tasks.** Each task in `TASKS.md` lists which sections to read. If the task is ambiguous and the docs don't resolve it, stop and ask — do not guess.
+2. **Always update `docs/TASKS.md` checkboxes after completing work.** Mark `[x]` the moment a task's acceptance criteria are met. Don't batch — checking off six tasks at once means you've drifted.
+3. **Use subagents for tasks marked `parallel: true` in `TASKS.md`.** Tasks with disjoint file scopes are designed to run concurrently in worktrees. Sequential execution wastes wall-clock time on parallelizable work.
+4. **One task = one commit.** Conventional Commits format: `<type>(<scope>): <subject>`. Reference SPEC sections in the body. See DESIGN.md §15.3.
+5. **Tests run before commits.** Test gates per task type live in DESIGN.md §15.2. No `--no-verify`, no `.skip`, no "tests later".
 
-## Backend stack
+### Architecture rules (cite DESIGN.md sections in PRs)
 
-| Component | Version | Notes |
-|---|---|---|
-| PHP | 8.5+ | strict types where practical |
-| Laravel | 13.x | new app skeleton |
-| Filament | 5.x | mounted at `/admin`, `web` guard |
-| Sanctum | 4.x | **token mode**, not stateful — tokens in `Authorization: Bearer` |
-| Intervention Image | 3.x | via `intervention/image-laravel` |
-| Pest | 3.x | feature + unit tests |
+6. **`docs/DESIGN.md` is authoritative for code.** Column types, response shapes, validation rules, file paths — all defined there. Do NOT invent fields, endpoints, or directories.
+7. **Every endpoint wraps its payload in `{ "data": ... }`.** Auth, favorite, batch — all wrapped. No exceptions. (DESIGN.md §6.0)
+8. **Every primary key is UUID v7** via the `HasUuidV7` trait. Stored as `CHAR(36)`. Never auto-increment for application tables.
+9. **Two photo disks. All file I/O goes through them.**
+   - `Storage::disk('photos')` — public-read; sized variants only
+   - `Storage::disk('photos_private')` — private; originals only; signed URLs only
 
-### Install commands
-
-```bash
-# from repo root
-composer create-project laravel/laravel backend "^13.0"
-cd backend
-composer require filament/filament "^5.0" \
-                 intervention/image-laravel "^3.0" \
-                 laravel/sanctum "^4.0" \
-                 league/flysystem-aws-s3-v3 "^3.0"
-composer require --dev laravel/pint rector/rector pestphp/pest
-
-# publish required Laravel migrations
-php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
-php artisan queue:table
-php artisan queue:failed-table
-php artisan queue:batches-table
-
-# IMPORTANT: edit the Sanctum migration so tokenable_id is CHAR(36) (matches users.id)
-# See SPEC.md §4.6
-```
-
-Run locally:
-```bash
-php artisan serve                           # API + Filament at :8000
-php artisan queue:work --tries=3 --timeout=120   # in a second terminal
-```
+   Never use `File::`, `fopen`, `copy`, or `move_uploaded_file`. (DESIGN.md §11)
+10. **Authorization, not just authentication.** Every mutating controller calls `$this->authorize($action, $model)` AND `$request->user()->tokenCan('photos:write'|'albums:write')`. (DESIGN.md §6.4a, §9)
+11. **Wrap multi-write operations in `DB::transaction(...)`.** Photo upload (insert + tag attach + dispatch), photo update (update + tag sync), album with cover. (DESIGN.md §6.4a)
+12. **Eager-load explicitly.** Every list/show endpoint declares `with([...])` and `withCount([...])`. N+1 is a bug — `Beyondcode\QueryDetector` catches it in tests.
+13. **Tailwind v4 setup is non-negotiable.** No `tailwind.config.js`, no `postcss.config.js`, no `autoprefixer`. Theme tokens go inside `@theme { ... }` in `src/index.css`. Authoritative content in DESIGN.md §8.12 — don't duplicate.
+14. **All UI strings live in `frontend/src/data/`.** No hardcoded English strings inside JSX. Components import from `data/copy.ts`.
 
 ---
 
-## Frontend stack
+## Engineering principles (project-specific)
 
-| Component | Version | Notes |
-|---|---|---|
-| Node | 20 LTS+ | |
-| React | 19.x | function components only |
-| Vite | 6.x | with `@vitejs/plugin-react` |
-| Tailwind CSS | **4.x** | via `@tailwindcss/vite` — see below |
-| React Router | 7.x | data router API |
-| TanStack Query | 5.x | server state, caching, polling |
-| Axios | 1.x | with auth + error interceptors |
-| Vitest + RTL | latest | |
-| Playwright | latest | E2E |
+Generic principle definitions are useless. Here's how each applies to **this** codebase.
 
-### Install commands
+### SOLID
 
-```bash
-# from repo root
-npm create vite@latest frontend -- --template react-ts
-cd frontend
+**S — Single Responsibility.** A class owns one reason to change.
+- `App\Services\Imaging\InterventionImageProcessor` resizes images. It does NOT extract EXIF, does NOT save Photo records, does NOT dispatch jobs. If you find yourself adding "and also do X" to a service, X belongs elsewhere.
+- `App\Http\Controllers\Api\V1\PhotoController` orchestrates request → response. The actual work (resize, tag sync, EXIF strip) lives in services and jobs. Controllers are thin coordinators.
+- ❌ Anti-example: `Photo::uploadAndProcess()` static method on the model. ✅ Right: `PhotoUploadAction::__invoke($files, $user)` in `App\Actions\Photo\`.
 
-npm install react-router-dom@^7 \
-            @tanstack/react-query@^5 \
-            axios@^1 \
-            lucide-react \
-            sonner
+**O — Open/Closed.** Code is open for extension, closed for modification.
+- New sort orders for `GET /photos` go into `App\Queries\PhotoQuery::applySort()` as new cases — adding one shouldn't require editing the controller.
+- New image variants (e.g. "social" 1200px) go into `ImageProcessor::generate()` via a config-driven loop, not hardcoded if/else.
 
-npm install -D @tailwindcss/vite tailwindcss@^4 \
-               vitest \
-               @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom \
-               @playwright/test \
-               prettier eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-plugin-react-hooks
-```
+**L — Liskov Substitution.** A subtype must be usable wherever its supertype is.
+- `App\Contracts\ImageProcessor` interface — both `InterventionImageProcessor` (production) and `FakeImageProcessor` (tests) must satisfy the same contract: same method signatures, same exceptions, same side effects on the Photo row. Tests must not need to know which is bound.
 
-### Tailwind v4 setup
+**I — Interface Segregation.** Clients shouldn't depend on methods they don't use.
+- Don't put `extract()` and `stripGps()` in the same interface as `generate()` — they're separate concerns. `App\Contracts\ImageProcessor` and `App\Contracts\ExifExtractor` are intentionally split.
 
-Authoritative content lives in **SPEC.md §8.12** (the `vite.config.ts` and `src/index.css` templates). Don't duplicate it here — drift is a real risk. Only the rule remains here:
+**D — Dependency Inversion.** Depend on abstractions, not concretes.
+- `ProcessPhoto` job constructor signature: `public function __construct(public Photo $photo) {}`, `handle(ImageProcessor $processor, ExifExtractor $exif)` — never `new InterventionImageProcessor()` inside the job.
+- `AppServiceProvider::register()` binds the contracts to concrete implementations. Tests bind fakes in `setUp()`.
 
-**Forbidden in this project:**
-- `tailwind.config.js` — Tailwind v4 does not need it
-- `postcss.config.js` — `@tailwindcss/vite` handles PostCSS internally
-- `autoprefixer` — built into the Tailwind v4 engine
+### REST
 
-If you find yourself typing any of those filenames, stop and re-read SPEC.md §8.12.
+The API at `/api/v1` is the contract. Apply REST grammar:
 
-Run locally:
-```bash
-npm run dev            # Vite at :5173, proxies /api to Laravel
-npm run build          # production bundle to dist/
-npm test -- --run      # Vitest
-npx playwright test    # E2E
-```
+- **Resources, not actions.** ✅ `PUT /photos/{id}/favorite` and `DELETE /photos/{id}/favorite` (favorite is a sub-resource). ❌ `POST /photos/{id}/toggle-favorite` (toggle is a verb).
+- **Idempotency.** PUT, DELETE, GET must be safe to retry. POST need not be — but pair it with a server-generated UUID so duplicate posts can be detected.
+- **Status codes match meaning.** `201 Created` only when the resource is fully ready. Photo upload returns `202 Accepted` because processing is async.
+- **Uniform envelope.** Every endpoint wraps in `{ "data": ... }`. List endpoints add `links` and `meta` (cursor pagination). No exceptions for "convenience".
+- **Cache hints.** `GET /photos/{id}` emits `ETag: W/"<sha1(updated_at)>"`. Clients send `If-None-Match` → `304 Not Modified` saves bandwidth.
+- **Errors use a uniform envelope** (DESIGN.md §10.1) — `{ "message": "...", "errors": { "field": [...] } }`. Frontend never needs to special-case error shapes.
 
----
+### KISS
 
-## Image processing conventions
+The smallest implementation that meets the acceptance criteria wins.
 
-- **Library:** Intervention Image **v3** only. Driver: GD or Imagick (whichever the host provides — config in `config/image.php`).
-- **Wrapper service:** `App\Services\ImageProcessor::generate(Photo $photo)` is the single entry point. Controllers and admin actions never call Intervention directly.
-- **Sizes** (`SPEC.md §11.2`):
+- One upload endpoint (`POST /photos` accepts 1–20 files), not two. Frontend doesn't branch.
+- One polling loop after upload (`GET /photos/batch/{id}` includes per-photo statuses), not two.
+- Cursor pagination, not page+offset+`total` (the gallery doesn't need a count).
+- Tags are a flat global vocabulary, not a hierarchy. v1 has no tag categories, no tag descriptions, no tag colors.
+- Soft deletes are out of scope for v1. Deletes are permanent. We can add `deleted_at` later if undo becomes a requirement.
+- ❌ Anti-example: introducing a `PhotoFactory` interface so the factory itself is swappable. ✅ Right: just use Laravel's `Photo::factory()` directly.
 
-  | Size | Width | Quality | Format |
-  |---|---|---|---|
-  | thumbnail | 300 px | 80 | JPEG |
-  | medium    | 800 px | 85 | JPEG |
-  | large     | 1600 px | 90 | JPEG |
+### DRY
 
-- **Never upscale.** If the source width is smaller than the target, copy the source as that size.
-- **Auto-orient** from EXIF, **strip metadata** from the resized output (originals retain it).
-- **All file ops use `Storage::disk('photos')`.** Path layout:
-  ```
-  photos/originals/{uuid}.{ext}
-  photos/thumbnails/{uuid}.jpg
-  photos/medium/{uuid}.jpg
-  photos/large/{uuid}.jpg
-  ```
-- **EXIF extraction:** `App\Services\ExifExtractor::extract($absolutePath)` — returns `[]` on missing/unreadable, never throws.
-- **Job:** `App\Jobs\ProcessPhoto implements ShouldQueue` — `$tries = 3`, `$backoff = [10, 30, 60]`. `failed()` writes `processing_status='failed'` and `processing_error`.
-- **Batch:** `POST /photos/batch` wraps multiple `ProcessPhoto` dispatches in `Bus::batch(...)`. Polling endpoint reads `Bus::findBatch($id)`.
+Don't repeat yourself, but also don't pre-abstract.
+
+- **Tag upsert lives in `App\Services\TagAssigner::syncByNames(Photo, array)`** — used by `POST /photos`, `PATCH /photos`, and the Filament `PhotoResource` form. One implementation, three call sites.
+- **Filter logic for `GET /photos` lives in `App\Queries\PhotoQuery`** — reused by the Filament admin index page. Don't reimplement search/sort in two places.
+- **Eager-loading lists are constants** on the Resource: `PhotoResource::with = ['album:id,name', 'tags:id,name,slug', 'user:id,name']`. Controllers reference the constant.
+- **UI strings live once** in `frontend/src/data/copy.ts`. Components import; never inline.
+- **DON'T** abstract until the second occurrence. The third occurrence is when extraction becomes required.
 
 ---
 
-## Queue & storage configuration
+## Parallelization rules
 
-Same code, different env. `config/filesystems.php` defines two disks (`photos` public, `photos_private` private) that both resolve to `local` or `s3` based on `PHOTOS_DRIVER`. `QUEUE_CONNECTION` swaps between `database` and `sqs`. **Never hardcode disk or queue names** — always use `Storage::disk('photos')` or `Storage::disk('photos_private')`.
+(Full plan in DESIGN.md §14. Operational summary here.)
 
-| Env var | Local dev | Production |
-|---|---|---|
-| `QUEUE_CONNECTION` | `database` | `sqs` |
-| `FILESYSTEM_DISK` | `photos` | `photos` |
-| `PHOTOS_DRIVER` | `local` | `s3` |
-| `SQS_KEY` / `SQS_SECRET` / `SQS_PREFIX` / `SQS_QUEUE` / `SQS_REGION` | — | required |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_DEFAULT_REGION` | — | required |
-| `AWS_BUCKET_PUBLIC` / `AWS_BUCKET_PRIVATE` / `AWS_URL` | — | required (two buckets — see §11.4) |
-| `SANCTUM_TOKEN_EXPIRATION` | `1440` (24h, in min) | `1440` (24h) |
-| `DB_PERSISTENT_CONNECTIONS` | `false` | `false` (mandatory for SQS workers) |
+**Wave 0 — sequential foundation (no parallelism):**
+- Phase 11 (Git/PR setup) → Phase 9 (Hooks) → Phase 1 (Backend foundation)
 
-Local worker:
-```bash
-php artisan queue:work --queue=default --tries=3 --timeout=180 --memory=512
-```
+**Wave 1 — three parallel tracks (each in its own git worktree):**
+- Track A: Phase 2 (API) → Phase 6 (Image pipeline)
+- Track B: Phase 3 (Filament admin)
+- Track C: Phase 4 (Frontend scaffold) → Phase 5 (Components, mocked API)
 
-Production worker (under Supervisor):
-```bash
-php artisan queue:work sqs --queue=photogallerypro --tries=3 --timeout=180 --sleep=3 --memory=512
-```
+Tracks share zero files. Sync at end of Wave 1: Track C swaps mocks for real API.
 
-When migrating to AWS:
-- Edit `.env` only — no code changes.
-- **Two S3 buckets:** `AWS_BUCKET_PUBLIC` (CloudFront-fronted, holds sized variants) and `AWS_BUCKET_PRIVATE` (Block Public Access ON, holds originals; signed URLs only).
-- Public bucket needs CORS config allowing the production frontend origin.
-- SQS queue is **standard**, not FIFO.
-- Run `backend/scripts/smoke-aws.php` before flipping production traffic.
+**Wave 2 — convergence with limited parallelism:**
+- Phase 7 (queue monitoring) ‖ Phase 8 (AWS) ‖ Phase 10 (test fill-gaps)
+
+**Wave 3 — sequential close-out:** Phase 12 → Phase 13.
+
+**Files that NEVER edit in parallel** (merge conflict magnets — assign to one agent serially):
+- `bootstrap/app.php`
+- `database/migrations/*` (filenames must be ordered)
+- `app/Providers/Filament/AdminPanelProvider.php`
+- `frontend/src/index.css` (`@theme` block)
+- `frontend/src/App.tsx` (route table)
+- `frontend/src/main.tsx` (provider tree)
+- `.env.example` / `.env.production.example`
+- `composer.json` / `package.json`
+- `lefthook.yml` / `.claude/settings.json` / `.github/workflows/*`
+
+**When picking a task in `TASKS.md`:**
+- If `parallel_with` is non-empty, you CAN dispatch a subagent (use the Agent tool) for one of those tasks while you work on yours.
+- If a task touches a magnet file, claim it serially — broadcast in the team channel before starting.
 
 ---
 
-## Code conventions
+## Code style
 
-### PHP (backend)
-- **Formatter:** Laravel Pint (`backend/pint.json`, Laravel preset). Auto-runs via Claude Code `PostToolUse` hook on `*.php` files. Pre-commit via lefthook.
-- **Modernization:** Rector with `withPhpSets(php83: true)`.
-- **Tests:** Pest 3.x. Use `Storage::fake('photos')` and `Queue::fake()` in feature tests. TDD encouraged for jobs and services.
-- **UUIDs:** every Eloquent model that ships data uses `use HasUuids;`. Never auto-increment.
-- **Enums:** PHP 8.3 backed enums for status fields (`App\Enums\ProcessingStatus`).
-- **Strict types:** `declare(strict_types=1);` at the top of `app/Services/*` and `app/Jobs/*`.
-- **No facades in models.** Inject services through the IoC container.
+### PHP
+- **Pint** with Laravel preset (`backend/pint.json`). Auto-runs via Claude Code `PostToolUse` hook on `*.php` files; pre-commit via lefthook.
+- **PSR-12** baseline; Pint enforces deviations.
+- **Strict types** (`declare(strict_types=1);`) on every file in `app/Services/`, `app/Actions/`, `app/Jobs/`, `app/Queries/`.
+- **Type hints on everything**: parameters, return types, properties (PHP 8 promoted properties preferred for DTOs).
+- **Final by default.** New classes are `final class Foo` unless explicitly designed for inheritance. Prevents accidental coupling.
+- **No facades inside models.** Inject services through the IoC container.
+- **Mass assignment:** `$model->fill($request->validated())` — never `$request->all()`.
 
-### TypeScript / React (frontend)
-- **Formatter:** Prettier (`.prettierrc`: `singleQuote: true`, `semi: true`, `printWidth: 100`).
-- **Linter:** ESLint with `@typescript-eslint` + `react-hooks`.
-- **Components:** function components only, named exports preferred.
-- **Hooks:** custom hooks live in `src/hooks/`, one hook per file, prefixed `use*`.
-- **API access:** never call `axios` directly from a component — go through `src/api/{photos,albums,tags,auth}.ts` wrappers + `src/hooks/use*` for caching.
-- **Server state:** TanStack Query. Local UI state: `useState`/`useReducer`. No Redux, no Zustand in v1.
-- **Strings:** every user-facing string lives in `src/data/copy.ts` (or `nav.ts` / `shortcuts.ts`). PRs that introduce hardcoded strings must be rewritten.
-- **Tests:** Vitest + React Testing Library; user-event for interactions; jsdom environment.
+### TypeScript / React
+- **Prettier** (`frontend/.prettierrc`): `singleQuote: true`, `semi: true`, `printWidth: 100`. Auto-runs on `*.{ts,tsx,css}`.
+- **ESLint** with `@typescript-eslint` + `eslint-plugin-react-hooks`. Rules of hooks enforced.
+- **`tsconfig.json`:** `"strict": true`, `"noUncheckedIndexedAccess": true`, `"noImplicitOverride": true`, `"exactOptionalPropertyTypes": true`. `any` is banned (`@typescript-eslint/no-explicit-any: error`); use `unknown` + narrowing.
+- **Function components only.** No class components.
+- **Named exports** for components and hooks.
+
+### Tailwind v4
+- `@tailwindcss/vite` plugin only. Theme tokens in `@theme { ... }` inside `src/index.css`.
+- **No** `tailwind.config.js`, `postcss.config.js`, or `autoprefixer`.
+- Authoritative setup: DESIGN.md §8.12.
 
 ### Git
-- **Branch naming:** `feat/<topic>`, `fix/<topic>`, `chore/<topic>`, `test/<topic>`, `docs/<topic>`.
-- **Commits:** Conventional Commits (`feat(scope): ...`, `fix(scope): ...`). One logical change per commit.
-- **PRs:** every PR fills the template in `.github/PULL_REQUEST_TEMPLATE.md` — Summary, Screenshots (frontend), Test plan, Spec references.
-- **Direct push to `main` is blocked** by branch protection. Open a PR.
-- **Hooks:** `lefthook` runs Pint + Prettier + ESLint pre-commit. Don't bypass with `--no-verify`.
+- Conventional Commits (`feat`, `fix`, `chore`, `test`, `docs`, `refactor`, `perf`).
+- Branch naming: `feat/<phase>-<task>` (e.g. `feat/2-api-photos-store`).
+- One PR per task. Squash merge.
 
-### Spec changes
-- Changes to `SPEC.md` are first-class work. Open a PR titled `spec: ...` and update CLAUDE.md if a convention changes. The spec and code stay in lockstep — drift is a bug.
+---
+
+## Before writing any class, ask:
+
+1. **Have I read the relevant section of `DESIGN.md`?** If the class is documented there, follow the spec verbatim. If it's not, stop — should it be?
+2. **What is this class's single reason to change?** If you can't answer in one sentence, it's doing too much.
+3. **Does an existing service/contract already cover this?** Check `app/Contracts/`, `app/Services/`, `app/Actions/`, `app/Queries/` before creating new files.
+4. **Should this depend on a contract instead of a concrete?** If a unit test would want to fake it, it needs a contract.
+5. **Where will this class be tested?** If you can't name the test file before writing the class, you're writing untested code.
+6. **Is there a Laravel-built-in or first-party package that already does this?** No NIH (Not Invented Here) for solved problems.
+7. **Will this class touch a magnet file (see Parallelization rules)?** If yes, queue the magnet edit as a separate atomic task.
+8. **Am I about to call `$request->all()`?** Stop. Use `$request->validated()`.
+9. **Am I about to write a SQL query string?** Use the query builder or scopes; raw SQL only with explicit justification in the commit body.
+10. **Am I about to add a new env var?** Add it to `.env.example` AND `Appendix A` of DESIGN.md in the same commit.
+
+---
+
+## When stuck
+
+- **Ambiguity in REQUIREMENTS.md:** ask the user; don't invent acceptance criteria.
+- **Conflict between REQUIREMENTS.md and DESIGN.md:** REQUIREMENTS wins; DESIGN gets a `spec:` PR to align.
+- **Test fails after refactor:** revert, never `.skip`. (DESIGN.md §15.5)
+- **Unclear if a task can parallelize:** read DESIGN.md §14.4 (magnet files); if uncertain, run sequentially.
+- **Need a new pattern not in DESIGN.md:** propose it as a `docs:` PR before implementing.
