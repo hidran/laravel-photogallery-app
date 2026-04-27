@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends Factory<Album>
  */
-class AlbumFactory extends Factory
+final class AlbumFactory extends Factory
 {
     protected $model = Album::class;
 

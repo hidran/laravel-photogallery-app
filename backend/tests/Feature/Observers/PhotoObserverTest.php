@@ -36,7 +36,7 @@ it('removes the original from photos_private and the 3 variants from photos on p
     ]);
 });
 
-it('does not blow up when variant paths are null (failed/processing photos)', function () {
+it('does not throw when variant paths are null', function () {
     Storage::fake('photos');
     Storage::fake('photos_private');
 

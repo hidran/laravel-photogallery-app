@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 /**
  * @extends Factory<Tag>
  */
-class TagFactory extends Factory
+final class TagFactory extends Factory
 {
     protected $model = Tag::class;
 
