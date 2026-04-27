@@ -84,7 +84,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): add HasUuidV7 trait`
 
 ### T005 — Add `App\Enums\ProcessingStatus` and `TokenAbility` enums
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** T004, T006
