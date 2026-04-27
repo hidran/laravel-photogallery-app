@@ -18,6 +18,15 @@ final class Photo extends Model
     /** @use HasFactory<PhotoFactory> */
     use HasFactory, HasUuidV7;
 
+    /**
+     * Mass-assignable columns.
+     *
+     * IMPORTANT: every API request that fills() this model MUST go through
+     * its FormRequest's validated() output (CLAUDE.md rule 6). The
+     * `processing_*` columns are present here so the upload action and the
+     * ProcessPhoto job can update() them, but no FormRequest may include
+     * those keys — they're job-internal state, not user input.
+     */
     protected $fillable = [
         'user_id',
         'album_id',
