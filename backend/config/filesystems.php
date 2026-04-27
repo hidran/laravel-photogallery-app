@@ -60,6 +60,46 @@ return [
             'report' => false,
         ],
 
+        // Public-read disk for resized variants. Local: storage/app/public/photos
+        // (served via storage:link). Production: public S3 bucket fronted by CDN.
+        'photos' => env('PHOTOS_DRIVER', 'local') === 's3'
+            ? [
+                'driver' => 's3',
+                'key' => env('AWS_ACCESS_KEY_ID'),
+                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                'region' => env('AWS_DEFAULT_REGION'),
+                'bucket' => env('AWS_BUCKET_PUBLIC'),
+                'url' => env('AWS_URL'),
+                'visibility' => 'public',
+                'throw' => true,
+            ]
+            : [
+                'driver' => 'local',
+                'root' => storage_path('app/public/photos'),
+                'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage/photos',
+                'visibility' => 'public',
+                'throw' => true,
+            ],
+
+        // Private disk for originals. Local: storage/app/photos-private (NOT linked).
+        // Production: private S3 bucket with Block Public Access ON; URLs only via signed temporaryUrl().
+        'photos_private' => env('PHOTOS_DRIVER', 'local') === 's3'
+            ? [
+                'driver' => 's3',
+                'key' => env('AWS_ACCESS_KEY_ID'),
+                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                'region' => env('AWS_DEFAULT_REGION'),
+                'bucket' => env('AWS_BUCKET_PRIVATE'),
+                'visibility' => 'private',
+                'throw' => true,
+            ]
+            : [
+                'driver' => 'local',
+                'root' => storage_path('app/photos-private'),
+                'visibility' => 'private',
+                'throw' => true,
+            ],
+
     ],
 
     /*
@@ -75,6 +115,7 @@ return [
 
     'links' => [
         public_path('storage') => storage_path('app/public'),
+        public_path('photos') => storage_path('app/public/photos'),
     ],
 
 ];

@@ -95,7 +95,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): add ProcessingStatus and TokenAbility enums`
 
 ### T006 — Configure two `photos` disks in `config/filesystems.php`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** T004, T005
