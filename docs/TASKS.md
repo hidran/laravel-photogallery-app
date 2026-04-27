@@ -232,7 +232,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `chore(backend): photogallery config and env example`
 
 ### T018 — Phase 1 review
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T001–T017
 - **Parallel with:** —
