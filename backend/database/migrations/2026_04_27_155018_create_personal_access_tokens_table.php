@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('personal_access_tokens', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            // tokenable_id is CHAR(36) to match the UUID v7 ids on users (DESIGN.md §4.6).
+            // Keep Sanctum's default auto-increment PK — Sanctum's
+            // PersonalAccessToken model and HasApiTokens::createToken()
+            // do NOT supply an id, so a UUID PK with no default would
+            // NOT-NULL-fail on insert. DESIGN.md §4.6 only requires
+            // `tokenable_id` to be CHAR(36); the PK itself stays as-is.
+            $table->id();
             $table->uuidMorphs('tokenable');
             $table->text('name');
             $table->string('token', 64)->unique();
