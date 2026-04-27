@@ -73,7 +73,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `chore(backend): publish framework migrations; tokenable_id is CHAR(36)`
 
 ### T004 — Add `App\Concerns\HasUuidV7` trait
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** T005, T006
