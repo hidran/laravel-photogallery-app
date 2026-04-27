@@ -162,7 +162,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): resolve circular FK with cover_photo_id constraint`
 
 ### T012 — Migration: `photo_tag` pivot
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T011
 - **Parallel with:** —
