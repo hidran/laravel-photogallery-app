@@ -129,7 +129,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): albums table with per-user unique name`
 
 ### T009 — Migration: `tags`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T007
 - **Parallel with:** T008
