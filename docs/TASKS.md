@@ -39,7 +39,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 ---
 
 ### T001 — Scaffold Laravel app + install dependencies
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** —
 - **Parallel with:** T002 (different working dir)
@@ -51,7 +51,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `chore(backend): scaffold Laravel 13 with core dependencies`
 
 ### T002 — Scaffold React app + install dependencies
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** —
 - **Parallel with:** T001
@@ -62,7 +62,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `chore(frontend): scaffold Vite + React 19 + TypeScript`
 
 ### T003 — Publish Sanctum + queue + batches migrations; fix tokenable_id type
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** —
@@ -73,7 +73,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `chore(backend): publish framework migrations; tokenable_id is CHAR(36)`
 
 ### T004 — Add `App\Concerns\HasUuidV7` trait
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** T005, T006
@@ -84,7 +84,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): add HasUuidV7 trait`
 
 ### T005 — Add `App\Enums\ProcessingStatus` and `TokenAbility` enums
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** T004, T006
@@ -95,7 +95,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): add ProcessingStatus and TokenAbility enums`
 
 ### T006 — Configure two `photos` disks in `config/filesystems.php`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** T004, T005
@@ -107,7 +107,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `chore(backend): configure photos and photos_private disks`
 
 ### T007 — Migration: `users` (with `is_admin`)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T003, T004
 - **Parallel with:** —
@@ -118,7 +118,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): users table with admin flag`
 
 ### T008 — Migration: `albums` (without cover_photo_id FK)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T007
 - **Parallel with:** T009
@@ -129,7 +129,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): albums table with per-user unique name`
 
 ### T009 — Migration: `tags`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T007
 - **Parallel with:** T008
@@ -139,7 +139,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): tags table (global, unique name/slug)`
 
 ### T010 — Migration: `photos` (with FULLTEXT + composite indexes)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T008
 - **Parallel with:** —
@@ -151,7 +151,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): photos table with composite indexes and fulltext`
 
 ### T011 — Migration: `add_cover_photo_fk_to_albums`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T010
 - **Parallel with:** —
@@ -162,7 +162,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): resolve circular FK with cover_photo_id constraint`
 
 ### T012 — Migration: `photo_tag` pivot
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T011
 - **Parallel with:** —
@@ -173,7 +173,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): photo_tag pivot with composite PK`
 
 ### T013 — Photo, Album, Tag, User Eloquent models
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T012, T004, T005
 - **Parallel with:** —
@@ -186,7 +186,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): Eloquent models with relationships`
 
 ### T014 — `PhotoObserver` deletes 4 files on photo delete
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013, T006
 - **Parallel with:** —
@@ -198,7 +198,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): PhotoObserver removes files on delete`
 
 ### T015 — Factories for Photo, Album, Tag, User
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T016
@@ -209,7 +209,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): model factories`
 
 ### T016 — `AdminUserSeeder` + `DatabaseSeeder` wiring
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T015
@@ -221,7 +221,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): seed admin user from env`
 
 ### T017 — `config/photogallery.php` + `.env.example` augmentation
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** T004, T005, T006
@@ -232,7 +232,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `chore(backend): photogallery config and env example`
 
 ### T018 — Phase 1 review
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T001–T017
 - **Parallel with:** —
