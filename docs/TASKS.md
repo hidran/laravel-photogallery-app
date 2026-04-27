@@ -107,7 +107,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `chore(backend): configure photos and photos_private disks`
 
 ### T007 — Migration: `users` (with `is_admin`)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T003, T004
 - **Parallel with:** —
