@@ -39,7 +39,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 ---
 
 ### T001 — Scaffold Laravel app + install dependencies
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** —
 - **Parallel with:** T002 (different working dir)
@@ -51,7 +51,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `chore(backend): scaffold Laravel 13 with core dependencies`
 
 ### T002 — Scaffold React app + install dependencies
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** —
 - **Parallel with:** T001
