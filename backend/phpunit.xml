@@ -23,6 +23,14 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
+        <!--
+            Tests stay on SQLite in-memory regardless of the host's .env DB
+            settings. Keeps `./vendor/bin/pest` fast (~0.5s cold) and
+            usable outside Sail. The FULLTEXT index in the photos
+            migration is wrapped in a driver check, so SQLite skips it
+            cleanly. Sail-flavoured runs still work too — `sail test`
+            picks up these envs over the Sail mariadb host.
+        -->
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
