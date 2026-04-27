@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Concerns\HasUuidV7;
 use App\Enums\ProcessingStatus;
+use Database\Factories\PhotoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class Photo extends Model
 {
-    /** @use HasFactory<\Database\Factories\PhotoFactory> */
+    /** @use HasFactory<PhotoFactory> */
     use HasFactory, HasUuidV7;
 
     protected $fillable = [
