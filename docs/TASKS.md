@@ -173,7 +173,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): photo_tag pivot with composite PK`
 
 ### T013 — Photo, Album, Tag, User Eloquent models
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T012, T004, T005
 - **Parallel with:** —
