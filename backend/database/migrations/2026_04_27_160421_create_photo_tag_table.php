@@ -30,6 +30,11 @@ return new class extends Migration
             $table->timestamp('created_at')->useCurrent();
 
             $table->primary(['photo_id', 'tag_id'], 'photo_tag_pk');
+            // The composite PK is left-most (photo_id, tag_id) — it covers
+            // "tags for this photo" but NOT the reverse "photos for this
+            // tag" lookup that Tag::photos() and the ?tags[] filter need.
+            // DESIGN.md §4.5 explicitly requires INDEX (tag_id).
+            $table->index('tag_id', 'photo_tag_tag_idx');
         });
     }
 

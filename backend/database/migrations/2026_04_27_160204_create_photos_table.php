@@ -49,6 +49,11 @@ return new class extends Migration
             $table->text('processing_error')->nullable();
             $table->timestamps();
 
+            // Per DESIGN.md §4 conventions: every FK column has an index.
+            // foreignUuid()->constrained() does NOT auto-add an index on
+            // SQLite/PostgreSQL, so we add it explicitly here for user_id.
+            // (album_id is already covered by the composite below.)
+            $table->index('user_id', 'photos_user_idx');
             // Composite indexes from §4.4 — each one covers a real query path.
             $table->index(['album_id', 'created_at'], 'photos_album_created_idx');
             $table->index(['is_favorite', 'created_at'], 'photos_favorite_created_idx');
