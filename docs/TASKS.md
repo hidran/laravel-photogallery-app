@@ -186,7 +186,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): Eloquent models with relationships`
 
 ### T014 — `PhotoObserver` deletes 4 files on photo delete
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013, T006
 - **Parallel with:** —
