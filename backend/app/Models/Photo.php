@@ -73,8 +73,10 @@ final class Photo extends Model
      */
     public function tags(): BelongsToMany
     {
+        // The pivot only carries created_at (DESIGN.md §4.5 — no updated_at);
+        // withPivot exposes it without forcing Eloquent to write updated_at.
         return $this->belongsToMany(Tag::class, 'photo_tag')
-            ->withTimestamps();
+            ->withPivot('created_at');
     }
 
     /**

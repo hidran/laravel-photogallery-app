@@ -28,7 +28,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('albums', function (Blueprint $table) {
-            $table->dropForeign('albums_cover_photo_id_foreign');
+            // Pass the column array (not the index name) — SQLite's
+            // grammar can only drop FKs via column-array (it rewrites the
+            // table); MySQL/PostgreSQL handle either form.
+            $table->dropForeign(['cover_photo_id']);
         });
     }
 };

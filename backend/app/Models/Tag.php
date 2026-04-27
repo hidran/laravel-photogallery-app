@@ -39,7 +39,8 @@ final class Tag extends Model
      */
     public function photos(): BelongsToMany
     {
+        // Pivot has only created_at (DESIGN.md §4.5).
         return $this->belongsToMany(Photo::class, 'photo_tag')
-            ->withTimestamps();
+            ->withPivot('created_at');
     }
 }
