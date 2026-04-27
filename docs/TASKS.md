@@ -139,7 +139,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): tags table (global, unique name/slug)`
 
 ### T010 — Migration: `photos` (with FULLTEXT + composite indexes)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T008
 - **Parallel with:** —
