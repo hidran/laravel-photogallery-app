@@ -209,7 +209,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): model factories`
 
 ### T016 — `AdminUserSeeder` + `DatabaseSeeder` wiring
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T015
