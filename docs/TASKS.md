@@ -62,7 +62,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `chore(frontend): scaffold Vite + React 19 + TypeScript`
 
 ### T003 — Publish Sanctum + queue + batches migrations; fix tokenable_id type
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** —
