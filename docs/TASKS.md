@@ -151,7 +151,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(db): photos table with composite indexes and fulltext`
 
 ### T011 — Migration: `add_cover_photo_fk_to_albums`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T010
 - **Parallel with:** —
