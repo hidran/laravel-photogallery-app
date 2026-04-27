@@ -221,7 +221,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): seed admin user from env`
 
 ### T017 — `config/photogallery.php` + `.env.example` augmentation
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** T004, T005, T006
