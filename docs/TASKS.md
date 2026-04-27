@@ -198,7 +198,7 @@ Depends on: Phase 11 (Git/PR setup) and Phase 9 (Hooks). Wave 0.
 - **Commit:** `feat(backend): PhotoObserver removes files on delete`
 
 ### T015 — Factories for Photo, Album, Tag, User
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T016
