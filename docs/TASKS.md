@@ -564,7 +564,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 ---
 
 ### T046 — Install Filament panel + brand
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T018
 - **Parallel with:** T030 (different track)
