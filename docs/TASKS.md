@@ -253,7 +253,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 ---
 
 ### T019 — `ForceJsonResponse` middleware
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T018
 - **Parallel with:** T020
