@@ -287,7 +287,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): ETag middleware for single-resource GETs`
 
 ### T022 — `PhotoPolicy` + `AlbumPolicy`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T021
