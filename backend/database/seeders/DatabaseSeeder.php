@@ -15,6 +15,10 @@ final class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdminUserSeeder::class,
+            UserSeeder::class,
+            TagSeeder::class,
+            AlbumSeeder::class,
+            PhotoSeeder::class,
         ]);
     }
 }
