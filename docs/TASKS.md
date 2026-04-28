@@ -643,7 +643,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): storage management page`
 
 ### T053 — Filament smoke tests
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T047–T052
 - **Parallel with:** —
