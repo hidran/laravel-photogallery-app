@@ -13,6 +13,17 @@ use App\Models\User;
  */
 final class AlbumPolicy
 {
+    /**
+     * Any authenticated user with the albums:write ability can create
+     * an album. Returning a Gate-friendly bool here so the dual-gate
+     * pattern (token ability + policy) is symmetric across all album
+     * mutations (PR #4 review S3).
+     */
+    public function create(User $user): bool
+    {
+        return true;
+    }
+
     public function view(User $user, Album $album): bool
     {
         return $album->user_id === $user->id;

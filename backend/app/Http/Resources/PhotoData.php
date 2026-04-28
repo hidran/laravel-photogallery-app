@@ -53,9 +53,12 @@ final class PhotoData extends JsonResource
             'file_size' => (int) $this->file_size,
             'mime_type' => $this->mime_type,
             'is_favorite' => (bool) $this->is_favorite,
-            'exif' => $this->exif,
+            // exif may carry GPS / device serials; processing_error may
+            // leak path fragments and worker context — both are owner+admin
+            // only (DESIGN.md §6.6 + security review S1 on PR #4).
+            'exif' => $isOwnerOrAdmin ? $this->exif : null,
             'processing_status' => $this->processing_status?->value,
-            'processing_error' => $this->processing_error,
+            'processing_error' => $isOwnerOrAdmin ? $this->processing_error : null,
             'album' => $this->whenLoaded('album', fn () => [
                 'id' => $this->album->id,
                 'name' => $this->album->name,

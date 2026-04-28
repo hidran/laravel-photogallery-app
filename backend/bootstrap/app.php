@@ -27,6 +27,25 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             ForceJsonResponse::class,
         ]);
+
+        // Trust upstream proxies so $request->ip() resolves to the
+        // client address (X-Forwarded-For), not the proxy's. Without
+        // this every request behind ALB/Nginx/CloudFront shares the
+        // same IP and the auth rate limiter (10/min/IP) collapses
+        // into one shared bucket — neutering credential-stuffing
+        // protection (PR #4 review S4).
+        //
+        // TRUSTED_PROXIES values:
+        //   '*'                      — trust any proxy (typical in fronted-by-LB deployments)
+        //   '10.0.0.0/8'             — trust a CIDR (private LB)
+        //   '203.0.113.5,203.0.113.6'— explicit comma list
+        //   ''  (default)            — trust nothing; safe for local dev
+        $trustedProxies = env('TRUSTED_PROXIES', '');
+        if ($trustedProxies !== '') {
+            $middleware->trustProxies(
+                at: $trustedProxies === '*' ? '*' : explode(',', $trustedProxies),
+            );
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // DESIGN.md §11.1 — every non-2xx response on /api/* uses a uniform

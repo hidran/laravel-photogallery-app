@@ -31,12 +31,17 @@ final class AlbumController extends Controller
             ->with(AlbumData::WITH)
             ->withCount('photos');
 
+        // Track the primary direction so the cursor tiebreaker on `id`
+        // matches it — using a fixed `desc` here makes name_asc's
+        // pagination non-deterministic across same-name rows
+        // (PR #4 review C8).
+        $direction = 'desc';
         match ($sort) {
-            'name_asc' => $query->orderBy('name', 'asc'),
+            'name_asc' => [$query->orderBy('name', 'asc'), $direction = 'asc'],
             'most_photos' => $query->orderBy('photos_count', 'desc')->orderBy('created_at', 'desc'),
             default => $query->orderBy('created_at', 'desc'),
         };
-        $query->orderBy('id', 'desc');
+        $query->orderBy('id', $direction);
 
         return AlbumData::collection(
             $query->cursorPaginate($perPage, ['*'], 'cursor', $cursor)
@@ -52,7 +57,14 @@ final class AlbumController extends Controller
 
     public function store(StoreAlbumRequest $request): JsonResponse
     {
+        // Dual gate (CLAUDE.md rule 10) — token ability AND policy. The
+        // create() policy method is intentionally permissive but its
+        // existence keeps every mutation symmetric and lets policies
+        // tighten without controller edits (PR #4 review S3).
         $this->ensureAbility($request, TokenAbility::AlbumsWrite);
+        if ($request->user()?->cannot('create', Album::class)) {
+            throw new AuthorizationException;
+        }
 
         $album = Album::create([
             ...$request->validated(),

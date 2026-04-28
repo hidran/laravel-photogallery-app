@@ -32,7 +32,7 @@ final class PhotoController extends Controller
             ->withSearch($request->validated('search'))
             ->withTags($request->validated('tags'))
             ->withAlbum($request->validated('album_id'))
-            ->withFavorites((bool) $request->validated('favorites', false))
+            ->withFavorites($request->boolean('favorites'))
             ->applySort(
                 $request->validated('sort'),
                 $request->validated('order'),
@@ -62,25 +62,37 @@ final class PhotoController extends Controller
         unset($data['tags'], $data['new_tags']);
 
         DB::transaction(function () use ($photo, $data, $tags, $newTags, $tagAssigner): void {
+            $rowChanged = false;
             if ($data !== []) {
                 $photo->update($data);
+                $rowChanged = true;
             }
 
             if ($tags !== null || $newTags !== null) {
-                // Resolve incoming slugs to names so TagAssigner can
-                // upsert by name uniformly.
-                $names = collect($tags ?? [])
-                    ->map(fn (string $slug) => Tag::where('slug', $slug)->value('name') ?? $slug)
+                // Single query — slugs come pre-validated by UpdatePhotoRequest's
+                // `exists:tags,slug` rule, so a missing slug here is impossible.
+                // Skipping the per-slug fallback closes the silent-create
+                // edge case (PR #4 review C1).
+                $existingNames = $tags
+                    ? Tag::query()->whereIn('slug', $tags)->pluck('name')->all()
+                    : [];
+
+                $names = collect($existingNames)
                     ->merge($newTags ?? [])
                     ->unique()
                     ->values()
                     ->all();
 
                 $tagAssigner->syncByNames($photo, $names);
+
+                // The pivot changed but Eloquent doesn't bump updated_at on
+                // pivot writes. Touching the photo invalidates the ETag so
+                // a refetch sees the new tag set (PR #4 review C2).
+                if (! $rowChanged) {
+                    $photo->touch();
+                }
             }
         });
-
-        $photo->load(PhotoData::WITH);
 
         return PhotoData::make($photo->fresh(PhotoData::WITH))->response();
     }

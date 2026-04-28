@@ -53,6 +53,23 @@ it('PATCH replaces the tag set via TagAssigner', function () {
     expect($photo->fresh()->tags()->pluck('name')->all())->toBe(['mountain']);
 });
 
+it('PATCH bumps updated_at when only tags change (so ETag invalidates)', function () {
+    // PR #4 review C2 — pivot writes don't bump updated_at on their own,
+    // so a tag-only PATCH must explicitly touch() the photo.
+    $user = User::factory()->create();
+    $photo = Photo::factory()->processed()->create([
+        'user_id' => $user->id,
+        'updated_at' => now()->subHour(),
+    ]);
+    $before = $photo->updated_at->copy();
+
+    $this->withHeaders(authHeaderFor($user))
+        ->patchJson("/api/v1/photos/{$photo->id}", ['new_tags' => ['mountain']])
+        ->assertOk();
+
+    expect($photo->fresh()->updated_at->greaterThan($before))->toBeTrue();
+});
+
 it('PATCH album_id requires the album to be owned by the authed user', function () {
     $user = User::factory()->create();
     $stranger = User::factory()->create();

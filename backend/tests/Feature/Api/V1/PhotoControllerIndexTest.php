@@ -44,11 +44,11 @@ it('eager-loads relations to avoid N+1 (≤2 queries for the photos page)', func
     $queries = DB::getQueryLog();
     DB::disableQueryLog();
 
-    // 1 photos page query + 1 cursor-count query (cursor pagination) +
-    // 1 eager-load per declared relation in PhotoData::WITH (album,
-    // tags, user) → 5 max. The hard floor is "no per-row queries"; we
-    // assert ≤ 1 query per relation, not ≤ 2 absolute.
-    expect(count($queries))->toBeLessThanOrEqual(6);
+    // Cursor pagination skips the offset-pagination `total` query, so
+    // the budget is: 1 page query + 3 eager-loads from PhotoData::WITH
+    // (album, tags, user) = 4. Tightened from ≤6 per PR #4 review C3 so
+    // a stray eager-load slip is caught.
+    expect(count($queries))->toBeLessThanOrEqual(4);
 
     // No per-row repetitions: every distinct query SQL must be unique.
     $sqls = array_map(fn ($q) => $q['query'], $queries);

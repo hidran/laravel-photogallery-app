@@ -85,3 +85,59 @@ it('hides width/height until processing completes', function () {
 it('declares the eager-load WITH constant per CLAUDE.md DRY rule', function () {
     expect(PhotoData::WITH)->toContain('album:id,name', 'tags:id,name,slug', 'user:id,name');
 });
+
+// PR #4 security review S1 — exif + processing_error are owner+admin only.
+
+it('hides exif from anonymous viewers', function () {
+    $photo = Photo::factory()->processed()->create([
+        'exif' => ['GPS' => ['lat' => 1.0, 'lng' => 2.0], 'Make' => 'Apple'],
+    ]);
+    $photo->load(PhotoData::WITH);
+
+    $payload = renderPhotoData($photo, viewer: null);
+
+    expect($payload['exif'])->toBeNull();
+});
+
+it('hides processing_error from anonymous viewers', function () {
+    $photo = Photo::factory()->create([
+        'processing_status' => ProcessingStatus::Failed->value,
+        'processing_error' => '/var/www/storage/photos-private/abc.jpg: PHP Fatal error',
+    ]);
+    $photo->load(PhotoData::WITH);
+
+    $payload = renderPhotoData($photo, viewer: null);
+
+    expect($payload['processing_error'])->toBeNull();
+});
+
+it('includes exif and processing_error for the owner', function () {
+    $owner = User::factory()->create();
+    $photo = Photo::factory()->create([
+        'user_id' => $owner->id,
+        'exif' => ['Make' => 'Apple'],
+        'processing_error' => 'queue blew up',
+    ]);
+    $photo->load(PhotoData::WITH);
+
+    $payload = renderPhotoData($photo, $owner);
+
+    expect($payload['exif'])->toBe(['Make' => 'Apple']);
+    expect($payload['processing_error'])->toBe('queue blew up');
+});
+
+it('includes exif and processing_error for admins viewing others', function () {
+    $owner = User::factory()->create();
+    $admin = User::factory()->create(['is_admin' => true]);
+    $photo = Photo::factory()->create([
+        'user_id' => $owner->id,
+        'exif' => ['Make' => 'Canon'],
+        'processing_error' => 'admin-visible error',
+    ]);
+    $photo->load(PhotoData::WITH);
+
+    $payload = renderPhotoData($photo, $admin);
+
+    expect($payload['exif'])->toBe(['Make' => 'Canon']);
+    expect($payload['processing_error'])->toBe('admin-visible error');
+});

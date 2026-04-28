@@ -104,6 +104,7 @@ it('admin token bypasses ownership on every covered endpoint', function (Closure
     $response = $this->withHeaders(authedHeaders($admin, ['photos:write', 'albums:write', 'admin']))
         ->{$config['method']}($config['url'], $config['body']);
 
-    expect($response->status())->not->toBe(403);
-    expect($response->status())->not->toBe(401);
+    // Tightened per PR #4 review C5: must land on a documented success
+    // status from §6.7. "not 403 and not 401" false-passed on 5xx.
+    expect($response->status())->toBeIn([200, 201, 204]);
 })->with('mutating_endpoints_with_owner_resource');
