@@ -253,7 +253,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 ---
 
 ### T019 — `ForceJsonResponse` middleware
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T018
 - **Parallel with:** T020
@@ -264,7 +264,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): force JSON middleware on /api/*`
 
 ### T020 — Custom exception handler with universal envelope
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T018
 - **Parallel with:** T019
@@ -276,7 +276,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): universal error envelope per DESIGN.md §11.1`
 
 ### T021 — `App\Http\Middleware\ETag`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T019
 - **Parallel with:** T022
@@ -287,7 +287,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): ETag middleware for single-resource GETs`
 
 ### T022 — `PhotoPolicy` + `AlbumPolicy`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T021
@@ -298,7 +298,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(backend): photo and album policies (ownership + admin)`
 
 ### T023 — Form requests: `RegisterRequest`, `LoginRequest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T024, T025, T026
@@ -310,7 +310,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): auth form requests`
 
 ### T024 — Form requests: `IndexPhotosRequest`, `StorePhotosRequest`, `UpdatePhotoRequest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T023, T025, T026
@@ -322,7 +322,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): photo form requests`
 
 ### T025 — Form requests: `StoreAlbumRequest`, `UpdateAlbumRequest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T023, T024, T026
@@ -333,7 +333,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): album form requests`
 
 ### T026 — `PhotoData`, `AlbumData`, `TagData`, `UserData` resources
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T023, T024, T025
@@ -345,7 +345,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): API resources (PhotoData/AlbumData/TagData/UserData)`
 
 ### T027 — `App\Queries\PhotoQuery` (composable filters/sorts)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T028
@@ -356,7 +356,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(backend): PhotoQuery composable builder`
 
 ### T028 — `App\Services\TagAssigner::syncByNames`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T027
@@ -367,7 +367,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(backend): TagAssigner service`
 
 ### T029 — `App\Actions\Photo\UploadPhotosAction`
-- **Status:** [ ]
+- **Status:** [-] deferred to Phase 6 (needs PhotoStorage interface from T072)
 - **Owner:** backend-dev
 - **Depends on:** T024, T026, T028, T032 (PhotoStorage from Phase 6, but use a stub here)
 - **Parallel with:** —
@@ -380,7 +380,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(backend): UploadPhotosAction`
 
 ### T030 — `AuthController` (register, login, logout, me)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T020, T023, T026
 - **Parallel with:** T031, T034, T035, T036
@@ -391,7 +391,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): AuthController with abilities`
 
 ### T031 — `PhotoController@index` and `@show`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T020, T024, T026, T027
 - **Parallel with:** T030, T034, T035, T036
@@ -402,7 +402,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): GET /photos and /photos/{id}`
 
 ### T032 — `PhotoController@store` (delegates to `UploadPhotosAction`)
-- **Status:** [ ]
+- **Status:** [-] deferred to Phase 6 (depends on T029)
 - **Owner:** backend-dev
 - **Depends on:** T029
 - **Parallel with:** —
@@ -412,7 +412,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): POST /photos delegates to UploadPhotosAction`
 
 ### T033 — `PhotoController@update`, `@destroy`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T022, T024, T026
 - **Parallel with:** T034, T035, T036
@@ -423,7 +423,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): PATCH/DELETE /photos/{id}`
 
 ### T034 — Favorite endpoints: `PUT` and `DELETE /photos/{id}/favorite`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T022
 - **Parallel with:** T030, T031, T035, T036
@@ -434,7 +434,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): idempotent PUT/DELETE favorite endpoints`
 
 ### T035 — `BatchController@show` for `GET /photos/batch/{id}`
-- **Status:** [ ]
+- **Status:** [-] deferred to Phase 6 (no batches exist without T029 uploads)
 - **Owner:** backend-dev
 - **Depends on:** T029
 - **Parallel with:** T030, T031, T034, T036
@@ -445,7 +445,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): GET /photos/batch/{id}`
 
 ### T036 — `AlbumController` (CRUD)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T022, T025, T026
 - **Parallel with:** T030, T031, T034, T035
@@ -456,7 +456,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): AlbumController CRUD`
 
 ### T037 — `TagController@index`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T026
 - **Parallel with:** T038
@@ -467,7 +467,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): GET /tags`
 
 ### T038 — `HealthController@index`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T020
 - **Parallel with:** T037
@@ -478,7 +478,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): GET /health endpoint`
 
 ### T039 — Routes + middleware groups + rate limiters
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T030–T038
 - **Parallel with:** —
@@ -491,7 +491,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): route definitions with rate limits`
 
 ### T040 — Pest tests: `AuthTest`, `AuthorizationTest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T030
 - **Parallel with:** T041, T042, T043, T044
@@ -502,7 +502,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): auth and authorization sweep`
 
 ### T041 — Pest tests: `PhotoIndexTest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T031
 - **Parallel with:** T040, T042, T043, T044
@@ -512,7 +512,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): GET /photos coverage`
 
 ### T042 — Pest tests: `PhotoCrudTest`, `PhotoUploadTest`, `PhotoFavoriteTest`
-- **Status:** [ ]
+- **Status:** [~]
 - **Owner:** backend-dev
 - **Depends on:** T032, T033, T034
 - **Parallel with:** T040, T041, T043, T044
@@ -523,7 +523,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): photo CRUD, upload, favorite`
 
 ### T043 — Pest tests: `BatchProgressTest`, `AlbumCrudTest`, `TagIndexTest`
-- **Status:** [ ]
+- **Status:** [~]
 - **Owner:** backend-dev
 - **Depends on:** T035, T036, T037
 - **Parallel with:** T040, T041, T042, T044
@@ -534,7 +534,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): batch, albums, tags`
 
 ### T044 — Pest test: `HealthTest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T038
 - **Parallel with:** T040, T041, T042, T043
@@ -545,7 +545,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): health endpoint`
 
 ### T045 — Phase 2 review
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T040–T044
 - **Parallel with:** —
