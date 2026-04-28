@@ -298,7 +298,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(backend): photo and album policies (ownership + admin)`
 
 ### T023 — Form requests: `RegisterRequest`, `LoginRequest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T024, T025, T026
