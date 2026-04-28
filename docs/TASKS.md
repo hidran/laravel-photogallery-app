@@ -356,7 +356,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(backend): PhotoQuery composable builder`
 
 ### T028 — `App\Services\TagAssigner::syncByNames`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T027
