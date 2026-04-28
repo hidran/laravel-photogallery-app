@@ -769,7 +769,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 ---
 
 ### T063 — `ErrorBoundary` + `Modal` + common components
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T062
 - **Parallel with:** T064, T065, T066
@@ -780,7 +780,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): ErrorBoundary + Modal + common components`
 
 ### T064 — Layout: `Shell`, `Navbar`, `Sidebar`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev (Agent 5a)
 - **Depends on:** T060, T061, T063
 - **Parallel with:** T065, T066, T067
@@ -792,7 +792,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): app shell + navbar + sidebar`
 
 ### T065 — Hooks: `useDebounce`, `useKeyboardShortcuts`, `KeyboardShortcutsProvider`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T060
 - **Parallel with:** T064, T066, T067
@@ -803,7 +803,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): keyboard shortcuts and useDebounce`
 
 ### T066 — Server-state hooks: `useAuth`, `usePhotos`, `useAlbums`, `useTags`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T058, T059
 - **Parallel with:** T064, T065, T067
@@ -815,7 +815,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): TanStack Query hooks`
 
 ### T067 — Gallery: `MasonryGrid`, `PhotoCard`, `ProcessingOverlay`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev (Agent 5b)
 - **Depends on:** T063, T066
 - **Parallel with:** T064, T065, T068, T069
@@ -828,7 +828,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): masonry grid + photo card + processing overlay`
 
 ### T068 — Lightbox: `PhotoLightbox`, `ExifPanel`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev (Agent 5c)
 - **Depends on:** T063, T065, T067
 - **Parallel with:** T067, T069
@@ -841,7 +841,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): lightbox with keyboard nav and EXIF panel`
 
 ### T069 — Upload: `UploadModal`, `DropZone`, `UploadProgressList`, `useUpload`, `useBatchPoll`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev (Agent 5d)
 - **Depends on:** T063, T066
 - **Parallel with:** T067, T068
@@ -854,7 +854,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): upload modal with batch polling`
 
 ### T070 — Pages: `GalleryPage`, `FavoritesPage`, `AlbumPage`, `LoginPage`, `NotFoundPage`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T064, T067, T068
 - **Parallel with:** T069
@@ -866,7 +866,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): page components wired to hooks`
 
 ### T071 — Phase 5 review
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T063–T070
 - **Acceptance:**
