@@ -380,7 +380,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(backend): UploadPhotosAction`
 
 ### T030 — `AuthController` (register, login, logout, me)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T020, T023, T026
 - **Parallel with:** T031, T034, T035, T036
