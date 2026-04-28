@@ -6,10 +6,12 @@ namespace App\Filament\Pages;
 
 use App\Jobs\ProcessPhoto;
 use App\Models\Photo;
+use App\Support\HumanBytes;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use UnitEnum;
@@ -82,7 +84,7 @@ final class StorageManagement extends Page
     /**
      * @return array{size: string, count: int}
      */
-    private function getFolderStats(mixed $disk, string $folder): array
+    private function getFolderStats(Filesystem $disk, string $folder): array
     {
         $files = $disk->files($folder);
         $totalSize = 0;
@@ -92,20 +94,8 @@ final class StorageManagement extends Page
         }
 
         return [
-            'size' => $this->formatBytes($totalSize),
+            'size' => HumanBytes::format($totalSize),
             'count' => count($files),
         ];
-    }
-
-    private function formatBytes(int $bytes): string
-    {
-        if ($bytes === 0) {
-            return '0 B';
-        }
-
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        $i = (int) floor(log($bytes, 1024));
-
-        return round($bytes / (1024 ** $i), 1).' '.$units[$i];
     }
 }

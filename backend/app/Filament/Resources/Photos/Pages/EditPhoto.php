@@ -8,7 +8,7 @@ use App\Filament\Resources\Photos\PhotoResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
-class EditPhoto extends EditRecord
+final class EditPhoto extends EditRecord
 {
     protected static string $resource = PhotoResource::class;
 

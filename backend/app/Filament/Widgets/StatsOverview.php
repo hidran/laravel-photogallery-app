@@ -7,11 +7,14 @@ namespace App\Filament\Widgets;
 use App\Models\Album;
 use App\Models\Photo;
 use App\Models\Tag;
+use App\Support\HumanBytes;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 final class StatsOverview extends StatsOverviewWidget
 {
+    protected static ?int $sort = 1;
+
     protected function getStats(): array
     {
         $totalStorage = Photo::query()->sum('file_size');
@@ -20,19 +23,7 @@ final class StatsOverview extends StatsOverviewWidget
             Stat::make('Total Photos', Photo::query()->count()),
             Stat::make('Albums', Album::query()->count()),
             Stat::make('Tags', Tag::query()->count()),
-            Stat::make('Storage', $this->formatBytes((int) $totalStorage)),
+            Stat::make('Storage', HumanBytes::format((int) $totalStorage)),
         ];
-    }
-
-    private function formatBytes(int $bytes): string
-    {
-        if ($bytes === 0) {
-            return '0 B';
-        }
-
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        $i = (int) floor(log($bytes, 1024));
-
-        return round($bytes / (1024 ** $i), 1).' '.$units[$i];
     }
 }

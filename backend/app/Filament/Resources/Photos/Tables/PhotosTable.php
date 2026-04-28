@@ -7,6 +7,7 @@ namespace App\Filament\Resources\Photos\Tables;
 use App\Enums\ProcessingStatus;
 use App\Jobs\ProcessPhoto;
 use App\Models\Photo;
+use App\Support\HumanBytes;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -28,7 +29,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
-class PhotosTable
+final class PhotosTable
 {
     public static function configure(Table $table): Table
     {
@@ -55,7 +56,7 @@ class PhotosTable
 
                 TextColumn::make('file_size')
                     ->label('Size')
-                    ->formatStateUsing(fn (int $state): string => self::humanBytes($state))
+                    ->formatStateUsing(fn (int $state): string => HumanBytes::format($state))
                     ->sortable(),
 
                 ToggleColumn::make('is_favorite')
@@ -175,13 +176,5 @@ class PhotosTable
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
-    }
-
-    private static function humanBytes(int $bytes): string
-    {
-        $units = ['B', 'KB', 'MB', 'GB'];
-        $factor = floor((strlen((string) $bytes) - 1) / 3);
-
-        return sprintf('%.1f %s', $bytes / (1024 ** $factor), $units[(int) $factor]);
     }
 }

@@ -64,10 +64,7 @@ final class PhotoForm
                             ->maxLength(255),
                     ])
                     ->createOptionUsing(function (array $data): string {
-                        $tag = Tag::create([
-                            'name' => $data['name'],
-                            'slug' => str($data['name'])->slug()->toString(),
-                        ]);
+                        $tag = Tag::create(['name' => $data['name']]);
 
                         return $tag->id;
                     }),
