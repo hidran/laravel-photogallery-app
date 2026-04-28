@@ -2,13 +2,13 @@ import type { PaginatedResponse, SingleResponse, Photo } from '../types';
 import { apiClient } from './client';
 
 export interface PhotosIndexParams {
-  cursor?: string;
-  search?: string;
-  tags?: string[];
-  album_id?: string;
-  is_favorite?: boolean;
-  sort?: string;
-  order?: 'asc' | 'desc';
+  cursor?: string | undefined;
+  search?: string | undefined;
+  tags?: string[] | undefined;
+  album_id?: string | undefined;
+  is_favorite?: boolean | undefined;
+  sort?: string | undefined;
+  order?: 'asc' | 'desc' | undefined;
 }
 
 export interface UpdatePhotoPayload {
