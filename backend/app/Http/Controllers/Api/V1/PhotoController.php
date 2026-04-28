@@ -95,6 +95,35 @@ final class PhotoController extends Controller
     }
 
     /**
+     * PUT /photos/{photo}/favorite — idempotent. Always returns 204
+     * (DESIGN.md §6.2 favorite block) regardless of prior state.
+     */
+    public function favorite(Request $request, Photo $photo): Response
+    {
+        $this->ensureCan($request, 'update', $photo, TokenAbility::PhotosWrite);
+
+        if (! $photo->is_favorite) {
+            $photo->forceFill(['is_favorite' => true])->save();
+        }
+
+        return response()->noContent();
+    }
+
+    /**
+     * DELETE /photos/{photo}/favorite — idempotent.
+     */
+    public function unfavorite(Request $request, Photo $photo): Response
+    {
+        $this->ensureCan($request, 'update', $photo, TokenAbility::PhotosWrite);
+
+        if ($photo->is_favorite) {
+            $photo->forceFill(['is_favorite' => false])->save();
+        }
+
+        return response()->noContent();
+    }
+
+    /**
      * Combine policy + token-ability gate (CLAUDE.md rule 10). Throws the
      * same AuthorizationException either way so the universal-envelope
      * 403 fires from bootstrap/app.php.

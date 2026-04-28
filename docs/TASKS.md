@@ -423,7 +423,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): PATCH/DELETE /photos/{id}`
 
 ### T034 — Favorite endpoints: `PUT` and `DELETE /photos/{id}/favorite`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T022
 - **Parallel with:** T030, T031, T035, T036
