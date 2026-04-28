@@ -478,7 +478,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): GET /health endpoint`
 
 ### T039 — Routes + middleware groups + rate limiters
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T030–T038
 - **Parallel with:** —
