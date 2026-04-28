@@ -333,7 +333,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): album form requests`
 
 ### T026 — `PhotoData`, `AlbumData`, `TagData`, `UserData` resources
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T023, T024, T025
