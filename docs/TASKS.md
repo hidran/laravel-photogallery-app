@@ -467,7 +467,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): GET /tags`
 
 ### T038 — `HealthController@index`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T020
 - **Parallel with:** T037
