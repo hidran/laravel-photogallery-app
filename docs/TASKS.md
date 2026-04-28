@@ -576,7 +576,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `chore(filament): install admin panel`
 
 ### T047 — `PhotoResource` (table)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T046
 - **Parallel with:** T049, T051
@@ -599,7 +599,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): PhotoResource form, actions, bulk actions`
 
 ### T049 — `AlbumResource`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T046
 - **Parallel with:** T047, T051
@@ -610,7 +610,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): AlbumResource + relation manager`
 
 ### T050 — `TagResource`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T046
 - **Parallel with:** T049
@@ -621,7 +621,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): TagResource`
 
 ### T051 — Widgets: StatsOverview, RecentUploadsTable, QueueMonitor
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T046
 - **Parallel with:** T047, T049
