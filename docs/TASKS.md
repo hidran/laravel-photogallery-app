@@ -345,7 +345,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): API resources (PhotoData/AlbumData/TagData/UserData)`
 
 ### T027 — `App\Queries\PhotoQuery` (composable filters/sorts)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T028
