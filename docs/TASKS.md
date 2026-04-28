@@ -670,7 +670,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 ---
 
 ### T055 — Vite config + Tailwind v4 install
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T002
 - **Parallel with:** T056, T057
@@ -683,7 +683,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `chore(frontend): Vite + Tailwind v4 setup`
 
 ### T056 — TypeScript strict + ESLint + Prettier
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T002
 - **Parallel with:** T055, T057
@@ -695,7 +695,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `chore(frontend): strict TS + ESLint + Prettier`
 
 ### T057 — Type definitions in `src/types/`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T056
 - **Parallel with:** T055, T058
@@ -705,7 +705,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `feat(frontend): API type definitions`
 
 ### T058 — `src/api/client.ts` + interceptors
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T057
 - **Parallel with:** T057, T059
@@ -717,7 +717,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `feat(frontend): axios client with interceptors`
 
 ### T059 — Typed API wrappers (`src/api/{photos,albums,tags,batch,auth}.ts`)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T058
 - **Parallel with:** T058
@@ -728,7 +728,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `feat(frontend): typed API wrappers`
 
 ### T060 — `lib/queryClient.ts` + Provider tree in `App.tsx`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T058
 - **Parallel with:** T061
@@ -741,7 +741,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `feat(frontend): provider tree and lazy routing`
 
 ### T061 — `src/data/copy.ts`, `nav.ts`, `polling.ts`, `shortcuts.ts`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T002
 - **Parallel with:** T060
@@ -752,7 +752,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `feat(frontend): centralized data modules`
 
 ### T062 — Phase 4 review
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T055–T061
 - **Acceptance:**
