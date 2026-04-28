@@ -367,7 +367,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(backend): TagAssigner service`
 
 ### T029 — `App\Actions\Photo\UploadPhotosAction`
-- **Status:** [ ]
+- **Status:** [-] deferred to Phase 6 (needs PhotoStorage interface from T072)
 - **Owner:** backend-dev
 - **Depends on:** T024, T026, T028, T032 (PhotoStorage from Phase 6, but use a stub here)
 - **Parallel with:** —
@@ -402,7 +402,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): GET /photos and /photos/{id}`
 
 ### T032 — `PhotoController@store` (delegates to `UploadPhotosAction`)
-- **Status:** [ ]
+- **Status:** [-] deferred to Phase 6 (depends on T029)
 - **Owner:** backend-dev
 - **Depends on:** T029
 - **Parallel with:** —
@@ -434,7 +434,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): idempotent PUT/DELETE favorite endpoints`
 
 ### T035 — `BatchController@show` for `GET /photos/batch/{id}`
-- **Status:** [ ]
+- **Status:** [-] deferred to Phase 6 (no batches exist without T029 uploads)
 - **Owner:** backend-dev
 - **Depends on:** T029
 - **Parallel with:** T030, T031, T034, T036
@@ -545,7 +545,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): health endpoint`
 
 ### T045 — Phase 2 review
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T040–T044
 - **Parallel with:** —
