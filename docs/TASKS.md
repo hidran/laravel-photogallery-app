@@ -632,7 +632,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): dashboard widgets`
 
 ### T052 — `StorageManagement` page
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T046, T051
 - **Parallel with:** —
