@@ -445,7 +445,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): GET /photos/batch/{id}`
 
 ### T036 — `AlbumController` (CRUD)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T022, T025, T026
 - **Parallel with:** T030, T031, T034, T035
