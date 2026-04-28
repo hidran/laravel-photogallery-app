@@ -322,7 +322,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): photo form requests`
 
 ### T025 — Form requests: `StoreAlbumRequest`, `UpdateAlbumRequest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T023, T024, T026
