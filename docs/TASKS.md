@@ -264,7 +264,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): force JSON middleware on /api/*`
 
 ### T020 — Custom exception handler with universal envelope
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T018
 - **Parallel with:** T019
