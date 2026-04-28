@@ -391,7 +391,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): AuthController with abilities`
 
 ### T031 — `PhotoController@index` and `@show`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T020, T024, T026, T027
 - **Parallel with:** T030, T034, T035, T036
