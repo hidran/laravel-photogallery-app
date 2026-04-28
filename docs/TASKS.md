@@ -512,7 +512,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): GET /photos coverage`
 
 ### T042 — Pest tests: `PhotoCrudTest`, `PhotoUploadTest`, `PhotoFavoriteTest`
-- **Status:** [~]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T032, T033, T034
 - **Parallel with:** T040, T041, T043, T044
@@ -523,7 +523,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): photo CRUD, upload, favorite`
 
 ### T043 — Pest tests: `BatchProgressTest`, `AlbumCrudTest`, `TagIndexTest`
-- **Status:** [~]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T035, T036, T037
 - **Parallel with:** T040, T041, T042, T044
