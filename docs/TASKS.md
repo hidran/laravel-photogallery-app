@@ -276,7 +276,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): universal error envelope per DESIGN.md §11.1`
 
 ### T021 — `App\Http\Middleware\ETag`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T019
 - **Parallel with:** T022
