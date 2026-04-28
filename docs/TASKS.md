@@ -587,7 +587,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): PhotoResource table + filters`
 
 ### T048 — `PhotoResource` (form + reprocess action)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T047
 - **Parallel with:** T049, T051

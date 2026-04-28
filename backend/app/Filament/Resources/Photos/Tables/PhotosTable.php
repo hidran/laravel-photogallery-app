@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Photos\Tables;
 
 use App\Enums\ProcessingStatus;
+use App\Jobs\ProcessPhoto;
+use App\Models\Photo;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -12,6 +16,8 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -20,6 +26,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class PhotosTable
 {
@@ -110,10 +117,61 @@ class PhotosTable
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
+                Action::make('reprocess')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->action(function (Photo $record): void {
+                        $record->update([
+                            'processing_status' => ProcessingStatus::Pending,
+                            'processing_attempts' => 0,
+                            'processing_error' => null,
+                        ]);
+                        ProcessPhoto::dispatch($record);
+                        Notification::make()->title('Reprocessing dispatched')->success()->send();
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    BulkAction::make('assignToAlbum')
+                        ->label('Assign to Album')
+                        ->icon('heroicon-o-folder')
+                        ->form([
+                            Select::make('album_id')
+                                ->label('Album')
+                                ->relationship('album', 'name')
+                                ->required(),
+                        ])
+                        ->action(function (Collection $records, array $data): void {
+                            $records->each->update(['album_id' => $data['album_id']]);
+                            Notification::make()->title('Photos assigned to album')->success()->send();
+                        }),
+                    BulkAction::make('toggleFavorite')
+                        ->label('Toggle Favorite')
+                        ->icon('heroicon-o-heart')
+                        ->action(function (Collection $records): void {
+                            $records->each(function (Photo $photo): void {
+                                $photo->update(['is_favorite' => ! $photo->is_favorite]);
+                            });
+                            Notification::make()->title('Favorites toggled')->success()->send();
+                        }),
+                    BulkAction::make('reprocess')
+                        ->label('Reprocess')
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records): void {
+                            $records->each(function (Photo $photo): void {
+                                $photo->update([
+                                    'processing_status' => ProcessingStatus::Pending,
+                                    'processing_attempts' => 0,
+                                    'processing_error' => null,
+                                ]);
+                                ProcessPhoto::dispatch($photo);
+                            });
+                            Notification::make()->title('Reprocessing dispatched')->success()->send();
+                        }),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
