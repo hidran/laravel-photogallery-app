@@ -310,7 +310,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): auth form requests`
 
 ### T024 — Form requests: `IndexPhotosRequest`, `StorePhotosRequest`, `UpdatePhotoRequest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T023, T025, T026
