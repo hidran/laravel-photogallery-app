@@ -456,7 +456,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): AlbumController CRUD`
 
 ### T037 — `TagController@index`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T026
 - **Parallel with:** T038
