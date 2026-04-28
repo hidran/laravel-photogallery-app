@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { queryClient } from './lib/queryClient';
+import { copy } from './data/copy';
 
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
@@ -14,7 +15,7 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>{copy.gallery.loading}</div>}>
           <Routes>
             <Route path="/" element={<GalleryPage />} />
             <Route path="/favorites" element={<FavoritesPage />} />

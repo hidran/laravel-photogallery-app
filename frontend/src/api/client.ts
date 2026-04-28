@@ -1,5 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'sonner';
+import { copy } from '../data/copy';
+import type { ApiError } from '../types';
 
 const TOKEN_KEY = 'auth_token';
 
@@ -33,7 +35,7 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  (error: AxiosError<ApiError>) => {
     const status = error.response?.status;
 
     if (status === 401) {
@@ -43,7 +45,7 @@ apiClient.interceptors.response.use(
     }
 
     if (status === 413) {
-      toast.error('File too large');
+      toast.error(copy.errors.tooLarge);
       return Promise.reject(error);
     }
 
@@ -52,7 +54,7 @@ apiClient.interceptors.response.use(
     }
 
     if (status !== undefined && status >= 500) {
-      toast.error('Server error');
+      toast.error(copy.errors.serverError);
       return Promise.reject(error);
     }
 

@@ -28,10 +28,17 @@ export async function getPhoto(id: string): Promise<SingleResponse<Photo>> {
   return data;
 }
 
+export interface UploadResponse {
+  data: {
+    batch_id: string;
+    total: number;
+  };
+}
+
 export async function uploadPhotos(
   files: File[],
   meta?: { album_id?: string; tags?: string[] },
-): Promise<{ data: { batch_id: string; total: number } }> {
+): Promise<UploadResponse> {
   const formData = new FormData();
   files.forEach((file) => formData.append('files[]', file));
   if (meta?.album_id) {
@@ -39,10 +46,10 @@ export async function uploadPhotos(
   }
   meta?.tags?.forEach((tag) => formData.append('tags[]', tag));
 
-  const { data } = await apiClient.post('/photos', formData, {
+  const { data } = await apiClient.post<UploadResponse>('/photos', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return data as { data: { batch_id: string; total: number } };
+  return data;
 }
 
 export async function updatePhoto(
