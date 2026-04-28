@@ -9,3 +9,5 @@ export { Shell } from './Shell';
 export { Sidebar } from './Sidebar';
 export { UploadModal } from './UploadModal';
 export { UploadProgressList } from './UploadProgressList';
+export { ExifPanel } from './ExifPanel';
+export { PhotoLightbox } from './PhotoLightbox';
