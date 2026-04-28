@@ -491,7 +491,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): route definitions with rate limits`
 
 ### T040 — Pest tests: `AuthTest`, `AuthorizationTest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T030
 - **Parallel with:** T041, T042, T043, T044
@@ -502,7 +502,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): auth and authorization sweep`
 
 ### T041 — Pest tests: `PhotoIndexTest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T031
 - **Parallel with:** T040, T042, T043, T044
@@ -512,7 +512,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): GET /photos coverage`
 
 ### T042 — Pest tests: `PhotoCrudTest`, `PhotoUploadTest`, `PhotoFavoriteTest`
-- **Status:** [ ]
+- **Status:** [~]
 - **Owner:** backend-dev
 - **Depends on:** T032, T033, T034
 - **Parallel with:** T040, T041, T043, T044
@@ -523,7 +523,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): photo CRUD, upload, favorite`
 
 ### T043 — Pest tests: `BatchProgressTest`, `AlbumCrudTest`, `TagIndexTest`
-- **Status:** [ ]
+- **Status:** [~]
 - **Owner:** backend-dev
 - **Depends on:** T035, T036, T037
 - **Parallel with:** T040, T041, T042, T044
@@ -534,7 +534,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): batch, albums, tags`
 
 ### T044 — Pest test: `HealthTest`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T038
 - **Parallel with:** T040, T041, T042, T043
