@@ -412,7 +412,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): POST /photos delegates to UploadPhotosAction`
 
 ### T033 — `PhotoController@update`, `@destroy`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T022, T024, T026
 - **Parallel with:** T034, T035, T036
