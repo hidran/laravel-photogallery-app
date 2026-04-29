@@ -65,7 +65,12 @@ export function GalleryPage() {
   }
 
   if (allPhotos.length === 0) {
-    return <p className="p-6 text-center text-gray-500">{copy.gallery.emptyState}</p>;
+    const hasFilters = searchParams.has('search') || searchParams.getAll('tags[]').length > 0;
+    return (
+      <p className="p-6 text-center text-gray-500">
+        {hasFilters ? copy.gallery.emptySearch : copy.gallery.emptyState}
+      </p>
+    );
   }
 
   return (

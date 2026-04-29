@@ -3,6 +3,11 @@ export const copy = {
     name: 'PhotoGallery Pro',
   },
 
+  common: {
+    cancel: 'Cancel',
+    tryAgain: 'Try again',
+  },
+
   nav: {
     allPhotos: 'All Photos',
     favorites: 'Favorites',
@@ -51,6 +56,25 @@ export const copy = {
     deleteConfirm: 'Are you sure you want to delete this photo? This action cannot be undone.',
     delete: 'Delete photo',
     viewFullSize: 'View full size',
+    toggleExif: 'Toggle EXIF info',
+  },
+
+  exif: {
+    title: 'EXIF Data',
+    noData: 'No EXIF data',
+    camera: 'Camera',
+    iso: 'ISO',
+    aperture: 'Aperture',
+    shutter: 'Shutter Speed',
+    focalLength: 'Focal Length',
+    takenAt: 'Taken At',
+  },
+
+  sort: {
+    newest: 'Newest',
+    oldest: 'Oldest',
+    titleAsc: 'Title A\u2013Z',
+    titleDesc: 'Title Z\u2013A',
   },
 
   errors: {

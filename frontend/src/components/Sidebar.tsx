@@ -99,6 +99,7 @@ export function Sidebar() {
               key={tag.id}
               type="button"
               onClick={() => toggleTag(tag.slug)}
+              aria-pressed={activeTags.includes(tag.slug)}
               className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
                 activeTags.includes(tag.slug)
                   ? 'bg-blue-600 text-white'

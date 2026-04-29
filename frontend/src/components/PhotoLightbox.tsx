@@ -126,7 +126,7 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
                 type="button"
                 onClick={() => setShowExif((prev) => !prev)}
                 className="rounded-full p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                aria-label="Toggle EXIF info"
+                aria-label={copy.lightbox.toggleExif}
               >
                 <Info className="h-5 w-5" />
               </button>
@@ -238,7 +238,7 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
                     onClick={() => setShowDeleteConfirm(false)}
                     className="rounded-md px-3 py-1.5 text-sm text-gray-300 hover:text-white"
                   >
-                    Cancel
+                    {copy.common.cancel}
                   </button>
                   <button
                     type="button"

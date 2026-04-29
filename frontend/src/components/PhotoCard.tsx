@@ -18,7 +18,18 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
   };
 
   return (
-    <div className="group relative cursor-pointer overflow-hidden rounded-lg" onClick={onClick}>
+    <div
+      className="group relative cursor-pointer overflow-hidden rounded-lg"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
       <img
         src={photo.urls.medium ?? photo.urls.thumbnail ?? ''}
         srcSet={

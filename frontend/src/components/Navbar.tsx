@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Upload, LogOut, ChevronDown } from 'lucide-react';
 import { useDebounce } from '../hooks';
@@ -9,10 +9,10 @@ import { copy } from '../data/copy';
 type SortOption = 'newest' | 'oldest' | 'title_asc' | 'title_desc';
 
 const sortLabels: Record<SortOption, string> = {
-  newest: 'Newest',
-  oldest: 'Oldest',
-  title_asc: 'Title A–Z',
-  title_desc: 'Title Z–A',
+  newest: copy.sort.newest,
+  oldest: copy.sort.oldest,
+  title_asc: copy.sort.titleAsc,
+  title_desc: copy.sort.titleDesc,
 };
 
 export function Navbar() {
@@ -22,8 +22,33 @@ export function Navbar() {
   const { data: meData } = useMe();
   const logoutMutation = useLogout();
   const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
 
   const currentSort = (searchParams.get('sort') as SortOption) ?? 'newest';
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    if (!sortOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sortOpen]);
+
+  // Close dropdown on Escape
+  useEffect(() => {
+    if (!sortOpen) return;
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setSortOpen(false);
+      }
+    }
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [sortOpen]);
 
   useEffect(() => {
     setSearchParams((prev) => {
@@ -78,7 +103,7 @@ export function Navbar() {
       </div>
 
       {/* Sort Dropdown */}
-      <div className="relative">
+      <div className="relative" ref={sortRef}>
         <button
           type="button"
           onClick={() => setSortOpen(!sortOpen)}
@@ -88,11 +113,12 @@ export function Navbar() {
           <ChevronDown className="h-4 w-4" />
         </button>
         {sortOpen && (
-          <div className="absolute right-0 z-10 mt-1 w-40 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+          <div role="menu" className="absolute right-0 z-10 mt-1 w-40 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
             {(Object.keys(sortLabels) as SortOption[]).map((option) => (
               <button
                 key={option}
                 type="button"
+                role="menuitem"
                 onClick={() => handleSortChange(option)}
                 className={`block w-full px-4 py-2 text-left text-sm ${
                   currentSort === option
