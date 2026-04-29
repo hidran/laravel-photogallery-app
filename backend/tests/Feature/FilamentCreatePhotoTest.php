@@ -8,12 +8,14 @@ use App\Models\Photo;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('photos_private');
+    Queue::fake();
     $this->admin = User::factory()->create(['is_admin' => true]);
     $this->actingAs($this->admin);
 });

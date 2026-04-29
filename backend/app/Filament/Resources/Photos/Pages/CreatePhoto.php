@@ -6,6 +6,8 @@ namespace App\Filament\Resources\Photos\Pages;
 
 use App\Enums\ProcessingStatus;
 use App\Filament\Resources\Photos\PhotoResource;
+use App\Jobs\ProcessPhoto;
+use App\Models\Photo;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Storage;
 
@@ -29,5 +31,12 @@ final class CreatePhoto extends CreateRecord
         $data['processing_status'] = ProcessingStatus::Pending;
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        /** @var Photo $photo */
+        $photo = $this->record;
+        ProcessPhoto::dispatch($photo);
     }
 }
