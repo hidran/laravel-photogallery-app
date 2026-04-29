@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Photo\UploadPhotosAction;
 use App\Enums\TokenAbility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Photo\IndexPhotosRequest;
+use App\Http\Requests\Photo\StorePhotosRequest;
 use App\Http\Requests\Photo\UpdatePhotoRequest;
 use App\Http\Resources\PhotoData;
 use App\Models\Photo;
@@ -21,11 +23,59 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 /**
- * DESIGN.md §6.2 — read endpoints. Mutating actions land in T032/T033/T034
- * once the upload pipeline + favorite endpoints are wired.
+ * DESIGN.md §6.2 — Photo CRUD + favorites.
  */
 final class PhotoController extends Controller
 {
+    /**
+     * POST /photos — upload 1-20 photos, dispatch ProcessPhoto batch.
+     *
+     * Returns 202 Accepted with a Location header pointing to the batch
+     * status endpoint so the client can poll for processing completion
+     * (DESIGN.md §6.2, §12.2).
+     */
+    public function store(StorePhotosRequest $request, UploadPhotosAction $action): JsonResponse
+    {
+        $this->ensureCan($request, 'create', Photo::class, TokenAbility::PhotosWrite);
+
+        $validated = $request->validated();
+
+        // Resolve tag names from existing slugs + new tag names.
+        $existingNames = ! empty($validated['tags'])
+            ? Tag::query()->whereIn('slug', $validated['tags'])->pluck('name')->all()
+            : [];
+
+        $tagNames = collect($existingNames)
+            ->merge($validated['new_tags'] ?? [])
+            ->unique()
+            ->values()
+            ->all();
+
+        $result = $action(
+            files: $validated['files'],
+            user: $request->user(),
+            albumId: $validated['album_id'] ?? null,
+            tagNames: $tagNames,
+            titles: $validated['titles'] ?? [],
+            description: $validated['description'] ?? null,
+            isFavorite: (bool) ($validated['is_favorite'] ?? false),
+        );
+
+        // Load relations for the response.
+        $photos = collect($result['photos'])->each(fn (Photo $p) => $p->load(PhotoData::WITH));
+
+        return response()->json([
+            'data' => [
+                'batch_id' => $result['batch_id'],
+                'total' => $result['total'],
+                'photos' => PhotoData::collection($photos),
+            ],
+        ], 202)->header(
+            'Location',
+            url("/api/v1/photos/batch/{$result['batch_id']}"),
+        );
+    }
+
     public function index(IndexPhotosRequest $request): AnonymousResourceCollection
     {
         $page = PhotoQuery::for(Photo::query()->with(PhotoData::WITH))
@@ -140,12 +190,15 @@ final class PhotoController extends Controller
      * same AuthorizationException either way so the universal-envelope
      * 403 fires from bootstrap/app.php.
      */
-    private function ensureCan(Request $request, string $action, Photo $photo, TokenAbility $required): void
+    /**
+     * @param  Photo|class-string<Photo>  $target
+     */
+    private function ensureCan(Request $request, string $action, Photo|string $target, TokenAbility $required): void
     {
         if (! $request->user()?->tokenCan($required->value)) {
             throw new AuthorizationException;
         }
-        if ($request->user()?->cannot($action, $photo)) {
+        if ($request->user()?->cannot($action, $target)) {
             throw new AuthorizationException;
         }
     }

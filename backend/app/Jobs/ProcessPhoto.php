@@ -9,6 +9,7 @@ use App\Contracts\ImageProcessor;
 use App\Enums\ProcessingStatus;
 use App\Events\PhotoProcessed;
 use App\Models\Photo;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Storage;
 
 final class ProcessPhoto implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
 

@@ -15,6 +15,11 @@ use App\Models\User;
  */
 final class PhotoPolicy
 {
+    public function create(User $user): bool
+    {
+        return true;
+    }
+
     public function view(User $user, Photo $photo): bool
     {
         return $photo->user_id === $user->id;

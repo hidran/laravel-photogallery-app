@@ -51,6 +51,7 @@ Route::middleware('throttle:api')->group(function () {
 
     // Mutating routes — Sanctum token + in-controller tokenCan gate.
     Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/photos', [PhotoController::class, 'store']);
         Route::patch('/photos/{photo}', [PhotoController::class, 'update']);
         Route::delete('/photos/{photo}', [PhotoController::class, 'destroy']);
         Route::put('/photos/{photo}/favorite', [PhotoController::class, 'favorite']);
@@ -61,6 +62,5 @@ Route::middleware('throttle:api')->group(function () {
         Route::delete('/albums/{album}', [AlbumController::class, 'destroy']);
     });
 
-    // POST /photos and GET /photos/batch/{batchId} are deferred to Phase 6
-    // (T029/T032/T035) — they depend on PhotoStorage + ProcessPhoto.
+    // GET /photos/batch/{batchId} is deferred to T035 (batch status endpoint).
 });
