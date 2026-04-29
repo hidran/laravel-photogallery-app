@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Contracts\ExifExtractor;
+use App\Contracts\ImageProcessor;
+use App\Contracts\PhotoStorage;
 use App\Models\Photo;
 use App\Models\User;
 use App\Observers\PhotoObserver;
+use App\Services\Imaging\InterventionImageProcessor;
+use App\Services\Imaging\PhpExifExtractor;
+use App\Services\Storage\DiskPhotoStorage;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,7 +23,9 @@ final class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(ImageProcessor::class, InterventionImageProcessor::class);
+        $this->app->bind(ExifExtractor::class, PhpExifExtractor::class);
+        $this->app->bind(PhotoStorage::class, DiskPhotoStorage::class);
     }
 
     public function boot(): void
