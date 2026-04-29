@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AlbumController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BatchController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\PhotoController;
 use App\Http\Controllers\Api\V1\TagController;
@@ -62,5 +63,8 @@ Route::middleware('throttle:api')->group(function () {
         Route::delete('/albums/{album}', [AlbumController::class, 'destroy']);
     });
 
-    // GET /photos/batch/{batchId} is deferred to T035 (batch status endpoint).
+    // Batch progress — auth required (must be batch creator).
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/photos/batch/{batchId}', [BatchController::class, 'show']);
+    });
 });
