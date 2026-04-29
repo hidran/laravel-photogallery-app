@@ -6,14 +6,10 @@ namespace App\Services\Imaging;
 
 use App\Contracts\ExifExtractor;
 use Illuminate\Http\UploadedFile;
-use Intervention\Image\ImageManager;
+use Intervention\Image\Laravel\Facades\Image;
 
 final class PhpExifExtractor implements ExifExtractor
 {
-    public function __construct(
-        private readonly ImageManager $imageManager,
-    ) {}
-
     /**
      * Extract sanitized EXIF data from a local file path.
      * Never includes GPS data. Returns [] on failure or missing EXIF.
@@ -96,7 +92,7 @@ final class PhpExifExtractor implements ExifExtractor
      */
     public function stripGps(UploadedFile $file): UploadedFile
     {
-        $image = $this->imageManager->decodePath($file->getPathname());
+        $image = Image::read($file->getPathname());
 
         // Re-encode the image which strips all EXIF (including GPS)
         $extension = strtolower($file->getClientOriginalExtension()) ?: 'jpg';
