@@ -92,7 +92,7 @@ final class PhpExifExtractor implements ExifExtractor
      */
     public function stripGps(UploadedFile $file): UploadedFile
     {
-        $image = Image::read($file->getPathname());
+        $image = Image::decodePath($file->getPathname());
 
         // Re-encode the image which strips all EXIF (including GPS)
         $extension = strtolower($file->getClientOriginalExtension()) ?: 'jpg';
