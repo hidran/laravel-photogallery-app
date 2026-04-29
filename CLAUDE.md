@@ -102,6 +102,27 @@ npm install -D @tailwindcss/vite tailwindcss@^4 \
 
 ---
 
+## Running the dev environment
+
+From the `backend/` directory:
+
+```bash
+# Start all services (server + queue worker + logs + Vite):
+composer run dev
+
+# Or run individually:
+php artisan serve              # API server at :8000
+php artisan queue:listen       # Process queued jobs (photo resizing, EXIF extraction)
+php artisan pail               # Stream logs
+cd ../frontend && npm run dev  # Vite dev server at :5173
+```
+
+**Important:** The queue worker must be running for photo uploads to be processed. Without it, photos stay in `pending` status indefinitely. `composer run dev` starts the worker automatically.
+
+For one-off job processing: `php artisan queue:work --stop-when-empty`
+
+---
+
 ## Critical rules
 
 These are **non-negotiable**. Violations require an explicit user override.
