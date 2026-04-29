@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Search, Upload, LogOut, ChevronDown } from 'lucide-react';
 import { useDebounce } from '../hooks';
 import { useMe, useLogout } from '../hooks/useAuth';
+import { getToken } from '../api/client';
 import { copy } from '../data/copy';
 
 type SortOption = 'newest' | 'oldest' | 'title_asc' | 'title_desc';
@@ -57,6 +58,7 @@ export function Navbar() {
     logoutMutation.mutate();
   }
 
+  const isAuthenticated = getToken() !== null;
   const userName = meData?.data.user.name ?? '';
 
   return (
@@ -105,28 +107,39 @@ export function Navbar() {
         )}
       </div>
 
-      {/* Upload Button */}
-      <button
-        type="button"
-        onClick={handleUploadClick}
-        className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-      >
-        <Upload className="h-4 w-4" />
-        {copy.upload.title}
-      </button>
+      {isAuthenticated ? (
+        <>
+          {/* Upload Button — auth only */}
+          <button
+            type="button"
+            onClick={handleUploadClick}
+            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            <Upload className="h-4 w-4" />
+            {copy.upload.title}
+          </button>
 
-      {/* Auth Menu */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-700">{userName}</span>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+          {/* Auth Menu */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-700">{userName}</span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            >
+              <LogOut className="h-4 w-4" />
+              {copy.auth.logout}
+            </button>
+          </div>
+        </>
+      ) : (
+        <a
+          href="/login"
+          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          <LogOut className="h-4 w-4" />
-          {copy.auth.logout}
-        </button>
-      </div>
+          {copy.auth.login}
+        </a>
+      )}
     </header>
   );
 }
