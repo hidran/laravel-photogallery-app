@@ -42,18 +42,18 @@ it('generates three variant images and updates the photo model', function (): vo
     // Assert: photo model updated with variant paths
     $photo->refresh();
 
-    expect($photo->thumbnail_path)->toBe('thumbnails/test.jpg');
-    expect($photo->medium_path)->toBe('medium/test.jpg');
-    expect($photo->large_path)->toBe('large/test.jpg');
+    expect($photo->thumbnail_path)->toBe("thumbnail/{$photo->id}.jpg");
+    expect($photo->medium_path)->toBe("medium/{$photo->id}.jpg");
+    expect($photo->large_path)->toBe("large/{$photo->id}.jpg");
 
     // Assert: width/height set (no upscaling — original is 200x100)
     expect($photo->width)->toBe(200);
     expect($photo->height)->toBe(100);
 
     // Assert: files exist on the public photos disk
-    Storage::disk('photos')->assertExists('thumbnails/test.jpg');
-    Storage::disk('photos')->assertExists('medium/test.jpg');
-    Storage::disk('photos')->assertExists('large/test.jpg');
+    Storage::disk('photos')->assertExists("thumbnail/{$photo->id}.jpg");
+    Storage::disk('photos')->assertExists("medium/{$photo->id}.jpg");
+    Storage::disk('photos')->assertExists("large/{$photo->id}.jpg");
 });
 
 it('does not upscale images smaller than variant width', function (): void {
@@ -84,7 +84,7 @@ it('does not upscale images smaller than variant width', function (): void {
     expect($photo->height)->toBe(75);
 
     // All variant files should still be created
-    Storage::disk('photos')->assertExists('thumbnails/small.jpg');
-    Storage::disk('photos')->assertExists('medium/small.jpg');
-    Storage::disk('photos')->assertExists('large/small.jpg');
+    Storage::disk('photos')->assertExists("thumbnail/{$photo->id}.jpg");
+    Storage::disk('photos')->assertExists("medium/{$photo->id}.jpg");
+    Storage::disk('photos')->assertExists("large/{$photo->id}.jpg");
 });

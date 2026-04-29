@@ -50,7 +50,7 @@ final class UploadPhotosAction
         ?string $description = null,
         bool $isFavorite = false,
     ): array {
-        return DB::transaction(function () use ($files, $user, $albumId, $tagNames, $titles, $description, $isFavorite): array {
+        [$photos, $jobs] = DB::transaction(function () use ($files, $user, $albumId, $tagNames, $titles, $description, $isFavorite): array {
             $photos = [];
             $jobs = [];
 
@@ -67,7 +67,7 @@ final class UploadPhotosAction
                     'album_id' => $albumId,
                     'title' => $title,
                     'description' => $description,
-                    'filename' => $file->getClientOriginalName(),
+                    'filename' => basename($file->getClientOriginalName()),
                     'original_path' => $path,
                     'file_size' => $file->getSize(),
                     'mime_type' => $file->getMimeType(),
@@ -84,13 +84,15 @@ final class UploadPhotosAction
                 $jobs[] = new ProcessPhoto($photo);
             }
 
-            $batch = Bus::batch($jobs)->dispatch();
-
-            return [
-                'batch_id' => $batch->id,
-                'total' => count($photos),
-                'photos' => $photos,
-            ];
+            return [$photos, $jobs];
         });
+
+        $batch = Bus::batch($jobs)->dispatch();
+
+        return [
+            'batch_id' => $batch->id,
+            'total' => count($photos),
+            'photos' => $photos,
+        ];
     }
 }

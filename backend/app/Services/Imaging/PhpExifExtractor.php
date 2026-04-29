@@ -95,16 +95,20 @@ final class PhpExifExtractor implements ExifExtractor
         $image = Image::decodePath($file->getPathname());
 
         // Re-encode the image which strips all EXIF (including GPS)
-        $extension = strtolower($file->getClientOriginalExtension()) ?: 'jpg';
+        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+        $ext = strtolower($file->getClientOriginalExtension());
+        $extension = in_array($ext, $allowed, true) ? $ext : 'jpg';
         $encoded = $image->encodeUsingFileExtension($extension);
 
         $tempPath = tempnam(sys_get_temp_dir(), 'exif_strip_');
         file_put_contents($tempPath, (string) $encoded);
 
+        register_shutdown_function(static fn () => @unlink($tempPath));
+
         return new UploadedFile(
             path: $tempPath,
             originalName: $file->getClientOriginalName(),
-            mimeType: $file->getClientMimeType(),
+            mimeType: $file->getMimeType(),
             error: UPLOAD_ERR_OK,
             test: true,
         );

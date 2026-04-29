@@ -47,9 +47,11 @@ final class ProcessPhoto implements ShouldQueue
 
     public function failed(\Throwable $e): void
     {
+        report($e);
+
         $this->photo->update([
             'processing_status' => ProcessingStatus::Failed,
-            'processing_error' => $e->getMessage(),
+            'processing_error' => 'Processing failed. Please try again or contact support.',
         ]);
     }
 }

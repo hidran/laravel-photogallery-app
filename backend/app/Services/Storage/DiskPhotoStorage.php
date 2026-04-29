@@ -19,7 +19,9 @@ final class DiskPhotoStorage implements PhotoStorage
      */
     public function storeOriginal(UploadedFile $file, string $photoId): string
     {
-        $extension = $file->getClientOriginalExtension();
+        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+        $ext = strtolower($file->getClientOriginalExtension());
+        $extension = in_array($ext, $allowed, true) ? $ext : 'jpg';
         $relativePath = "originals/{$photoId}.{$extension}";
 
         Storage::disk('photos_private')->put(
