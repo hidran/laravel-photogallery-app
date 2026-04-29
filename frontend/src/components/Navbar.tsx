@@ -84,7 +84,7 @@ export function Navbar() {
   }
 
   const isAuthenticated = getToken() !== null;
-  const userName = meData?.data.user.name ?? '';
+  const userName = meData?.data?.name ?? '';
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-4 border-b border-gray-200 bg-white px-4 shadow-sm">

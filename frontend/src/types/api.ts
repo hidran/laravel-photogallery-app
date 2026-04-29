@@ -21,18 +21,24 @@ export interface ApiError {
   errors?: Record<string, string[]>;
 }
 
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  is_admin: boolean;
+  created_at: string;
+}
+
 export interface AuthResponse {
   data: {
     token: string;
     expires_at: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      is_admin: boolean;
-      created_at: string;
-    };
+    user: AuthUser;
   };
+}
+
+export interface MeResponse {
+  data: AuthUser;
 }
 
 export interface BatchPhoto {

@@ -1,4 +1,4 @@
-import type { AuthResponse } from '../types';
+import type { AuthResponse, MeResponse } from '../types';
 import { apiClient, setToken, clearToken } from './client';
 
 export interface RegisterPayload {
@@ -30,7 +30,7 @@ export async function logout(): Promise<void> {
   clearToken();
 }
 
-export async function me(): Promise<AuthResponse> {
-  const { data } = await apiClient.get<AuthResponse>('/auth/me');
+export async function me(): Promise<MeResponse> {
+  const { data } = await apiClient.get<MeResponse>('/auth/me');
   return data;
 }
