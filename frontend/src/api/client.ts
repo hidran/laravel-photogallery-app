@@ -22,7 +22,7 @@ export function getToken(): string | null {
 }
 
 export const apiClient = axios.create({
-  baseURL: '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api/v1',
 });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
