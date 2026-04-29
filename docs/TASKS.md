@@ -367,7 +367,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(backend): TagAssigner service`
 
 ### T029 — `App\Actions\Photo\UploadPhotosAction`
-- **Status:** [-] deferred to Phase 6 (needs PhotoStorage interface from T072)
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T024, T026, T028, T032 (PhotoStorage from Phase 6, but use a stub here)
 - **Parallel with:** —
@@ -402,7 +402,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): GET /photos and /photos/{id}`
 
 ### T032 — `PhotoController@store` (delegates to `UploadPhotosAction`)
-- **Status:** [-] deferred to Phase 6 (depends on T029)
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T029
 - **Parallel with:** —
@@ -884,7 +884,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 ---
 
 ### T072 — `App\Contracts\ImageProcessor` + `ExifExtractor` + `PhotoStorage` interfaces
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T073
@@ -894,7 +894,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(backend): service contracts (ImageProcessor, ExifExtractor, PhotoStorage)`
 
 ### T073 — `App\Services\Storage\DiskPhotoStorage` (concrete)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T072, T006
 - **Parallel with:** T074, T075
@@ -907,7 +907,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(backend): DiskPhotoStorage implementation`
 
 ### T074 — `App\Services\Imaging\PhpExifExtractor`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T072
 - **Parallel with:** T073, T075
@@ -919,7 +919,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(backend): PhpExifExtractor with GPS stripping`
 
 ### T075 — `App\Services\Imaging\InterventionImageProcessor`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T072
 - **Parallel with:** T073, T074
@@ -931,7 +931,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(backend): InterventionImageProcessor`
 
 ### T076 — Bind contracts in `AppServiceProvider`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T073, T074, T075
 - **Parallel with:** —
@@ -942,7 +942,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `chore(backend): bind service contracts`
 
 ### T077 — `App\Jobs\ProcessPhoto` job
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T076
 - **Parallel with:** —
@@ -955,7 +955,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(pipeline): ProcessPhoto job`
 
 ### T078 — Domain events: `PhotoUploaded`, `PhotoProcessed`, `PhotoDeleted`, `AlbumDeleted`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T077
@@ -966,7 +966,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(backend): domain events`
 
 ### T079 — Wire `UploadPhotosAction` to dispatch real `ProcessPhoto` jobs
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T029, T077
 - **Parallel with:** —
@@ -977,7 +977,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(pipeline): wire UploadPhotosAction to ProcessPhoto`
 
 ### T080 — Phase 6 review + E2E processing test
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T077–T079
 - **Acceptance:**
