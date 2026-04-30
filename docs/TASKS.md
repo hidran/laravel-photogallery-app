@@ -987,6 +987,91 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 
 ---
 
+# Phase 6.5 — Favorites refactor (boolean → many-to-many pivot)
+
+Refactors favorites from a `is_favorite` boolean column on `photos` to a `favorites` pivot table (`users ↔ photos`). Any authenticated user can favorite any photo.
+
+---
+
+### T090 — Migration: create `favorites` pivot table + drop `is_favorite` column
+- **Status:** [ ]
+- **Owner:** backend-dev
+- **Depends on:** T080
+- **Parallel with:** —
+- **Reads:** DESIGN.md §4.6
+- **Acceptance:**
+  - `favorites` table with `user_id` (CHAR(36) FK), `photo_id` (CHAR(36) FK), `created_at`.
+  - Composite primary key (`user_id`, `photo_id`).
+  - Data migration: existing `photos.is_favorite=true` rows get a `favorites` row for the photo owner.
+  - `is_favorite` column dropped from `photos`.
+  - `is_favorite` + `created_at` composite index removed from `photos`.
+- **Commit:** `feat(db): favorites pivot table, drop is_favorite column`
+
+### T091 — Update Photo + User models for favorites relationship
+- **Status:** [ ]
+- **Owner:** backend-dev
+- **Depends on:** T090
+- **Parallel with:** T092
+- **Reads:** DESIGN.md §4.6, §5
+- **Acceptance:**
+  - `Photo::favoritedBy()` → `belongsToMany(User::class, 'favorites')`.
+  - `User::favoritePhotos()` → `belongsToMany(Photo::class, 'favorites')`.
+  - Remove `is_favorite` from `Photo::$fillable` and `Photo::casts()`.
+  - `PhotoFactory` no longer sets `is_favorite`.
+- **Commit:** `refactor(models): favorites relationship via pivot`
+
+### T092 — Update PhotoController favorite/unfavorite + PhotoData resource
+- **Status:** [ ]
+- **Owner:** backend-dev
+- **Depends on:** T091
+- **Parallel with:** T093
+- **Reads:** DESIGN.md §6.2 (favorite endpoints), §6.6 (PhotoData shape)
+- **Acceptance:**
+  - `PUT /photos/{id}/favorite` → `$request->user()->favoritePhotos()->syncWithoutDetaching([$photo->id])`. No ownership check — any authenticated user can favorite.
+  - `DELETE /photos/{id}/favorite` → `$request->user()->favoritePhotos()->detach($photo->id)`.
+  - `PhotoData` returns `is_favorite` computed from pivot: `$this->favoritedBy->contains(auth()->user())` or equivalent.
+  - `PhotoData` returns `favorites_count` via `withCount('favoritedBy')`.
+  - `GET /photos?is_favorite=1` filters to current user's favorites via `whereHas('favoritedBy', fn ($q) => $q->where('user_id', auth()->id()))`.
+- **Commit:** `refactor(api): favorites via pivot table`
+
+### T093 — Update Filament PhotoResource for favorites pivot
+- **Status:** [ ]
+- **Owner:** backend-dev
+- **Depends on:** T091
+- **Parallel with:** T092
+- **Reads:** DESIGN.md §7.1
+- **Acceptance:**
+  - `ToggleColumn` for `is_favorite` replaced with a `favorites_count` TextColumn (display-only in admin).
+  - `TernaryFilter` for `is_favorite` replaced with a filter on `favoritedBy` relationship count.
+  - Bulk `ToggleFavorite` action removed (no longer makes sense — favorites are per-user).
+- **Commit:** `refactor(filament): favorites as pivot in PhotoResource`
+
+### T094 — Update frontend hooks + components for favorites pivot
+- **Status:** [ ]
+- **Owner:** frontend-dev
+- **Depends on:** T092
+- **Parallel with:** —
+- **Reads:** DESIGN.md §6.6, §8.5
+- **Acceptance:**
+  - `Photo` type: `is_favorite: boolean` (now per-user) + `favorites_count: number`.
+  - `useToggleFavorite` optimistic update flips `is_favorite` + adjusts `favorites_count`.
+  - FavoritesPage shows only the current user's favorites.
+  - PhotoCard shows `favorites_count` badge on heart icon.
+- **Commit:** `refactor(frontend): favorites via pivot`
+
+### T095 — Update tests for favorites refactor
+- **Status:** [ ]
+- **Owner:** backend-dev
+- **Depends on:** T092, T093
+- **Parallel with:** —
+- **Acceptance:**
+  - `PhotoFavoriteTest`: user A favorites photo owned by user B → 204; user A's favorites list includes it; user B's does not.
+  - `PhotoControllerIndexTest`: `is_favorite=1` returns only requesting user's favorites.
+  - Filament smoke tests still pass.
+- **Commit:** `test: favorites pivot coverage`
+
+---
+
 # Phase 7 — Filament queue monitoring (widgets, reprocess actions, storage page)
 
 Depends on Phase 3 + Phase 6.

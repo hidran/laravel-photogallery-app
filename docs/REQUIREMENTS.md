@@ -55,7 +55,7 @@ A staff user with elevated access to the admin panel. Manages content across all
 - **US-19.** As a member, I want only my own photos and albums to appear when I edit or delete; other members' content is read-only to me.
 
 ### Organization (Member)
-- **US-20.** As a member, I want to mark any photo as a favorite with one click and see it in a "Favorites" view.
+- **US-20.** As a member, I want to mark any photo (mine or others') as a favorite with one click and see my favorites in a "Favorites" view.
 - **US-21.** As a member, I want to create albums to group related photos.
 - **US-22.** As a member, I want to set an album cover photo.
 - **US-23.** As a member, I want to add multiple tags per photo, including new tags I create on the fly.
@@ -144,10 +144,11 @@ A staff user with elevated access to the admin panel. Manages content across all
 - F7.5 Tags cannot be deleted via the API (admin-only via the panel)
 
 ### F8 — Favorites
-- F8.1 Per-member favorites are not in v1 — favorite is a property of the photo, owned-by-photo-owner
+- F8.1 Per-member favorites: any authenticated user can favorite any photo (many-to-many `users ↔ photos` via `favorites` pivot table)
 - F8.2 One click to mark / unmark
 - F8.3 Optimistic UI (heart fills before the request returns)
-- F8.4 Dedicated "Favorites" view in the sidebar
+- F8.4 Dedicated "Favorites" view in the sidebar (shows the current user's favorites only)
+- F8.5 Favorite count visible per photo (how many users favorited it)
 
 ### F9 — Authentication
 - F9.1 Email + password registration
@@ -225,8 +226,13 @@ Each feature ships with verifiable conditions. Pull these into Pest, Vitest, and
 - AC-F7-3: Creating a second tag named "Sunset Photography" produces a name collision error (admin-only override).
 
 ### F8 — Favorites
-- AC-F8-1: `PUT /photos/{id}/favorite` is idempotent: two consecutive calls both return 204 and leave `is_favorite=true`.
-- AC-F8-2: Marking a photo as favorite from the gallery flips the heart icon before the network round trip completes (optimistic).
+- AC-F8-1: `PUT /photos/{id}/favorite` is idempotent: two consecutive calls both return 204 and insert a single row in the `favorites` pivot table for the current user + photo.
+- AC-F8-2: `DELETE /photos/{id}/favorite` is idempotent: two consecutive calls both return 204.
+- AC-F8-3: Any authenticated user can favorite any photo, not just their own.
+- AC-F8-4: Marking a photo as favorite from the gallery flips the heart icon before the network round trip completes (optimistic).
+- AC-F8-5: `GET /photos?is_favorite=1` returns only photos the current user has favorited.
+- AC-F8-6: `is_favorite` in photo responses is relative to the requesting user (true if that user favorited it, false otherwise).
+- AC-F8-7: `favorites_count` in photo responses shows total favorites across all users.
 
 ### F9 — Authentication
 - AC-F9-1: A registered member's token is valid for exactly 1440 minutes (24 hours) from issuance.

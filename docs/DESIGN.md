@@ -419,7 +419,7 @@ Slug auto-generated from `name` in the model's `booted()` hook via `Str::slug`. 
 | height | INT UNSIGNED | NULL | NULL | filled after processing |
 | file_size | BIGINT UNSIGNED | NOT NULL | — | bytes |
 | mime_type | VARCHAR(100) | NOT NULL | — | — |
-| is_favorite | TINYINT(1) | NOT NULL | `0` | — |
+| ~~is_favorite~~ | — | — | — | **REMOVED** — replaced by `favorites` pivot table (§4.7) |
 | exif | JSON | NULL | NULL | sanitized — no GPS |
 | processing_status | ENUM | NOT NULL | `'pending'` | `pending` / `processing` / `completed` / `failed` |
 | processing_attempts | TINYINT UNSIGNED | NOT NULL | `0` | — |
@@ -431,7 +431,7 @@ Slug auto-generated from `name` in the model's `booted()` hook via `Str::slug`. 
 - PRIMARY (`id`)
 - INDEX (`user_id`)
 - INDEX (`album_id`, `created_at`) — covers "newest in album"
-- INDEX (`is_favorite`, `created_at`) — covers favorites-first sort
+- ~~INDEX (`is_favorite`, `created_at`)~~ — **REMOVED** (favorites now in pivot table)
 - INDEX (`processing_status`, `created_at`) — covers admin queue dashboard
 - INDEX (`created_at`) — default newest sort across all photos
 - FULLTEXT (`title`, `description`) `photos_search_idx` — for `MATCH ... AGAINST` search
@@ -448,11 +448,25 @@ Slug auto-generated from `name` in the model's `booted()` hook via `Str::slug`. 
 - **Composite PRIMARY KEY** (`photo_id`, `tag_id`)
 - INDEX (`tag_id`)
 
-### 4.6 `personal_access_tokens` (Sanctum)
+### 4.6 `favorites` (pivot — users ↔ photos)
+
+| Column | Type | Null | Default | Key / Constraint |
+|---|---|---|---|---|
+| user_id | CHAR(36) | NOT NULL | — | FK → `users(id)` · ON DELETE **CASCADE** · ON UPDATE **CASCADE** |
+| photo_id | CHAR(36) | NOT NULL | — | FK → `photos(id)` · ON DELETE **CASCADE** · ON UPDATE **CASCADE** |
+| created_at | TIMESTAMP | NOT NULL | `CURRENT_TIMESTAMP` | when favorited |
+
+**Keys / Indexes:**
+- **Composite PRIMARY KEY** (`user_id`, `photo_id`)
+- INDEX (`photo_id`) — for counting favorites per photo
+
+Any authenticated user can favorite any photo. `is_favorite` in API responses is computed per-requesting-user via this pivot. `favorites_count` is a `withCount('favoritedBy')`.
+
+### 4.7 `personal_access_tokens` (Sanctum)
 
 Standard Sanctum table **with one modification**: `tokenable_id` must be `CHAR(36)` (not `UNSIGNED BIGINT`) to match `users.id`.
 
-### 4.7 `jobs` / `failed_jobs` / `job_batches`
+### 4.8 `jobs` / `failed_jobs` / `job_batches`
 
 Standard Laravel queue tables. Read by the Filament `QueueMonitor` widget. In production with SQS, `jobs` is unused; only `failed_jobs` and `job_batches` matter.
 
@@ -602,7 +616,7 @@ public function isAdmin(): bool              // attribute getter from is_admin c
   | `album_id` | UUID\|null | must exist + owned; null unassigns |
   | `tags[]` | string[] (slugs) | full replacement |
   | `new_tags[]` | string[] (names) | created if missing |
-  | `is_favorite` | boolean | true/false |
+  | ~~`is_favorite`~~ | — | **REMOVED** — use `PUT/DELETE /photos/{id}/favorite` instead |
 
 - Wrapped in `DB::transaction`.
 - **200 OK:** `{ "data": PhotoData }`
@@ -614,18 +628,18 @@ public function isAdmin(): bool              // attribute getter from is_admin c
 - **Errors:** 403, 404
 
 #### `PUT /photos/{photo}/favorite`
-Mark as favorite. **Idempotent.**
-- **Auth:** token + ownership
+Mark as favorite for the requesting user. **Idempotent.** Any authenticated user can favorite any photo.
+- **Auth:** token (any authenticated user — no ownership required)
 - **Body:** empty
-- **204 No Content**
-- **Errors:** 403, 404
+- **204 No Content** — inserts row in `favorites` pivot if not already present
+- **Errors:** 404
 
 #### `DELETE /photos/{photo}/favorite`
-Unmark. **Idempotent.**
-- **Auth:** token + ownership
+Unmark for the requesting user. **Idempotent.**
+- **Auth:** token (any authenticated user — no ownership required)
 - **Body:** empty
-- **204 No Content**
-- **Errors:** 403, 404
+- **204 No Content** — removes row from `favorites` pivot if present
+- **Errors:** 404
 
 #### `GET /photos/batch/{batchId}`
 Poll batch progress. **One** polling loop covers everything (no per-photo polling needed).
@@ -706,7 +720,8 @@ Tag mutations are admin-only (Filament panel). No `POST /tags` / `PATCH /tags/{i
   },
   "width": 4000, "height": 3000,
   "file_size": 2500000, "mime_type": "image/jpeg",
-  "is_favorite": true,
+  "is_favorite": true,       // relative to the requesting user (from favorites pivot)
+  "favorites_count": 12,     // total across all users
   "exif": { "camera": "...", "iso": 400, "aperture": "f/2.8", "shutter": "1/250", "focal_length": "85mm", "taken_at": "..." },
   "processing_status": "completed", "processing_error": null,
   "album": { "id": "uuid", "name": "Travel" },
