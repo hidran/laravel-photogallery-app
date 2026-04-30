@@ -6,7 +6,7 @@ export interface PhotosIndexParams {
   search?: string | undefined;
   tags?: string[] | undefined;
   album_id?: string | undefined;
-  is_favorite?: boolean | undefined;
+  favorites?: boolean | undefined;
   sort?: string | undefined;
   order?: 'asc' | 'desc' | undefined;
 }

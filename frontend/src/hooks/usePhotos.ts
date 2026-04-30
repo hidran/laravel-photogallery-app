@@ -69,6 +69,7 @@ export function useToggleFavorite() {
 
       const previousPhoto = queryClient.getQueryData<SingleResponse<Photo>>(['photo', id]);
 
+      // Update single-photo cache
       queryClient.setQueryData<SingleResponse<Photo>>(['photo', id], (old) => {
         if (!old) return old;
         return {
@@ -81,12 +82,37 @@ export function useToggleFavorite() {
         };
       });
 
+      // Update all infinite list caches (photos list)
+      queryClient.setQueriesData<{ pages: PaginatedResponse<Photo>[]; pageParams: unknown[] }>(
+        { queryKey: ['photos'] },
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((photo) =>
+                photo.id === id
+                  ? {
+                      ...photo,
+                      is_favorite: !isFavorite,
+                      favorites_count: photo.favorites_count + (isFavorite ? -1 : 1),
+                    }
+                  : photo,
+              ),
+            })),
+          };
+        },
+      );
+
       return { previousPhoto };
     },
     onError: (_err, { id }, context) => {
       if (context?.previousPhoto) {
         queryClient.setQueryData(['photo', id], context.previousPhoto);
       }
+      // Refetch lists to restore correct state
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
     },
     onSettled: (_data, _error, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['photos'] });

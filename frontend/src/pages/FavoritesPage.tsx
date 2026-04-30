@@ -8,7 +8,7 @@ import type { Photo } from '../types';
 export function FavoritesPage() {
   const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
 
-  const { data, fetchNextPage, hasNextPage, isLoading } = usePhotos({ is_favorite: true });
+  const { data, fetchNextPage, hasNextPage, isLoading } = usePhotos({ favorites: true });
 
   const allPhotos = useMemo(
     () => data?.pages.flatMap((page) => page.data) ?? [],
