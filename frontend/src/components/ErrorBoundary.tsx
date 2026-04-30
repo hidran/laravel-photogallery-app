@@ -22,7 +22,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return { hasError: true, error };
   }
 
-  override componentDidCatch(_error: Error, _info: ErrorInfo): void {
+  override componentDidCatch(error: Error, info: ErrorInfo): void {
+    void error;
+    void info;
     toast.error(copy.errors.generic);
   }
 

@@ -32,7 +32,9 @@ export function ExifPanel({ exif }: ExifPanelProps) {
 
   return (
     <div className="flex flex-col gap-3 p-4">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-300">{copy.exif.title}</h3>
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-300">
+        {copy.exif.title}
+      </h3>
       <dl className="flex flex-col gap-2">
         {rows.map((row) => (
           <div key={row.label} className="flex flex-col gap-0.5">

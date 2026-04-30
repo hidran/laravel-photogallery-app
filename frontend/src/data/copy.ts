@@ -5,7 +5,10 @@ export const copy = {
 
   common: {
     cancel: 'Cancel',
+    save: 'Save',
     tryAgain: 'Try again',
+    delete: 'Delete',
+    confirm: 'Confirm',
   },
 
   nav: {
@@ -35,6 +38,12 @@ export const copy = {
     emptyAlbum: 'This album is empty. Add photos to get started.',
     emptySearch: 'No photos match your search.',
     loading: 'Loading photos...',
+    selectMode: 'Select',
+    cancelSelect: 'Cancel',
+    selectedCount: (n: number) => `${n} selected`,
+    deleteSelected: 'Delete selected',
+    deleteSelectedConfirm: (n: number) =>
+      `Are you sure you want to delete ${n} photo${n > 1 ? 's' : ''}? This cannot be undone.`,
   },
 
   upload: {
@@ -57,6 +66,7 @@ export const copy = {
     delete: 'Delete photo',
     viewFullSize: 'View full size',
     toggleExif: 'Toggle EXIF info',
+    newTagPlaceholder: 'New tag name...',
   },
 
   exif: {
@@ -75,6 +85,7 @@ export const copy = {
     oldest: 'Oldest',
     titleAsc: 'Title A\u2013Z',
     titleDesc: 'Title Z\u2013A',
+    favoritesFirst: 'Favorites first',
   },
 
   errors: {
@@ -106,14 +117,22 @@ export const copy = {
     deleteConfirm: 'Are you sure you want to delete this album? Photos will not be deleted.',
     nameLabel: 'Album name',
     descriptionLabel: 'Description',
-    emptyState: 'No albums yet. Create one to organize your photos.',
+    descriptionPlaceholder: 'Add a description...',
+    emptyState: 'No albums yet.',
   },
 
   tags: {
     title: 'Tags',
     add: 'Add tag',
     remove: 'Remove tag',
-    placeholder: 'Type a tag name...',
+    placeholder: 'New tag...',
+    createHint: 'Press Enter to create',
+  },
+
+  stats: {
+    photos: 'Photos',
+    albums: 'Albums',
+    tags: 'Tags',
   },
 
   search: {

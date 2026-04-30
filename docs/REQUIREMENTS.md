@@ -43,7 +43,7 @@ A staff user with elevated access to the admin panel. Manages content across all
 - **US-09.** As a visitor, I want to navigate to the next/previous photo using arrow keys or on-screen arrows.
 - **US-10.** As a visitor, I want to share a link to a specific photo (URL contains the photo id).
 - **US-11.** As a visitor, I want to dismiss the lightbox with the Escape key.
-- **US-12.** As a visitor on a phone, I want the gallery to render as 2 columns; on a tablet 3; on a desktop 4.
+- **US-12.** As a visitor on a phone, I want the gallery to render as 2 columns; on a tablet 3; on a desktop 4–5.
 
 ### Upload & ownership (Member)
 - **US-13.** As a member, I want to drag and drop photos onto a target zone to upload them.
@@ -63,7 +63,9 @@ A staff user with elevated access to the admin panel. Manages content across all
 
 ### Editing (Member)
 - **US-25.** As a member, I want to edit the title, description, tags, and album of a photo from inside the lightbox without opening another page.
-- **US-26.** As a member, I want to delete a photo from the lightbox; the system should ask me to confirm.
+- **US-25a.** As a member, I want to create new tags inline while editing a photo in the lightbox (type name, press Enter).
+- **US-26.** As a member, I want to delete a photo from the lightbox; the system should ask me to confirm via a styled dialog (not a browser alert).
+- **US-26a.** As a member, I want to select multiple photos in the gallery and delete them in bulk via a styled confirmation dialog.
 - **US-27.** As a member, I want my private original photo (full resolution + full EXIF) to remain accessible only to me — never to other visitors, even with a direct URL.
 
 ### Keyboard power-user (Member + Administrator)
@@ -71,7 +73,7 @@ A staff user with elevated access to the admin panel. Manages content across all
 - **US-29.** As a power user, I want `←`/`→` to navigate the lightbox, `Escape` to close, `F` to favorite, `Delete` to delete.
 
 ### Authentication (Member + Administrator)
-- **US-30.** As a member, I want to register with email, name, and password.
+- **US-30.** As a member, I want to register with email, name, and password (accessible via `/login` or `/register`).
 - **US-31.** As a member, I want to log in and have my session persist for 24 hours of inactivity.
 - **US-32.** As a member, I want to log out and have my session immediately revoked across the application.
 - **US-33.** As an administrator, I want to log into a separate admin panel with a different URL.
@@ -90,28 +92,30 @@ A staff user with elevated access to the admin panel. Manages content across all
 ## 4. Feature catalog (grouped)
 
 ### F1 — Public gallery
-- F1.1 Masonry grid (responsive: 2/3/4 columns)
+- F1.1 Masonry grid (responsive: 2/3/4/5 columns)
 - F1.2 Lazy-loaded thumbnails with no layout shift
 - F1.3 Infinite scroll (cursor-based; no page numbers)
-- F1.4 Per-photo hover overlay: title + favorite indicator
-- F1.5 Empty state with call-to-action when no photos match
+- F1.4 Per-photo hover overlay: title, album name, favorite indicator (Pinterest-style slide-up)
+- F1.5 Empty state with icon and "Upload Photos" CTA button when no photos match
+- F1.6 Multi-select mode: enter select mode, check photos, bulk delete with custom confirmation dialog
+- F1.7 Stats bar in sidebar: photo, album, and tag counts
 
 ### F2 — Search & filtering
 - F2.1 Free-text search across title and description (debounced 300 ms)
 - F2.2 Tag filtering with AND logic (photo must have every selected tag)
 - F2.3 Album filtering
 - F2.4 Favorites-only filter
-- F2.5 Sort: newest / oldest / alphabetical / favorites-first
-- F2.6 Filter state reflected in the URL (shareable, back-button-friendly)
+- F2.5 Sort: newest / oldest / alphabetical / favorites-first (maps to backend `sort` + `order` params)
+- F2.6 Filter state reflected in the URL (search, tags, sort, order — shareable, back-button-friendly)
 
 ### F3 — Lightbox
 - F3.1 Fullscreen overlay with darkened background
 - F3.2 Large rendition of the photo with auto-prefetch of next/previous
-- F3.3 Inline-editable title, description, tags (owner only)
+- F3.3 Inline-editable title, description, album, tags (owner only) — slide-up edit panel with tag creation
 - F3.4 EXIF panel: camera, ISO, aperture, shutter, focal length, taken-at (no GPS)
-- F3.5 "View full size" link (owner only — produces a time-limited signed URL)
-- F3.6 Delete with confirmation
-- F3.7 Linkable via URL (?photo=...)
+- F3.5 "View full size" link (owner only — server omits `urls.original` for non-owners)
+- F3.6 Delete with custom confirmation dialog (owner only)
+- F3.7 Linkable via URL (?photo=...) — opens on load, updates on navigation, clears on close
 - F3.8 Closes on Escape, backdrop click, or URL change
 
 ### F4 — Upload
@@ -119,7 +123,7 @@ A staff user with elevated access to the admin panel. Manages content across all
 - F4.2 Client-side validation: MIME (JPG/PNG/WebP), size (≤ 10 MB)
 - F4.3 Up to 20 files per submission
 - F4.4 Per-file progress bar
-- F4.5 Set album, tags, title at upload time (or accept defaults)
+- F4.5 Set album and tags at upload time via UploadModal form (or accept defaults)
 - F4.6 Upload returns immediately; processing happens in the background
 
 ### F5 — Processing pipeline
@@ -130,18 +134,20 @@ A staff user with elevated access to the admin panel. Manages content across all
 - F5.5 Members can see "processing failed" overlays on their own photos and request reprocessing (admin action)
 
 ### F6 — Albums
-- F6.1 Member creates / renames / deletes own albums
+- F6.1 Member creates (with description) / renames / deletes own albums — all from sidebar UI
 - F6.2 Album has unique name per member (two members can both have "Travel")
 - F6.3 Album can have a cover photo
-- F6.4 Deleting an album does NOT delete its photos (they become unassigned)
-- F6.5 Photo-count visible on each album
+- F6.4 Deleting an album does NOT delete its photos (they become unassigned) — custom confirmation dialog
+- F6.5 Photo-count visible on each album in sidebar
+- F6.6 Album description editable inline on AlbumPage (owner only)
 
 ### F7 — Tags
 - F7.1 Tags are global (shared across members)
-- F7.2 Tags are created implicitly when a member uses a new name
+- F7.2 Tags are created implicitly when a member uses a new name — via lightbox edit panel or sidebar tag input
 - F7.3 Slug auto-generated from the name; uniqueness collisions resolved with `-2`, `-3`, …
 - F7.4 Photo-count visible per tag
 - F7.5 Tags cannot be deleted via the API (admin-only via the panel)
+- F7.6 Tag creation input in sidebar (+ button, Enter to create)
 
 ### F8 — Favorites
 - F8.1 Per-member favorites: any authenticated user can favorite any photo (many-to-many `users ↔ photos` via `favorites` pivot table)

@@ -1,0 +1,15 @@
+# Backend
+/backend/ @backend-dev
+
+# Frontend
+/frontend/ @frontend-dev
+
+# Docs
+/docs/ @backend-dev @frontend-dev
+
+# Config (magnet files — require review)
+/backend/bootstrap/app.php @backend-dev
+/backend/routes/api.php @backend-dev
+/frontend/src/App.tsx @frontend-dev
+/frontend/src/main.tsx @frontend-dev
+/frontend/src/index.css @frontend-dev

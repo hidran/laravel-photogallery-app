@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import FocusLock from 'react-focus-lock';
-import { X, Heart, Trash2, ChevronLeft, ChevronRight, Info } from 'lucide-react';
-import { useKeyboardShortcuts, useToggleFavorite, useDeletePhoto } from '../hooks';
+import { X, Heart, Trash2, ChevronLeft, ChevronRight, Info, Pencil } from 'lucide-react';
+import {
+  useKeyboardShortcuts,
+  useToggleFavorite,
+  useDeletePhoto,
+  useUpdatePhoto,
+  useAlbums,
+  useTags,
+} from '../hooks';
 import type { ShortcutHandler } from '../hooks';
 import { copy } from '../data/copy';
 import { ExifPanel } from './ExifPanel';
+import { useMe } from '../hooks/useAuth';
 import type { Photo } from '../types';
 
 interface PhotoLightboxProps {
@@ -19,10 +27,40 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
   const titleId = useId();
   const [showExif, setShowExif] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const toggleFavorite = useToggleFavorite();
   const deletePhoto = useDeletePhoto();
+  const updatePhoto = useUpdatePhoto();
+  const { data: meData } = useMe();
+  const { data: albumsData } = useAlbums();
+  const { data: tagsData } = useTags();
+
+  const isOwner = meData?.data?.id === photo.owner.id;
+  const albums = albumsData?.data ?? [];
+  const allTags = tagsData?.data ?? [];
+
+  // Edit form state
+  const [editTitle, setEditTitle] = useState(photo.title);
+  const [editDescription, setEditDescription] = useState(photo.description ?? '');
+  const [editAlbumId, setEditAlbumId] = useState(photo.album?.id ?? '');
+  const [editTagSlugs, setEditTagSlugs] = useState<string[]>(photo.tags.map((t) => t.slug));
+  const [newTagNames, setNewTagNames] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState('');
+
+  // Reset edit form when photo changes — use key-based reset via tracking photo.id
+  const [trackedPhotoId, setTrackedPhotoId] = useState(photo.id);
+  if (trackedPhotoId !== photo.id) {
+    setTrackedPhotoId(photo.id);
+    setEditTitle(photo.title);
+    setEditDescription(photo.description ?? '');
+    setEditAlbumId(photo.album?.id ?? '');
+    setEditTagSlugs(photo.tags.map((t) => t.slug));
+    setNewTagNames([]);
+    setNewTagInput('');
+    setEditMode(false);
+  }
 
   const currentIndex = useMemo(
     () => photos.findIndex((p) => p.id === photo.id),
@@ -31,7 +69,6 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
   const prevPhoto = currentIndex > 0 ? photos[currentIndex - 1] : undefined;
   const nextPhoto = currentIndex < photos.length - 1 ? photos[currentIndex + 1] : undefined;
 
-  // Save and restore focus
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement | null;
     return () => {
@@ -41,7 +78,6 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
     };
   }, []);
 
-  // Lock body scroll
   useEffect(() => {
     const original = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -74,15 +110,69 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
     });
   }, [deletePhoto, photo.id, onClose]);
 
+  const handleAddNewTag = useCallback(() => {
+    const name = newTagInput.trim();
+    if (name && !newTagNames.includes(name)) {
+      setNewTagNames((prev) => [...prev, name]);
+      setNewTagInput('');
+    }
+  }, [newTagInput, newTagNames]);
+
+  const handleRemoveNewTag = useCallback((name: string) => {
+    setNewTagNames((prev) => prev.filter((n) => n !== name));
+  }, []);
+
+  const handleSaveEdit = useCallback(() => {
+    const payload: {
+      title: string;
+      description: string | null;
+      album_id: string | null;
+      tags: string[];
+      new_tags?: string[];
+    } = {
+      title: editTitle,
+      description: editDescription || null,
+      album_id: editAlbumId || null,
+      tags: editTagSlugs,
+    };
+    if (newTagNames.length > 0) payload.new_tags = newTagNames;
+
+    updatePhoto.mutate(
+      { id: photo.id, payload },
+      {
+        onSuccess: () => {
+          setEditMode(false);
+          setNewTagNames([]);
+          setNewTagInput('');
+        },
+      },
+    );
+  }, [updatePhoto, photo.id, editTitle, editDescription, editAlbumId, editTagSlugs, newTagNames]);
+
+  const handleToggleTag = useCallback((slug: string) => {
+    setEditTagSlugs((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
+    );
+  }, []);
+
   const shortcuts: ShortcutHandler[] = useMemo(
     () => [
-      { key: 'ArrowLeft', action: handlePrev, enabled: !!prevPhoto },
-      { key: 'ArrowRight', action: handleNext, enabled: !!nextPhoto },
-      { key: 'Escape', action: onClose },
-      { key: 'f', action: handleToggleFavorite },
-      { key: 'Delete', action: handleDelete },
+      { key: 'ArrowLeft', action: handlePrev, enabled: !!prevPhoto && !editMode },
+      { key: 'ArrowRight', action: handleNext, enabled: !!nextPhoto && !editMode },
+      { key: 'Escape', action: editMode ? () => setEditMode(false) : onClose },
+      { key: 'f', action: handleToggleFavorite, enabled: !editMode },
+      { key: 'Delete', action: handleDelete, enabled: !editMode },
     ],
-    [handlePrev, handleNext, onClose, handleToggleFavorite, handleDelete, prevPhoto, nextPhoto],
+    [
+      handlePrev,
+      handleNext,
+      onClose,
+      handleToggleFavorite,
+      handleDelete,
+      prevPhoto,
+      nextPhoto,
+      editMode,
+    ],
   );
 
   useKeyboardShortcuts(shortcuts);
@@ -109,12 +199,8 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
           className="relative flex h-full w-full flex-col"
         >
           {/* Prefetch next/prev images */}
-          {prevPhoto?.urls.large && (
-            <link rel="prefetch" href={prevPhoto.urls.large} as="image" />
-          )}
-          {nextPhoto?.urls.large && (
-            <link rel="prefetch" href={nextPhoto.urls.large} as="image" />
-          )}
+          {prevPhoto?.urls.large && <link rel="prefetch" href={prevPhoto.urls.large} as="image" />}
+          {nextPhoto?.urls.large && <link rel="prefetch" href={nextPhoto.urls.large} as="image" />}
 
           {/* Top bar */}
           <div className="flex shrink-0 items-center justify-between p-4">
@@ -122,6 +208,18 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
               {photo.title}
             </h2>
             <div className="flex items-center gap-2">
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={() => setEditMode((prev) => !prev)}
+                  className={`rounded-full p-2 transition-colors hover:bg-white/10 ${
+                    editMode ? 'text-blue-400' : 'text-white/70 hover:text-white'
+                  }`}
+                  aria-label={copy.lightbox.edit}
+                >
+                  <Pencil className="h-5 w-5" />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setShowExif((prev) => !prev)}
@@ -143,7 +241,6 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
 
           {/* Main content area */}
           <div className="relative flex min-h-0 flex-1 items-center justify-center">
-            {/* Prev button */}
             {prevPhoto && (
               <button
                 type="button"
@@ -155,7 +252,6 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
               </button>
             )}
 
-            {/* Photo */}
             <img
               src={photo.urls.large ?? ''}
               alt={photo.title}
@@ -165,7 +261,6 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
               className="max-h-full max-w-full object-contain"
             />
 
-            {/* Next button */}
             {nextPhoto && (
               <button
                 type="button"
@@ -177,7 +272,7 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
               </button>
             )}
 
-            {/* EXIF panel (slides from right) */}
+            {/* EXIF panel */}
             <div
               className={`absolute right-0 top-0 h-full w-64 transform bg-gray-900/95 shadow-xl transition-transform duration-200 ${
                 showExif ? 'translate-x-0' : 'translate-x-full'
@@ -185,6 +280,96 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
             >
               <ExifPanel exif={photo.exif} />
             </div>
+
+            {/* Edit panel */}
+            {editMode && isOwner && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gray-900/95 p-4 shadow-xl">
+                <div className="mx-auto flex max-w-2xl flex-col gap-3">
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    placeholder="Title"
+                    className="rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
+                  />
+                  <textarea
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Description"
+                    rows={2}
+                    className="rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
+                  />
+                  <select
+                    value={editAlbumId}
+                    onChange={(e) => setEditAlbumId(e.target.value)}
+                    className="rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="">No album</option>
+                    {albums.map((album) => (
+                      <option key={album.id} value={album.id}>
+                        {album.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allTags.map((tag) => (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => handleToggleTag(tag.slug)}
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                          editTagSlugs.includes(tag.slug)
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    ))}
+                    {newTagNames.map((name) => (
+                      <button
+                        key={`new-${name}`}
+                        type="button"
+                        onClick={() => handleRemoveNewTag(name)}
+                        className="rounded-full bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700"
+                      >
+                        {name} &times;
+                      </button>
+                    ))}
+                    <input
+                      type="text"
+                      value={newTagInput}
+                      onChange={(e) => setNewTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddNewTag();
+                        }
+                      }}
+                      placeholder={copy.lightbox.newTagPlaceholder}
+                      className="w-24 rounded-full border border-gray-600 bg-gray-800 px-2.5 py-1 text-xs text-white placeholder:text-gray-500 focus:border-brand-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditMode(false)}
+                      className="rounded-md px-3 py-1.5 text-sm text-gray-300 hover:text-white"
+                    >
+                      {copy.common.cancel}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveEdit}
+                      disabled={updatePhoto.isPending}
+                      className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Bottom bar */}
@@ -196,23 +381,20 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
                 className={`rounded-full p-2 transition-colors hover:bg-white/10 ${
                   photo.is_favorite ? 'text-red-500' : 'text-white/70 hover:text-white'
                 }`}
-                aria-label={
-                  photo.is_favorite ? copy.favorites.remove : copy.favorites.add
-                }
+                aria-label={photo.is_favorite ? copy.favorites.remove : copy.favorites.add}
               >
-                <Heart
-                  className="h-5 w-5"
-                  fill={photo.is_favorite ? 'currentColor' : 'none'}
-                />
+                <Heart className="h-5 w-5" fill={photo.is_favorite ? 'currentColor' : 'none'} />
               </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="rounded-full p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-red-400"
-                aria-label={copy.lightbox.delete}
-              >
-                <Trash2 className="h-5 w-5" />
-              </button>
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="rounded-full p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-red-400"
+                  aria-label={copy.lightbox.delete}
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              )}
             </div>
 
             {photo.urls.original && (

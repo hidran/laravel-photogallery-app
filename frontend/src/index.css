@@ -1,10 +1,31 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
+  --color-brand-50: oklch(0.97 0.02 270);
+  --color-brand-100: oklch(0.93 0.04 270);
   --color-brand-500: oklch(0.65 0.2 270);
-  --font-sans: "Inter", system-ui, sans-serif;
+  --color-brand-600: oklch(0.55 0.22 270);
+  --color-brand-700: oklch(0.45 0.2 270);
+
+  --color-accent: oklch(0.75 0.15 55);
+  --color-accent-hover: oklch(0.68 0.15 55);
+
+  --color-surface: oklch(0.985 0.002 250);
+  --color-sidebar: oklch(0.16 0.02 260);
+  --color-sidebar-hover: oklch(0.22 0.02 260);
+  --color-sidebar-active: oklch(0.25 0.04 270);
+  --color-sidebar-text: oklch(0.7 0.01 250);
+  --color-sidebar-text-bright: oklch(0.92 0.01 250);
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

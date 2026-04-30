@@ -7,8 +7,13 @@ export function useUpload() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ files, meta }: { files: File[]; meta?: { album_id?: string; tags?: string[] } }) =>
-      uploadPhotos(files, meta),
+    mutationFn: ({
+      files,
+      meta,
+    }: {
+      files: File[];
+      meta?: { album_id?: string; tags?: string[] };
+    }) => uploadPhotos(files, meta),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photos'] });
     },

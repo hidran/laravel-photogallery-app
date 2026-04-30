@@ -1,24 +1,31 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Heart, X, Check } from 'lucide-react';
-import { usePhotos, useRemoveFavoritesBatch, useRemoveAllFavorites } from '../hooks';
+import { toast } from 'sonner';
+import { usePhotos, useRemoveFavoritesBatch, useRemoveAllFavorites, useDeletePhoto } from '../hooks';
+import { useMe } from '../hooks/useAuth';
+import { useLightboxNav } from '../hooks/useLightboxNav';
 import { MasonryGrid } from '../components/MasonryGrid';
 import { PhotoLightbox } from '../components/PhotoLightbox';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { copy } from '../data/copy';
 import type { Photo } from '../types';
 
 export function FavoritesPage() {
-  const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
 
   const { data, fetchNextPage, hasNextPage, isLoading } = usePhotos({ favorites: true });
   const removeBatch = useRemoveFavoritesBatch();
   const removeAll = useRemoveAllFavorites();
+  const deletePhoto = useDeletePhoto();
+  const { data: meData } = useMe();
+  const currentUserId = meData?.data?.id;
 
-  const allPhotos = useMemo(
-    () => data?.pages.flatMap((page) => page.data) ?? [],
-    [data],
-  );
+  const allPhotos = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
+
+  const { lightboxPhoto, openLightbox, navigateLightbox, closeLightbox } =
+    useLightboxNav(allPhotos);
 
   const toggleSelect = useCallback((photoId: string) => {
     setSelectedIds((prev) => {
@@ -37,10 +44,10 @@ export function FavoritesPage() {
       if (selectMode) {
         toggleSelect(photo.id);
       } else {
-        setLightboxPhoto(photo);
+        openLightbox(photo);
       }
     },
-    [selectMode, toggleSelect],
+    [selectMode, toggleSelect, openLightbox],
   );
 
   const handleRemoveSelected = useCallback(() => {
@@ -61,6 +68,20 @@ export function FavoritesPage() {
       },
     });
   }, [removeAll]);
+
+  const handleCardDelete = useCallback((photo: Photo) => {
+    setPhotoToDelete(photo);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!photoToDelete) return;
+    deletePhoto.mutate(photoToDelete.id, {
+      onSuccess: () => {
+        setPhotoToDelete(null);
+        toast.success('Photo deleted');
+      },
+    });
+  }, [photoToDelete, deletePhoto]);
 
   const handleCancelSelect = useCallback(() => {
     setSelectMode(false);
@@ -137,20 +158,22 @@ export function FavoritesPage() {
           onLoadMore={handleLoadMore}
           hasMore={!!hasNextPage}
           onClick={handlePhotoClick}
+          onDelete={handleCardDelete}
+          {...(currentUserId ? { currentUserId } : {})}
           renderOverlay={
             selectMode
               ? (photo) => (
                   <div
-                    className={`absolute inset-0 flex items-start justify-end p-2 ${
+                    className={`flex h-full w-full items-start justify-end p-2 ${
                       selectedIds.has(photo.id)
-                        ? 'bg-blue-500/20 ring-2 ring-inset ring-blue-500'
+                        ? 'bg-brand-500/20 ring-2 ring-inset ring-brand-500'
                         : ''
                     }`}
                   >
                     <div
                       className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
                         selectedIds.has(photo.id)
-                          ? 'border-blue-600 bg-blue-600 text-white'
+                          ? 'border-brand-600 bg-brand-600 text-white'
                           : 'border-white bg-white/80 text-transparent'
                       }`}
                     >
@@ -167,10 +190,21 @@ export function FavoritesPage() {
         <PhotoLightbox
           photo={lightboxPhoto}
           photos={allPhotos}
-          onClose={() => setLightboxPhoto(null)}
-          onNavigate={(photo) => setLightboxPhoto(photo)}
+          onClose={closeLightbox}
+          onNavigate={navigateLightbox}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={photoToDelete !== null}
+        onClose={() => setPhotoToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title={copy.lightbox.delete}
+        message={copy.lightbox.deleteConfirm}
+        confirmLabel={copy.common.delete}
+        variant="danger"
+        isPending={deletePhoto.isPending}
+      />
     </>
   );
 }

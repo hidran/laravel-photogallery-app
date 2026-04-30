@@ -24,6 +24,7 @@ export function App() {
               <Route path="/albums/:albumId" element={<AlbumPage />} />
             </Route>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<LoginPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

@@ -4,7 +4,7 @@ import { useUpload, useBatchPoll } from './useUpload';
 import type { BatchPhoto } from '../types';
 
 interface UploadFlowResult {
-  upload: (files: File[]) => void;
+  upload: (files: File[], meta?: { album_id?: string; tags?: string[] }) => void;
   isUploading: boolean;
   batchStatus: BatchPhoto[];
   progress: { total: number; pending: number; failed: number; finished: boolean } | null;
@@ -17,7 +17,10 @@ export function useUploadFlow(onComplete?: () => void): UploadFlowResult {
   const [files, setFiles] = useState<File[]>([]);
   const queryClient = useQueryClient();
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  });
 
   const uploadMutation = useUpload();
   const batchQuery = useBatchPoll(batchId);
@@ -26,27 +29,29 @@ export function useUploadFlow(onComplete?: () => void): UploadFlowResult {
   const batchPhotos = batchData?.photos ?? [];
   const finished = batchData?.finished ?? false;
 
-  // When batch finishes, invalidate photos and call onComplete
   useEffect(() => {
     if (finished && batchId) {
       queryClient.invalidateQueries({ queryKey: ['photos'] });
-      setBatchId(null);
-      setFiles([]);
-      onCompleteRef.current?.();
+      queueMicrotask(() => {
+        setBatchId(null);
+        setFiles([]);
+        onCompleteRef.current?.();
+      });
     }
   }, [finished, batchId, queryClient]);
 
   const upload = useCallback(
-    (selectedFiles: File[]) => {
+    (selectedFiles: File[], meta?: { album_id?: string; tags?: string[] }) => {
       setFiles(selectedFiles);
-      uploadMutation.mutate(
-        { files: selectedFiles },
-        {
-          onSuccess: (response) => {
-            setBatchId(response.data.batch_id);
-          },
+      const payload: { files: File[]; meta?: { album_id?: string; tags?: string[] } } = {
+        files: selectedFiles,
+      };
+      if (meta) payload.meta = meta;
+      uploadMutation.mutate(payload, {
+        onSuccess: (response) => {
+          setBatchId(response.data.batch_id);
         },
-      );
+      });
     },
     [uploadMutation],
   );
@@ -61,7 +66,12 @@ export function useUploadFlow(onComplete?: () => void): UploadFlowResult {
     isUploading: uploadMutation.isPending,
     batchStatus: batchPhotos,
     progress: batchData
-      ? { total: batchData.total, pending: batchData.pending, failed: batchData.failed, finished: batchData.finished }
+      ? {
+          total: batchData.total,
+          pending: batchData.pending,
+          failed: batchData.failed,
+          finished: batchData.finished,
+        }
       : null,
     files,
     reset,

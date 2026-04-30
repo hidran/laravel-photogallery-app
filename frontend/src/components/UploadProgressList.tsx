@@ -28,7 +28,10 @@ export function UploadProgressList({ files, batchPhotos }: UploadProgressListPro
     return (
       <ul className="mt-4 max-h-60 space-y-2 overflow-y-auto">
         {batchPhotos.map((photo) => (
-          <li key={photo.id} className="flex items-center justify-between rounded bg-gray-50 px-3 py-2">
+          <li
+            key={photo.id}
+            className="flex items-center justify-between rounded bg-gray-50 px-3 py-2"
+          >
             <span className="truncate text-sm text-gray-700">{photo.title}</span>
             <StatusIcon status={photo.processing_status} />
           </li>
@@ -40,7 +43,10 @@ export function UploadProgressList({ files, batchPhotos }: UploadProgressListPro
   return (
     <ul className="mt-4 max-h-60 space-y-2 overflow-y-auto">
       {files.map((file, index) => (
-        <li key={`${file.name}-${index}`} className="flex items-center justify-between rounded bg-gray-50 px-3 py-2">
+        <li
+          key={`${file.name}-${index}`}
+          className="flex items-center justify-between rounded bg-gray-50 px-3 py-2"
+        >
           <span className="truncate text-sm text-gray-700">{file.name}</span>
           <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
         </li>

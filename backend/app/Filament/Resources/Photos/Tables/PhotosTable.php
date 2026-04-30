@@ -37,34 +37,43 @@ final class PhotosTable
                     ->label('Thumbnail')
                     ->disk('photos')
                     ->width(60)
-                    ->height(60),
+                    ->height(60)
+                    ->grow(false),
 
                 TextColumn::make('title')
                     ->searchable()
                     ->sortable()
-                    ->limit(40),
+                    ->limit(30)
+                    ->wrap(),
 
                 TextColumn::make('album.name')
                     ->label('Album')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('tags.name')
                     ->label('Tags')
-                    ->badge(),
+                    ->badge()
+                    ->toggleable(),
 
                 TextColumn::make('file_size')
                     ->label('Size')
                     ->formatStateUsing(fn (int $state): string => HumanBytes::format($state))
-                    ->sortable(),
+                    ->sortable()
+                    ->grow(false)
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('favorited_by_count')
                     ->counts('favoritedBy')
-                    ->label('Favorites')
-                    ->sortable(),
+                    ->label('Fav')
+                    ->sortable()
+                    ->grow(false)
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('processing_status')
                     ->label('Status')
                     ->badge()
+                    ->grow(false)
                     ->color(fn (ProcessingStatus $state): string => match ($state) {
                         ProcessingStatus::Pending => 'gray',
                         ProcessingStatus::Processing => 'info',
@@ -75,7 +84,9 @@ final class PhotosTable
                 TextColumn::make('created_at')
                     ->label('Created')
                     ->since()
-                    ->sortable(),
+                    ->sortable()
+                    ->grow(false)
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('album')

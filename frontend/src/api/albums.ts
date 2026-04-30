@@ -12,7 +12,9 @@ export interface UpdateAlbumPayload {
   cover_photo_id?: string | null;
 }
 
-export async function getAlbums(params: { cursor?: string } = {}): Promise<PaginatedResponse<Album>> {
+export async function getAlbums(
+  params: { cursor?: string } = {},
+): Promise<PaginatedResponse<Album>> {
   const { data } = await apiClient.get<PaginatedResponse<Album>>('/albums', { params });
   return data;
 }

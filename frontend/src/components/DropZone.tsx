@@ -49,7 +49,9 @@ export function DropZone({ onFilesSelected, onError, disabled = false }: DropZon
       dragCounterRef.current += 1;
       if (dragCounterRef.current === 1) {
         const items = Array.from(e.dataTransfer.items);
-        const hasInvalid = items.some((item) => item.kind === 'file' && !ACCEPTED_TYPES.has(item.type));
+        const hasInvalid = items.some(
+          (item) => item.kind === 'file' && !ACCEPTED_TYPES.has(item.type),
+        );
         setDragState(hasInvalid ? 'invalid' : 'dragover');
       }
     },

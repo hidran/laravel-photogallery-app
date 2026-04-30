@@ -15,7 +15,7 @@ export function Shell() {
   }, []);
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-screen flex-col bg-surface">
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />

@@ -16,6 +16,7 @@ export interface UpdatePhotoPayload {
   description?: string | null;
   album_id?: string | null;
   tags?: string[];
+  new_tags?: string[];
 }
 
 export async function getPhotos(params: PhotosIndexParams = {}): Promise<PaginatedResponse<Photo>> {

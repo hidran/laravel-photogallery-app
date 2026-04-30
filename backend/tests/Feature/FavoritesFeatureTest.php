@@ -41,7 +41,7 @@ test('favorite is idempotent — second call returns 204 with single row', funct
     $this->putJson("/api/v1/photos/{$photo->id}/favorite")->assertNoContent();
 
     expect(
-        \DB::table('favorites')
+        DB::table('favorites')
             ->where('user_id', $user->id)
             ->where('photo_id', $photo->id)
             ->count()

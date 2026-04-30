@@ -7,10 +7,20 @@ interface MasonryGridProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   onClick?: (photo: Photo) => void;
+  onDelete?: (photo: Photo) => void;
+  currentUserId?: string;
   renderOverlay?: ((photo: Photo) => ReactNode) | undefined;
 }
 
-export function MasonryGrid({ photos, onLoadMore, hasMore, onClick, renderOverlay }: MasonryGridProps) {
+export function MasonryGrid({
+  photos,
+  onLoadMore,
+  hasMore,
+  onClick,
+  onDelete,
+  currentUserId,
+  renderOverlay,
+}: MasonryGridProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,7 +35,7 @@ export function MasonryGrid({ photos, onLoadMore, hasMore, onClick, renderOverla
           onLoadMore();
         }
       },
-      { rootMargin: '200px' }
+      { rootMargin: '200px' },
     );
 
     observer.observe(sentinel);
@@ -37,11 +47,32 @@ export function MasonryGrid({ photos, onLoadMore, hasMore, onClick, renderOverla
 
   return (
     <div>
-      <div className="columns-2 gap-4 md:columns-3 lg:columns-4">
+      <div className="columns-2 gap-5 md:columns-3 lg:columns-4 xl:columns-5">
         {photos.map((photo) => (
-          <div key={photo.id} className="relative mb-4 break-inside-avoid">
-            <PhotoCard photo={photo} onClick={() => onClick?.(photo)} />
-            {renderOverlay?.(photo)}
+          <div key={photo.id} className="relative mb-5 break-inside-avoid">
+            <PhotoCard
+              photo={photo}
+              onClick={() => onClick?.(photo)}
+              {...(onDelete ? { onDelete } : {})}
+              {...(currentUserId ? { isOwner: photo.owner.id === currentUserId } : {})}
+            />
+            {renderOverlay && (
+              <div
+                className="absolute inset-0 cursor-pointer"
+                onClick={() => onClick?.(photo)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onClick?.(photo);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Select ${photo.title}`}
+              >
+                {renderOverlay(photo)}
+              </div>
+            )}
           </div>
         ))}
       </div>

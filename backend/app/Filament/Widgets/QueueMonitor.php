@@ -25,10 +25,12 @@ final class QueueMonitor extends StatsOverviewWidget
             ->count();
 
         return [
-            Stat::make('Pending Jobs', $pendingJobs),
+            Stat::make('Pending Jobs', $pendingJobs)
+                ->color($pendingJobs > 0 ? 'warning' : 'success'),
             Stat::make('Failed Jobs', $failedJobs)
                 ->color($failedJobs > 0 ? 'danger' : 'success'),
-            Stat::make('Photos Processing', $photosProcessing),
+            Stat::make('Photos Processing', $photosProcessing)
+                ->color($photosProcessing > 0 ? 'info' : 'success'),
         ];
     }
 }
