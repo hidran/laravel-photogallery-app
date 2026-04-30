@@ -434,7 +434,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): idempotent PUT/DELETE favorite endpoints`
 
 ### T035 — `BatchController@show` for `GET /photos/batch/{id}`
-- **Status:** [-] deferred to Phase 6 (no batches exist without T029 uploads)
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T029
 - **Parallel with:** T030, T031, T034, T036
@@ -1270,7 +1270,7 @@ Wave 0. Runs early but documented here for grouping.
 - **Commit:** `test(frontend): fill coverage gaps`
 
 ### T097 — Playwright E2E suite
-- **Status:** [-] deferred (requires full running stack)
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T071, T080
 - **Parallel with:** T095, T096
@@ -1282,7 +1282,7 @@ Wave 0. Runs early but documented here for grouping.
 - **Commit:** `test(e2e): full user workflows`
 
 ### T098 — axe-core a11y check in Playwright
-- **Status:** [-] deferred (depends on T097)
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T097
 - **Parallel with:** —
@@ -1377,7 +1377,7 @@ Wave 0. Runs FIRST in practice.
 - **Commit:** `chore: /principles-check slash command`
 
 ### T106 — `docs/PARALLEL-WORKFLOW.md` + demo
-- **Status:** [-] deferred (requires multi-branch demo)
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T103
 - **Parallel with:** —
@@ -1394,7 +1394,7 @@ Wave 0. Runs FIRST in practice.
 ---
 
 ### T107 — `docs/SPEC-COVERAGE.md` audit
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T095, T096, T097
 - **Parallel with:** —
