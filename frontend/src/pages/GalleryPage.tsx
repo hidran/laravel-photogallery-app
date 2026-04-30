@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePhotos } from '../hooks';
 import { MasonryGrid } from '../components/MasonryGrid';
 import { PhotoLightbox } from '../components/PhotoLightbox';
-import { UploadModal } from '../components/UploadModal';
 import { copy } from '../data/copy';
 import type { Photo } from '../types';
 import type { PhotosIndexParams } from '../api/photos';
@@ -11,8 +10,6 @@ import type { PhotosIndexParams } from '../api/photos';
 export function GalleryPage() {
   const [searchParams] = useSearchParams();
   const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
-  const [uploadOpen, setUploadOpen] = useState(false);
-
   const params: PhotosIndexParams = useMemo(() => {
     const result: PhotosIndexParams = {};
     const search = searchParams.get('search');
@@ -34,13 +31,6 @@ export function GalleryPage() {
     () => data?.pages.flatMap((page) => page.data) ?? [],
     [data],
   );
-
-  // Listen to custom event from Navbar to open upload modal
-  useEffect(() => {
-    const handler = () => setUploadOpen(true);
-    window.addEventListener('open-upload-modal', handler);
-    return () => window.removeEventListener('open-upload-modal', handler);
-  }, []);
 
   const handlePhotoClick = useCallback((photo: Photo) => {
     setLightboxPhoto(photo);
@@ -91,7 +81,6 @@ export function GalleryPage() {
         />
       )}
 
-      <UploadModal isOpen={uploadOpen} onClose={() => setUploadOpen(false)} />
     </>
   );
 }
