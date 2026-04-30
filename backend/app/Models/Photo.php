@@ -41,7 +41,6 @@ final class Photo extends Model
         'height',
         'file_size',
         'mime_type',
-        'is_favorite',
         'exif',
         'processing_status',
         'processing_attempts',
@@ -51,7 +50,6 @@ final class Photo extends Model
     protected function casts(): array
     {
         return [
-            'is_favorite' => 'boolean',
             'exif' => 'array',
             'width' => 'integer',
             'height' => 'integer',
@@ -85,6 +83,17 @@ final class Photo extends Model
         // The pivot only carries created_at (DESIGN.md §4.5 — no updated_at);
         // withPivot exposes it without forcing Eloquent to write updated_at.
         return $this->belongsToMany(Tag::class, 'photo_tag')
+            ->withPivot('created_at');
+    }
+
+    /**
+     * Users who have favorited this photo (DESIGN.md §4.6).
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'favorites')
             ->withPivot('created_at');
     }
 
