@@ -69,7 +69,7 @@ final class PhotoData extends JsonResource
                     : false,
                 false,
             ),
-            'favorites_count' => $this->favoritedBy_count ?? 0,
+            'favorites_count' => $this->favorited_by_count ?? 0,
             // exif may carry GPS / device serials; processing_error may
             // leak path fragments and worker context — both are owner+admin
             // only (DESIGN.md §6.6 + security review S1 on PR #4).
