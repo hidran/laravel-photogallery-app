@@ -7,7 +7,7 @@ interface MasonryGridProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   onClick?: (photo: Photo) => void;
-  renderOverlay?: (photo: Photo) => ReactNode;
+  renderOverlay?: ((photo: Photo) => ReactNode) | undefined;
 }
 
 export function MasonryGrid({ photos, onLoadMore, hasMore, onClick, renderOverlay }: MasonryGridProps) {
