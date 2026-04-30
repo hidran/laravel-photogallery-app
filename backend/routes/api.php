@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AlbumController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BatchController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\PhotoController;
 use App\Http\Controllers\Api\V1\TagController;
@@ -40,7 +41,9 @@ Route::middleware(['throttle:api', 'auth:sanctum'])->group(function () {
 });
 
 Route::middleware('throttle:api')->group(function () {
-    // Public reads.
+    // Public reads — guests allowed. The 'auth:sanctum' guard is applied
+    // as optional so $request->user() resolves when a valid token is sent
+    // (needed for per-user is_favorite). Does NOT reject guests.
     Route::get('/photos', [PhotoController::class, 'index']);
     Route::get('/photos/{photo}', [PhotoController::class, 'show'])->middleware(ETag::class);
 
@@ -51,16 +54,20 @@ Route::middleware('throttle:api')->group(function () {
 
     // Mutating routes — Sanctum token + in-controller tokenCan gate.
     Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/photos', [PhotoController::class, 'store']);
         Route::patch('/photos/{photo}', [PhotoController::class, 'update']);
         Route::delete('/photos/{photo}', [PhotoController::class, 'destroy']);
         Route::put('/photos/{photo}/favorite', [PhotoController::class, 'favorite']);
         Route::delete('/photos/{photo}/favorite', [PhotoController::class, 'unfavorite']);
+        Route::delete('/photos/favorites/batch', [PhotoController::class, 'unfavoriteBatch']);
 
         Route::post('/albums', [AlbumController::class, 'store']);
         Route::patch('/albums/{album}', [AlbumController::class, 'update']);
         Route::delete('/albums/{album}', [AlbumController::class, 'destroy']);
     });
 
-    // POST /photos and GET /photos/batch/{batchId} are deferred to Phase 6
-    // (T029/T032/T035) — they depend on PhotoStorage + ProcessPhoto.
+    // Batch progress — auth required (must be batch creator).
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/photos/batch/{batchId}', [BatchController::class, 'show']);
+    });
 });

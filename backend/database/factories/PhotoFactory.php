@@ -36,7 +36,6 @@ final class PhotoFactory extends Factory
             'height' => $height,
             'file_size' => $this->faker->numberBetween(100_000, 5_000_000),
             'mime_type' => 'image/jpeg',
-            'is_favorite' => $this->faker->boolean(20),
             'exif' => null,
             'processing_status' => $this->faker->randomElement(ProcessingStatus::cases())->value,
             'processing_attempts' => 0,

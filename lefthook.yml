@@ -1,0 +1,15 @@
+pre-commit:
+  parallel: true
+  commands:
+    pint:
+      root: backend/
+      glob: "*.php"
+      run: vendor/bin/pint {staged_files} --format agent
+    prettier:
+      root: frontend/
+      glob: "*.{ts,tsx,css}"
+      run: npx prettier --write {staged_files} && git add {staged_files}
+    eslint:
+      root: frontend/
+      glob: "*.{ts,tsx}"
+      run: npx eslint {staged_files}

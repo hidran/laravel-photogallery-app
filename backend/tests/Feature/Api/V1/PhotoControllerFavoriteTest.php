@@ -24,69 +24,77 @@ function favHeaders(User $user, array $abilities = ['photos:write']): array
     return ['Authorization' => "Bearer {$token}"];
 }
 
-it('PUT /favorite marks the photo as favorite (204)', function () {
+it('PUT /favorite marks the photo as favorite for the user (204)', function () {
     $user = User::factory()->create();
-    $photo = Photo::factory()->processed()->create(['user_id' => $user->id, 'is_favorite' => false]);
+    $photo = Photo::factory()->processed()->create(['user_id' => $user->id]);
 
     $this->withHeaders(favHeaders($user))
         ->putJson("/api/v1/photos/{$photo->id}/favorite")
         ->assertStatus(204);
 
-    expect($photo->fresh()->is_favorite)->toBeTrue();
+    expect($user->favoritePhotos()->where('photo_id', $photo->id)->exists())->toBeTrue();
 });
 
-it('PUT /favorite is idempotent — repeated calls still 204 with no flip', function () {
+it('PUT /favorite is idempotent — repeated calls still 204 with no duplicate pivot', function () {
     $user = User::factory()->create();
-    $photo = Photo::factory()->processed()->create(['user_id' => $user->id, 'is_favorite' => true]);
+    $photo = Photo::factory()->processed()->create(['user_id' => $user->id]);
+    $user->favoritePhotos()->attach($photo->id);
 
     $this->withHeaders(favHeaders($user))
         ->putJson("/api/v1/photos/{$photo->id}/favorite")
         ->assertStatus(204);
 
-    expect($photo->fresh()->is_favorite)->toBeTrue();
+    expect($user->favoritePhotos()->where('photo_id', $photo->id)->count())->toBe(1);
 });
 
 it('DELETE /favorite unmarks (204)', function () {
     $user = User::factory()->create();
-    $photo = Photo::factory()->processed()->create(['user_id' => $user->id, 'is_favorite' => true]);
+    $photo = Photo::factory()->processed()->create(['user_id' => $user->id]);
+    $user->favoritePhotos()->attach($photo->id);
 
     $this->withHeaders(favHeaders($user))
         ->deleteJson("/api/v1/photos/{$photo->id}/favorite")
         ->assertStatus(204);
 
-    expect($photo->fresh()->is_favorite)->toBeFalse();
+    expect($user->favoritePhotos()->where('photo_id', $photo->id)->exists())->toBeFalse();
 });
 
 it('DELETE /favorite is idempotent — repeated calls still 204', function () {
     $user = User::factory()->create();
-    $photo = Photo::factory()->processed()->create(['user_id' => $user->id, 'is_favorite' => false]);
+    $photo = Photo::factory()->processed()->create(['user_id' => $user->id]);
 
     $this->withHeaders(favHeaders($user))
         ->deleteJson("/api/v1/photos/{$photo->id}/favorite")
         ->assertStatus(204);
 
-    expect($photo->fresh()->is_favorite)->toBeFalse();
+    expect($user->favoritePhotos()->where('photo_id', $photo->id)->exists())->toBeFalse();
 });
 
-it('PUT /favorite 403 from non-owner', function () {
+it('PUT /favorite allows non-owner to favorite (204)', function () {
     $owner = User::factory()->create();
     $stranger = User::factory()->create();
     $photo = Photo::factory()->processed()->create(['user_id' => $owner->id]);
 
     $this->withHeaders(favHeaders($stranger))
         ->putJson("/api/v1/photos/{$photo->id}/favorite")
-        ->assertStatus(403)
-        ->assertExactJson(['message' => 'This action is unauthorized.']);
+        ->assertStatus(204);
+
+    expect($stranger->favoritePhotos()->where('photo_id', $photo->id)->exists())->toBeTrue();
+    // Owner's favorites should be unaffected.
+    expect($owner->favoritePhotos()->where('photo_id', $photo->id)->exists())->toBeFalse();
 });
 
-it('DELETE /favorite 403 from non-owner', function () {
+it('DELETE /favorite allows non-owner to unfavorite (204)', function () {
     $owner = User::factory()->create();
     $stranger = User::factory()->create();
-    $photo = Photo::factory()->processed()->create(['user_id' => $owner->id, 'is_favorite' => true]);
+    $photo = Photo::factory()->processed()->create(['user_id' => $owner->id]);
+    $stranger->favoritePhotos()->attach($photo->id);
 
     $this->withHeaders(favHeaders($stranger))
         ->deleteJson("/api/v1/photos/{$photo->id}/favorite")
-        ->assertStatus(403);
+        ->assertStatus(204);
+
+    expect($stranger->favoritePhotos()->where('photo_id', $photo->id)->exists())->toBeFalse();
 });
 
 it('PUT /favorite 404 for missing UUID', function () {

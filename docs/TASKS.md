@@ -367,7 +367,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(backend): TagAssigner service`
 
 ### T029 — `App\Actions\Photo\UploadPhotosAction`
-- **Status:** [-] deferred to Phase 6 (needs PhotoStorage interface from T072)
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T024, T026, T028, T032 (PhotoStorage from Phase 6, but use a stub here)
 - **Parallel with:** —
@@ -402,7 +402,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): GET /photos and /photos/{id}`
 
 ### T032 — `PhotoController@store` (delegates to `UploadPhotosAction`)
-- **Status:** [-] deferred to Phase 6 (depends on T029)
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T029
 - **Parallel with:** —
@@ -434,7 +434,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `feat(api): idempotent PUT/DELETE favorite endpoints`
 
 ### T035 — `BatchController@show` for `GET /photos/batch/{id}`
-- **Status:** [-] deferred to Phase 6 (no batches exist without T029 uploads)
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T029
 - **Parallel with:** T030, T031, T034, T036
@@ -512,7 +512,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): GET /photos coverage`
 
 ### T042 — Pest tests: `PhotoCrudTest`, `PhotoUploadTest`, `PhotoFavoriteTest`
-- **Status:** [~]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T032, T033, T034
 - **Parallel with:** T040, T041, T043, T044
@@ -523,7 +523,7 @@ Depends on Phase 1 complete. Wave 1 — Track A.
 - **Commit:** `test(api): photo CRUD, upload, favorite`
 
 ### T043 — Pest tests: `BatchProgressTest`, `AlbumCrudTest`, `TagIndexTest`
-- **Status:** [~]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T035, T036, T037
 - **Parallel with:** T040, T041, T042, T044
@@ -564,7 +564,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 ---
 
 ### T046 — Install Filament panel + brand
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T018
 - **Parallel with:** T030 (different track)
@@ -576,7 +576,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `chore(filament): install admin panel`
 
 ### T047 — `PhotoResource` (table)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T046
 - **Parallel with:** T049, T051
@@ -587,7 +587,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): PhotoResource table + filters`
 
 ### T048 — `PhotoResource` (form + reprocess action)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T047
 - **Parallel with:** T049, T051
@@ -599,7 +599,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): PhotoResource form, actions, bulk actions`
 
 ### T049 — `AlbumResource`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T046
 - **Parallel with:** T047, T051
@@ -610,7 +610,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): AlbumResource + relation manager`
 
 ### T050 — `TagResource`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T046
 - **Parallel with:** T049
@@ -621,7 +621,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): TagResource`
 
 ### T051 — Widgets: StatsOverview, RecentUploadsTable, QueueMonitor
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T046
 - **Parallel with:** T047, T049
@@ -632,7 +632,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): dashboard widgets`
 
 ### T052 — `StorageManagement` page
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T046, T051
 - **Parallel with:** —
@@ -643,7 +643,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `feat(filament): storage management page`
 
 ### T053 — Filament smoke tests
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T047–T052
 - **Parallel with:** —
@@ -654,7 +654,7 @@ Wave 1 — Track B. Parallel with Phase 2.
 - **Commit:** `test(filament): admin smoke tests`
 
 ### T054 — Phase 3 review
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T053
 - **Acceptance:**
@@ -670,7 +670,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 ---
 
 ### T055 — Vite config + Tailwind v4 install
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T002
 - **Parallel with:** T056, T057
@@ -683,7 +683,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `chore(frontend): Vite + Tailwind v4 setup`
 
 ### T056 — TypeScript strict + ESLint + Prettier
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T002
 - **Parallel with:** T055, T057
@@ -695,7 +695,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `chore(frontend): strict TS + ESLint + Prettier`
 
 ### T057 — Type definitions in `src/types/`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T056
 - **Parallel with:** T055, T058
@@ -705,7 +705,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `feat(frontend): API type definitions`
 
 ### T058 — `src/api/client.ts` + interceptors
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T057
 - **Parallel with:** T057, T059
@@ -717,7 +717,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `feat(frontend): axios client with interceptors`
 
 ### T059 — Typed API wrappers (`src/api/{photos,albums,tags,batch,auth}.ts`)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T058
 - **Parallel with:** T058
@@ -728,7 +728,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `feat(frontend): typed API wrappers`
 
 ### T060 — `lib/queryClient.ts` + Provider tree in `App.tsx`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T058
 - **Parallel with:** T061
@@ -741,7 +741,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `feat(frontend): provider tree and lazy routing`
 
 ### T061 — `src/data/copy.ts`, `nav.ts`, `polling.ts`, `shortcuts.ts`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T002
 - **Parallel with:** T060
@@ -752,7 +752,7 @@ Wave 1 — Track C. Parallel with Phases 2 + 3.
 - **Commit:** `feat(frontend): centralized data modules`
 
 ### T062 — Phase 4 review
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T055–T061
 - **Acceptance:**
@@ -769,7 +769,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 ---
 
 ### T063 — `ErrorBoundary` + `Modal` + common components
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T062
 - **Parallel with:** T064, T065, T066
@@ -780,7 +780,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): ErrorBoundary + Modal + common components`
 
 ### T064 — Layout: `Shell`, `Navbar`, `Sidebar`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev (Agent 5a)
 - **Depends on:** T060, T061, T063
 - **Parallel with:** T065, T066, T067
@@ -792,7 +792,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): app shell + navbar + sidebar`
 
 ### T065 — Hooks: `useDebounce`, `useKeyboardShortcuts`, `KeyboardShortcutsProvider`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T060
 - **Parallel with:** T064, T066, T067
@@ -803,7 +803,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): keyboard shortcuts and useDebounce`
 
 ### T066 — Server-state hooks: `useAuth`, `usePhotos`, `useAlbums`, `useTags`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T058, T059
 - **Parallel with:** T064, T065, T067
@@ -815,7 +815,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): TanStack Query hooks`
 
 ### T067 — Gallery: `MasonryGrid`, `PhotoCard`, `ProcessingOverlay`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev (Agent 5b)
 - **Depends on:** T063, T066
 - **Parallel with:** T064, T065, T068, T069
@@ -828,7 +828,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): masonry grid + photo card + processing overlay`
 
 ### T068 — Lightbox: `PhotoLightbox`, `ExifPanel`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev (Agent 5c)
 - **Depends on:** T063, T065, T067
 - **Parallel with:** T067, T069
@@ -841,7 +841,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): lightbox with keyboard nav and EXIF panel`
 
 ### T069 — Upload: `UploadModal`, `DropZone`, `UploadProgressList`, `useUpload`, `useBatchPoll`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev (Agent 5d)
 - **Depends on:** T063, T066
 - **Parallel with:** T067, T068
@@ -854,7 +854,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): upload modal with batch polling`
 
 ### T070 — Pages: `GalleryPage`, `FavoritesPage`, `AlbumPage`, `LoginPage`, `NotFoundPage`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T064, T067, T068
 - **Parallel with:** T069
@@ -866,7 +866,7 @@ Depends on Phase 4. **Heavily parallelizable** — 4 sub-agents (a/b/c/d).
 - **Commit:** `feat(frontend): page components wired to hooks`
 
 ### T071 — Phase 5 review
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T063–T070
 - **Acceptance:**
@@ -884,7 +884,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 ---
 
 ### T072 — `App\Contracts\ImageProcessor` + `ExifExtractor` + `PhotoStorage` interfaces
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T073
@@ -894,7 +894,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(backend): service contracts (ImageProcessor, ExifExtractor, PhotoStorage)`
 
 ### T073 — `App\Services\Storage\DiskPhotoStorage` (concrete)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T072, T006
 - **Parallel with:** T074, T075
@@ -907,7 +907,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(backend): DiskPhotoStorage implementation`
 
 ### T074 — `App\Services\Imaging\PhpExifExtractor`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T072
 - **Parallel with:** T073, T075
@@ -919,7 +919,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(backend): PhpExifExtractor with GPS stripping`
 
 ### T075 — `App\Services\Imaging\InterventionImageProcessor`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T072
 - **Parallel with:** T073, T074
@@ -931,7 +931,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(backend): InterventionImageProcessor`
 
 ### T076 — Bind contracts in `AppServiceProvider`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T073, T074, T075
 - **Parallel with:** —
@@ -942,7 +942,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `chore(backend): bind service contracts`
 
 ### T077 — `App\Jobs\ProcessPhoto` job
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T076
 - **Parallel with:** —
@@ -955,7 +955,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(pipeline): ProcessPhoto job`
 
 ### T078 — Domain events: `PhotoUploaded`, `PhotoProcessed`, `PhotoDeleted`, `AlbumDeleted`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T013
 - **Parallel with:** T077
@@ -966,7 +966,7 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(backend): domain events`
 
 ### T079 — Wire `UploadPhotosAction` to dispatch real `ProcessPhoto` jobs
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T029, T077
 - **Parallel with:** —
@@ -977,13 +977,98 @@ Depends on Phase 1 + Phase 2 (T032). Wave 1 — Track A continuation.
 - **Commit:** `feat(pipeline): wire UploadPhotosAction to ProcessPhoto`
 
 ### T080 — Phase 6 review + E2E processing test
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T077–T079
 - **Acceptance:**
   - End-to-end: upload via API, run queue worker, poll `/photos/batch/{id}` → finished + completed photos.
   - GPS-bearing test fixture image: assert `exif` JSON contains no GPS keys after processing.
 - **Commit:** `chore: Phase 6 review`
+
+---
+
+# Phase 6.5 — Favorites refactor (boolean → many-to-many pivot)
+
+Refactors favorites from a `is_favorite` boolean column on `photos` to a `favorites` pivot table (`users ↔ photos`). Any authenticated user can favorite any photo.
+
+---
+
+### T090 — Migration: create `favorites` pivot table + drop `is_favorite` column
+- **Status:** [x]
+- **Owner:** backend-dev
+- **Depends on:** T080
+- **Parallel with:** —
+- **Reads:** DESIGN.md §4.6
+- **Acceptance:**
+  - `favorites` table with `user_id` (CHAR(36) FK), `photo_id` (CHAR(36) FK), `created_at`.
+  - Composite primary key (`user_id`, `photo_id`).
+  - Data migration: existing `photos.is_favorite=true` rows get a `favorites` row for the photo owner.
+  - `is_favorite` column dropped from `photos`.
+  - `is_favorite` + `created_at` composite index removed from `photos`.
+- **Commit:** `feat(db): favorites pivot table, drop is_favorite column`
+
+### T091 — Update Photo + User models for favorites relationship
+- **Status:** [x]
+- **Owner:** backend-dev
+- **Depends on:** T090
+- **Parallel with:** T092
+- **Reads:** DESIGN.md §4.6, §5
+- **Acceptance:**
+  - `Photo::favoritedBy()` → `belongsToMany(User::class, 'favorites')`.
+  - `User::favoritePhotos()` → `belongsToMany(Photo::class, 'favorites')`.
+  - Remove `is_favorite` from `Photo::$fillable` and `Photo::casts()`.
+  - `PhotoFactory` no longer sets `is_favorite`.
+- **Commit:** `refactor(models): favorites relationship via pivot`
+
+### T092 — Update PhotoController favorite/unfavorite + PhotoData resource
+- **Status:** [x]
+- **Owner:** backend-dev
+- **Depends on:** T091
+- **Parallel with:** T093
+- **Reads:** DESIGN.md §6.2 (favorite endpoints), §6.6 (PhotoData shape)
+- **Acceptance:**
+  - `PUT /photos/{id}/favorite` → `$request->user()->favoritePhotos()->syncWithoutDetaching([$photo->id])`. No ownership check — any authenticated user can favorite.
+  - `DELETE /photos/{id}/favorite` → `$request->user()->favoritePhotos()->detach($photo->id)`.
+  - `PhotoData` returns `is_favorite` computed from pivot: `$this->favoritedBy->contains(auth()->user())` or equivalent.
+  - `PhotoData` returns `favorites_count` via `withCount('favoritedBy')`.
+  - `GET /photos?is_favorite=1` filters to current user's favorites via `whereHas('favoritedBy', fn ($q) => $q->where('user_id', auth()->id()))`.
+- **Commit:** `refactor(api): favorites via pivot table`
+
+### T093 — Update Filament PhotoResource for favorites pivot
+- **Status:** [x]
+- **Owner:** backend-dev
+- **Depends on:** T091
+- **Parallel with:** T092
+- **Reads:** DESIGN.md §7.1
+- **Acceptance:**
+  - `ToggleColumn` for `is_favorite` replaced with a `favorites_count` TextColumn (display-only in admin).
+  - `TernaryFilter` for `is_favorite` replaced with a filter on `favoritedBy` relationship count.
+  - Bulk `ToggleFavorite` action removed (no longer makes sense — favorites are per-user).
+- **Commit:** `refactor(filament): favorites as pivot in PhotoResource`
+
+### T094 — Update frontend hooks + components for favorites pivot
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T092
+- **Parallel with:** —
+- **Reads:** DESIGN.md §6.6, §8.5
+- **Acceptance:**
+  - `Photo` type: `is_favorite: boolean` (now per-user) + `favorites_count: number`.
+  - `useToggleFavorite` optimistic update flips `is_favorite` + adjusts `favorites_count`.
+  - FavoritesPage shows only the current user's favorites.
+  - PhotoCard shows `favorites_count` badge on heart icon.
+- **Commit:** `refactor(frontend): favorites via pivot`
+
+### T095 — Update tests for favorites refactor
+- **Status:** [x]
+- **Owner:** backend-dev
+- **Depends on:** T092, T093
+- **Parallel with:** —
+- **Acceptance:**
+  - `PhotoFavoriteTest`: user A favorites photo owned by user B → 204; user A's favorites list includes it; user B's does not.
+  - `PhotoControllerIndexTest`: `is_favorite=1` returns only requesting user's favorites.
+  - Filament smoke tests still pass.
+- **Commit:** `test: favorites pivot coverage`
 
 ---
 
@@ -994,7 +1079,7 @@ Depends on Phase 3 + Phase 6.
 ---
 
 ### T081 — `QueueMonitor` widget reads from real tables
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T051, T077
 - **Parallel with:** T082, T083
@@ -1005,7 +1090,7 @@ Depends on Phase 3 + Phase 6.
 - **Commit:** `feat(filament): real queue monitoring widget`
 
 ### T082 — `RecentUploadsTable` widget shows last 10
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T051
 - **Parallel with:** T081, T083
@@ -1016,7 +1101,7 @@ Depends on Phase 3 + Phase 6.
 - **Commit:** `feat(filament): recent uploads widget`
 
 ### T083 — Reprocess action + bulk action live
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T048, T077
 - **Parallel with:** T081, T082
@@ -1027,7 +1112,7 @@ Depends on Phase 3 + Phase 6.
 - **Commit:** `feat(filament): reprocess actions wired to ProcessPhoto`
 
 ### T084 — `StorageManagement` actions live
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T052, T077
 - **Parallel with:** —
@@ -1038,7 +1123,7 @@ Depends on Phase 3 + Phase 6.
 - **Commit:** `feat(filament): storage management actions`
 
 ### T085 — Phase 7 review
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T081–T084
 - **Acceptance:**
@@ -1082,7 +1167,7 @@ Depends on Phase 3 + Phase 6.
 - **Commit:** `chore(backend): AWS smoke test script`
 
 ### T089 — Audit hardcoded paths/disks
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T086
 - **Parallel with:** —
@@ -1099,7 +1184,7 @@ Wave 0. Runs early but documented here for grouping.
 ---
 
 ### T090 — Backend dev tooling: Pint + Rector + QueryDetector
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T001
 - **Parallel with:** T091
@@ -1110,7 +1195,7 @@ Wave 0. Runs early but documented here for grouping.
 - **Commit:** `chore(backend): Pint + Rector configs`
 
 ### T091 — Frontend dev tooling: Prettier + ESLint
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T002
 - **Parallel with:** T090
@@ -1121,7 +1206,7 @@ Wave 0. Runs early but documented here for grouping.
 - **Commit:** `chore(frontend): Prettier + ESLint configs`
 
 ### T092 — `lefthook.yml` at repo root
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T090, T091
 - **Parallel with:** T093
@@ -1132,7 +1217,7 @@ Wave 0. Runs early but documented here for grouping.
 - **Commit:** `chore: lefthook pre-commit hooks`
 
 ### T093 — `.claude/settings.json` PostToolUse hooks
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T090, T091
 - **Parallel with:** T092
@@ -1145,7 +1230,7 @@ Wave 0. Runs early but documented here for grouping.
 - **Commit:** `chore: Claude Code hooks for auto-format and safety`
 
 ### T094 — `.github/workflows/ci.yml`
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T090, T091
 - **Parallel with:** —
@@ -1163,7 +1248,7 @@ Wave 0. Runs early but documented here for grouping.
 ---
 
 ### T095 — Backend coverage gaps from §15
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T045, T080
 - **Parallel with:** T096, T097
@@ -1174,7 +1259,7 @@ Wave 0. Runs early but documented here for grouping.
 - **Commit:** `test(backend): fill coverage gaps`
 
 ### T096 — Frontend coverage gaps
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T071
 - **Parallel with:** T095, T097
@@ -1185,7 +1270,7 @@ Wave 0. Runs early but documented here for grouping.
 - **Commit:** `test(frontend): fill coverage gaps`
 
 ### T097 — Playwright E2E suite
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T071, T080
 - **Parallel with:** T095, T096
@@ -1197,7 +1282,7 @@ Wave 0. Runs early but documented here for grouping.
 - **Commit:** `test(e2e): full user workflows`
 
 ### T098 — axe-core a11y check in Playwright
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T097
 - **Parallel with:** —
@@ -1215,7 +1300,7 @@ Wave 0. Runs FIRST in practice.
 ---
 
 ### T099 — Initial repo + branch protection
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** —
 - **Parallel with:** —
@@ -1226,7 +1311,7 @@ Wave 0. Runs FIRST in practice.
 - **Commit:** `chore: initial repository`
 
 ### T100 — PR template + CONTRIBUTING.md + CODEOWNERS
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T099
 - **Parallel with:** —
@@ -1236,7 +1321,7 @@ Wave 0. Runs FIRST in practice.
 - **Commit:** `docs: PR template and contributing guide`
 
 ### T101 — `/commit` slash command (Claude Code skill)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T100
 - **Parallel with:** T102
@@ -1247,7 +1332,7 @@ Wave 0. Runs FIRST in practice.
 - **Commit:** `chore: /commit slash command`
 
 ### T102 — Demo PR through the workflow
-- **Status:** [ ]
+- **Status:** [-] deferred (requires CI and remote setup)
 - **Owner:** backend-dev
 - **Depends on:** T100, T094
 - **Parallel with:** T101
@@ -1262,7 +1347,7 @@ Wave 0. Runs FIRST in practice.
 ---
 
 ### T103 — `scripts/worktree-new.sh` helper
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T099
 - **Parallel with:** T104, T105
@@ -1272,7 +1357,7 @@ Wave 0. Runs FIRST in practice.
 - **Commit:** `chore: worktree helper script`
 
 ### T104 — `/spec-check` slash command
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T101
 - **Parallel with:** T103, T105
@@ -1282,7 +1367,7 @@ Wave 0. Runs FIRST in practice.
 - **Commit:** `chore: /spec-check slash command`
 
 ### T105 — `/principles-check` slash command
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T101
 - **Parallel with:** T103, T104
@@ -1292,7 +1377,7 @@ Wave 0. Runs FIRST in practice.
 - **Commit:** `chore: /principles-check slash command`
 
 ### T106 — `docs/PARALLEL-WORKFLOW.md` + demo
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T103
 - **Parallel with:** —
@@ -1309,7 +1394,7 @@ Wave 0. Runs FIRST in practice.
 ---
 
 ### T107 — `docs/SPEC-COVERAGE.md` audit
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T095, T096, T097
 - **Parallel with:** —
@@ -1319,7 +1404,7 @@ Wave 0. Runs FIRST in practice.
 - **Commit:** `docs: spec coverage audit`
 
 ### T108 — Lighthouse + bundle size budget
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T071
 - **Parallel with:** T109
@@ -1330,7 +1415,7 @@ Wave 0. Runs FIRST in practice.
 - **Commit:** `perf(frontend): Lighthouse and bundle size budgets met`
 
 ### T109 — Security audit
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** code-reviewer
 - **Depends on:** T107
 - **Parallel with:** T108
@@ -1343,7 +1428,7 @@ Wave 0. Runs FIRST in practice.
 - **Commit:** `chore: security audit (no changes)` (or fixes)
 
 ### T110 — README.md (root)
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T107
 - **Parallel with:** T111
@@ -1375,6 +1460,141 @@ Wave 0. Runs FIRST in practice.
 
 ---
 
+# Phase 14 — Frontend feature completeness + design upgrade
+
+Implements missing frontend features identified by requirements audit. Added after Phase 13 planning.
+
+---
+
+### T113 — Linkable lightbox via `?photo=` URL param (F3.7, US-10)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T070
+- **Acceptance:**
+  - `useLightboxNav` hook syncs lightbox state with `?photo=<id>` URL param.
+  - Opening lightbox sets param, navigating updates it, closing removes it.
+  - Loading a URL with `?photo=<id>` opens the lightbox directly.
+  - Works on GalleryPage, FavoritesPage, AlbumPage.
+- **Commit:** `feat(frontend): linkable lightbox via ?photo= URL param`
+
+### T114 — Inline editing in lightbox (F3.3, US-25, US-25a)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T068
+- **Acceptance:**
+  - Owner-only edit button (pencil icon) in lightbox top bar.
+  - Slide-up edit panel: title input, description textarea, album select, tag toggle chips.
+  - New tag creation: inline text input with Enter-to-add, green pending chips, sent as `new_tags[]`.
+  - Save calls `useUpdatePhoto` mutation; Cancel or photo change resets form.
+  - Keyboard shortcuts disabled while editing.
+- **Commit:** `feat(frontend): inline photo editing in lightbox with tag creation`
+
+### T115 — Upload metadata form (F4.5, US-18)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T069
+- **Acceptance:**
+  - UploadModal shows album select + tag toggle chips before file selection.
+  - Metadata passed to `useUpload` as `meta` parameter.
+  - Fields hidden once upload starts.
+- **Commit:** `feat(frontend): album and tag selection at upload time`
+
+### T116 — Favorites-first sort option (F2.5)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T064
+- **Acceptance:**
+  - Sort dropdown includes "Favorites first" option.
+  - Maps to backend `sort=favorites&order=desc`.
+  - All sort options correctly map to backend `sort` + `order` params.
+- **Commit:** `feat(frontend): favorites-first sort + fix sort param mapping`
+
+### T117 — Album CRUD UI in sidebar (F6.1, F6.6, US-21)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T064
+- **Acceptance:**
+  - Create album: inline form with name + description, triggered by + button.
+  - Rename album: inline edit on hover (pencil icon).
+  - Delete album: custom ConfirmDialog (no browser alert).
+  - Album description editable on AlbumPage (owner-only, inline with pencil icon).
+- **Commit:** `feat(frontend): album CRUD in sidebar + description editing`
+
+### T118 — Multi-select + bulk delete on GalleryPage (F1.6, US-26a)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T067
+- **Acceptance:**
+  - "Select" button enters select mode; checkmark overlay on each photo.
+  - Clicking a photo toggles selection (overlay has its own click handler).
+  - "Delete selected" triggers custom ConfirmDialog (no `window.confirm`).
+  - Bulk delete fires `deletePhoto.mutate` per selected photo, clears selection on completion.
+- **Commit:** `feat(frontend): multi-select with bulk delete`
+
+### T119 — Tag creation in sidebar (F7.6)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T064
+- **Acceptance:**
+  - + button next to Tags heading opens inline input.
+  - Enter creates a slug from the name and toggles it as a filter.
+  - Hint text "Press Enter to create" shown below input.
+- **Commit:** `feat(frontend): tag creation input in sidebar`
+
+### T120 — Stats bar in sidebar (F1.7)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T064
+- **Acceptance:**
+  - Bottom of sidebar shows photo count, album count, tag count with icons.
+  - Updates reactively as data changes.
+- **Commit:** `feat(frontend): stats bar in sidebar`
+
+### T121 — Empty state upgrade + /register route (F1.5, US-30)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T070
+- **Acceptance:**
+  - Empty gallery shows icon, two-line copy, "Upload Photos" CTA button.
+  - `/register` route added pointing to LoginPage (which has register mode toggle).
+- **Commit:** `feat(frontend): empty state CTA + /register route`
+
+### T122 — Design system upgrade + Pinterest-style gallery
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T055
+- **Acceptance:**
+  - Dark sidebar with custom color tokens (`sidebar`, `sidebar-hover`, `sidebar-active`, etc.).
+  - Brand color palette (50–700) + accent color in `@theme`.
+  - PhotoCard: `rounded-2xl`, hover shadow, scale zoom, gradient overlay, slide-up info bar.
+  - MasonryGrid: 5 columns on xl screens, increased gap.
+  - Navbar: compact h-14, brand icon, avatar initial circle, refined search field.
+  - ConfirmDialog component replaces all `window.confirm` calls.
+  - Custom spinner for loading states (no text-only "Loading...").
+- **Commit:** `feat(frontend): design system upgrade + Pinterest-style gallery`
+
+### T123 — Fix sort param mapping (F2.5 bug)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T116
+- **Acceptance:**
+  - Navbar sort options map to correct backend params: `created_at`/`title`/`favorites` + `asc`/`desc`.
+  - Previous bug: sent raw UI values (`newest`, `title_asc`) which backend didn't recognize.
+  - Reverse mapping from URL params back to dropdown label works correctly.
+- **Commit:** `fix(frontend): sort dropdown maps to correct backend sort+order params`
+
+### T124 — Fix select mode click-through bug (F1.6 bug)
+- **Status:** [x]
+- **Owner:** frontend-dev
+- **Depends on:** T118
+- **Acceptance:**
+  - In select mode, clicking the overlay area toggles selection (not swallowed by overlay).
+  - MasonryGrid wraps `renderOverlay` in a clickable div with `onClick` handler.
+  - Both GalleryPage and FavoritesPage overlays work correctly.
+- **Commit:** `fix(frontend): select overlay captures clicks properly`
+
+---
+
 ## Task summary
 
 | Phase | Range | Count | Owner mix | Wave |
@@ -1385,6 +1605,7 @@ Wave 0. Runs FIRST in practice.
 | 4 — Frontend setup | T055–T062 | 8 | frontend-dev + reviewer | 1 (Track C) |
 | 5 — React components | T063–T071 | 9 | frontend-dev + reviewer | 1 (Track C cont.) |
 | 6 — Image pipeline | T072–T080 | 9 | backend-dev + reviewer | 1 (Track A cont.) |
+| 6.5 — Favorites refactor | T090–T095 | 6 | mixed | 1.5 |
 | 7 — Queue monitoring | T081–T085 | 5 | backend-dev + reviewer | 2 |
 | 8 — AWS migration | T086–T089 | 4 | backend-dev + reviewer | 2 |
 | 9 — Hooks | T090–T094 | 5 | mixed | 0 |
@@ -1392,7 +1613,8 @@ Wave 0. Runs FIRST in practice.
 | 11 — Git + GitHub | T099–T102 | 4 | backend-dev | 0 |
 | 12 — Multi-agent | T103–T106 | 4 | backend-dev | 3 |
 | 13 — Final assembly | T107–T112 | 6 | mixed | 3 |
-| **Total** | | **112** | | |
+| 14 — Frontend features + design | T113–T124 | 12 | frontend-dev | 4 |
+| **Total** | | **124** | | |
 
 ---
 

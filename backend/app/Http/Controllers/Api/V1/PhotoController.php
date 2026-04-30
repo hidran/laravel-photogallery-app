@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Photo\UploadPhotosAction;
 use App\Enums\TokenAbility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Photo\IndexPhotosRequest;
+use App\Http\Requests\Photo\StorePhotosRequest;
 use App\Http\Requests\Photo\UpdatePhotoRequest;
 use App\Http\Resources\PhotoData;
 use App\Models\Photo;
@@ -21,18 +23,70 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 /**
- * DESIGN.md §6.2 — read endpoints. Mutating actions land in T032/T033/T034
- * once the upload pipeline + favorite endpoints are wired.
+ * DESIGN.md §6.2 — Photo CRUD + favorites.
  */
 final class PhotoController extends Controller
 {
+    /**
+     * POST /photos — upload 1-20 photos, dispatch ProcessPhoto batch.
+     *
+     * Returns 202 Accepted with a Location header pointing to the batch
+     * status endpoint so the client can poll for processing completion
+     * (DESIGN.md §6.2, §12.2).
+     */
+    public function store(StorePhotosRequest $request, UploadPhotosAction $action): JsonResponse
+    {
+        $this->ensureCan($request, 'create', Photo::class, TokenAbility::PhotosWrite);
+
+        $validated = $request->validated();
+
+        // Resolve tag names from existing slugs + new tag names.
+        $existingNames = ! empty($validated['tags'])
+            ? Tag::query()->whereIn('slug', $validated['tags'])->pluck('name')->all()
+            : [];
+
+        $tagNames = collect($existingNames)
+            ->merge($validated['new_tags'] ?? [])
+            ->unique()
+            ->values()
+            ->all();
+
+        $result = $action(
+            files: $validated['files'],
+            user: $request->user(),
+            albumId: $validated['album_id'] ?? null,
+            tagNames: $tagNames,
+            titles: $validated['titles'] ?? [],
+            description: $validated['description'] ?? null,
+        );
+
+        // Load relations for the response.
+        $photos = collect($result['photos'])->each(fn (Photo $p) => $p->load(PhotoData::WITH));
+
+        return response()->json([
+            'data' => [
+                'batch_id' => $result['batch_id'],
+                'total' => $result['total'],
+                'photos' => PhotoData::collection($photos),
+            ],
+        ], 202)->header(
+            'Location',
+            url("/api/v1/photos/batch/{$result['batch_id']}"),
+        );
+    }
+
     public function index(IndexPhotosRequest $request): AnonymousResourceCollection
     {
-        $page = PhotoQuery::for(Photo::query()->with(PhotoData::WITH))
+        // Resolve user via Sanctum guard directly — public route has no
+        // auth:sanctum middleware, so $request->user() is null even with
+        // a valid token. auth('sanctum')->user() resolves it optionally.
+        $user = auth('sanctum')->user();
+
+        $page = PhotoQuery::for(Photo::query()->with(PhotoData::WITH)->withCount(PhotoData::WITH_COUNT))
             ->withSearch($request->validated('search'))
             ->withTags($request->validated('tags'))
             ->withAlbum($request->validated('album_id'))
-            ->withFavorites($request->boolean('favorites'))
+            ->withFavorites($request->boolean('favorites'), $user?->id)
             ->applySort(
                 $request->validated('sort'),
                 $request->validated('order'),
@@ -48,6 +102,7 @@ final class PhotoController extends Controller
     public function show(Photo $photo): JsonResponse
     {
         $photo->load(PhotoData::WITH);
+        $photo->loadCount(PhotoData::WITH_COUNT);
 
         return PhotoData::make($photo)->response();
     }
@@ -109,27 +164,55 @@ final class PhotoController extends Controller
     /**
      * PUT /photos/{photo}/favorite — idempotent. Always returns 204
      * (DESIGN.md §6.2 favorite block) regardless of prior state.
+     *
+     * Any authenticated user can favorite any photo — no ownership check.
      */
     public function favorite(Request $request, Photo $photo): Response
     {
-        $this->ensureCan($request, 'update', $photo, TokenAbility::PhotosWrite);
-
-        if (! $photo->is_favorite) {
-            $photo->forceFill(['is_favorite' => true])->save();
+        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
+            throw new AuthorizationException;
         }
+
+        $request->user()->favoritePhotos()->syncWithoutDetaching([$photo->id]);
 
         return response()->noContent();
     }
 
     /**
      * DELETE /photos/{photo}/favorite — idempotent.
+     *
+     * Any authenticated user can unfavorite any photo — no ownership check.
      */
     public function unfavorite(Request $request, Photo $photo): Response
     {
-        $this->ensureCan($request, 'update', $photo, TokenAbility::PhotosWrite);
+        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
+            throw new AuthorizationException;
+        }
 
-        if ($photo->is_favorite) {
-            $photo->forceFill(['is_favorite' => false])->save();
+        $request->user()->favoritePhotos()->detach($photo->id);
+
+        return response()->noContent();
+    }
+
+    /**
+     * DELETE /photos/favorites/batch — unfavorite multiple photos at once.
+     *
+     * Body: { "photo_ids": ["uuid", ...] } or { "all": true }
+     */
+    public function unfavoriteBatch(Request $request): Response
+    {
+        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
+            throw new AuthorizationException;
+        }
+
+        if ($request->boolean('all')) {
+            $request->user()->favoritePhotos()->detach();
+        } else {
+            $validated = $request->validate([
+                'photo_ids' => ['required', 'array', 'min:1'],
+                'photo_ids.*' => ['uuid'],
+            ]);
+            $request->user()->favoritePhotos()->detach($validated['photo_ids']);
         }
 
         return response()->noContent();
@@ -139,13 +222,15 @@ final class PhotoController extends Controller
      * Combine policy + token-ability gate (CLAUDE.md rule 10). Throws the
      * same AuthorizationException either way so the universal-envelope
      * 403 fires from bootstrap/app.php.
+     *
+     * @param  Photo|class-string<Photo>  $target
      */
-    private function ensureCan(Request $request, string $action, Photo $photo, TokenAbility $required): void
+    private function ensureCan(Request $request, string $action, Photo|string $target, TokenAbility $required): void
     {
         if (! $request->user()?->tokenCan($required->value)) {
             throw new AuthorizationException;
         }
-        if ($request->user()?->cannot($action, $photo)) {
+        if ($request->user()?->cannot($action, $target)) {
             throw new AuthorizationException;
         }
     }

@@ -81,10 +81,10 @@ final class PhotoQuery
         return $this;
     }
 
-    public function withFavorites(bool $favoritesOnly): self
+    public function withFavorites(bool $favoritesOnly, ?string $userId = null): self
     {
-        if ($favoritesOnly) {
-            $this->query->where('is_favorite', true);
+        if ($favoritesOnly && $userId !== null) {
+            $this->query->whereHas('favoritedBy', fn (Builder $q) => $q->where('users.id', $userId));
         }
 
         return $this;
@@ -112,7 +112,8 @@ final class PhotoQuery
         $order = $order === 'asc' ? 'asc' : 'desc';
 
         match ($sort) {
-            'favorites' => $this->query->orderBy('is_favorite', $order)
+            'favorites' => $this->query->withCount('favoritedBy')
+                ->orderBy('favorited_by_count', $order)
                 ->orderBy('created_at', $order),
             'title' => $this->query->orderBy('title', $order),
             default => $this->query->orderBy('created_at', $order),

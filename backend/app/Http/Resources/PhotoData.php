@@ -26,6 +26,16 @@ final class PhotoData extends JsonResource
         'album:id,name',
         'tags:id,name,slug',
         'user:id,name',
+        'favoritedBy:id',
+    ];
+
+    /**
+     * Eager-load list with favorites count for list endpoints.
+     *
+     * @var list<string>
+     */
+    public const array WITH_COUNT = [
+        'favoritedBy',
     ];
 
     /**
@@ -33,7 +43,7 @@ final class PhotoData extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $viewer = $request->user();
+        $viewer = $request->user() ?? auth('sanctum')->user();
         $isOwnerOrAdmin = $viewer !== null && $viewer->can('view', $this->resource);
         $isCompleted = $this->processing_status?->value === 'completed';
 
@@ -52,7 +62,14 @@ final class PhotoData extends JsonResource
             'height' => $isCompleted ? $this->height : null,
             'file_size' => (int) $this->file_size,
             'mime_type' => $this->mime_type,
-            'is_favorite' => (bool) $this->is_favorite,
+            'is_favorite' => $this->when(
+                $viewer !== null,
+                fn () => $this->relationLoaded('favoritedBy')
+                    ? $this->favoritedBy->contains('id', $viewer?->id)
+                    : false,
+                false,
+            ),
+            'favorites_count' => $this->favorited_by_count ?? 0,
             // exif may carry GPS / device serials; processing_error may
             // leak path fragments and worker context — both are owner+admin
             // only (DESIGN.md §6.6 + security review S1 on PR #4).

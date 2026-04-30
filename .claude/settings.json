@@ -1,0 +1,21 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "filePattern": "backend/**/*.php",
+        "command": "cd backend && vendor/bin/pint --dirty --format agent"
+      },
+      {
+        "matcher": "Edit|Write",
+        "filePattern": "frontend/**/*.{ts,tsx,css}",
+        "command": "cd frontend && npx prettier --write"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "command": "echo \"$PROMPT\" | grep -qiE 'rm -rf|git push --force|git reset --hard' && echo 'BLOCKED: Destructive command detected. Please confirm you want to proceed.' && exit 1 || exit 0"
+      }
+    ]
+  }
+}

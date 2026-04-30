@@ -26,7 +26,7 @@ final class IndexPhotosRequest extends FormRequest
             'tags' => ['nullable', 'array', 'max:10'],
             'tags.*' => ['string', 'exists:tags,slug'],
             'album_id' => ['nullable', 'uuid', 'exists:albums,id'],
-            'favorites' => ['nullable', 'in:0,1'],
+            'favorites' => ['nullable', 'in:0,1,true,false'],
             'sort' => ['nullable', 'in:created_at,title,favorites'],
             'order' => ['nullable', 'in:asc,desc'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
