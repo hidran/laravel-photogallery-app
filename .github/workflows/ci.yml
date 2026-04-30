@@ -9,6 +9,7 @@ on:
 jobs:
   backend:
     name: Backend (PHP ${{ matrix.php }})
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -16,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        php: ['8.3']
+        php: ['8.4']
 
     steps:
       - uses: actions/checkout@v4
@@ -52,6 +53,7 @@ jobs:
 
   frontend:
     name: Frontend (Node ${{ matrix.node }})
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     defaults:
       run:

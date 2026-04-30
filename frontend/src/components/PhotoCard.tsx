@@ -77,9 +77,7 @@ export function PhotoCard({ photo, onClick, onDelete, isOwner }: PhotoCardProps)
             <p className="truncate text-sm font-semibold text-white drop-shadow-sm">
               {photo.title}
             </p>
-            {photo.album && (
-              <p className="truncate text-xs text-white/70">{photo.album.name}</p>
-            )}
+            {photo.album && <p className="truncate text-xs text-white/70">{photo.album.name}</p>}
           </div>
           <button
             type="button"

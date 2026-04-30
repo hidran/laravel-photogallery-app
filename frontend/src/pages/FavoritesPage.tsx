@@ -1,7 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Heart, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { usePhotos, useRemoveFavoritesBatch, useRemoveAllFavorites, useDeletePhoto } from '../hooks';
+import {
+  usePhotos,
+  useRemoveFavoritesBatch,
+  useRemoveAllFavorites,
+  useDeletePhoto,
+} from '../hooks';
 import { useMe } from '../hooks/useAuth';
 import { useLightboxNav } from '../hooks/useLightboxNav';
 import { MasonryGrid } from '../components/MasonryGrid';
