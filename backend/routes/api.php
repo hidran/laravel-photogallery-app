@@ -57,6 +57,7 @@ Route::middleware('throttle:api')->group(function () {
         Route::delete('/photos/{photo}', [PhotoController::class, 'destroy']);
         Route::put('/photos/{photo}/favorite', [PhotoController::class, 'favorite']);
         Route::delete('/photos/{photo}/favorite', [PhotoController::class, 'unfavorite']);
+        Route::delete('/photos/favorites/batch', [PhotoController::class, 'unfavoriteBatch']);
 
         Route::post('/albums', [AlbumController::class, 'store']);
         Route::patch('/albums/{album}', [AlbumController::class, 'update']);

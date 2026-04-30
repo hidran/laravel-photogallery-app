@@ -91,6 +91,11 @@ export const copy = {
     title: 'Favorites',
     add: 'Add to favorites',
     remove: 'Remove from favorites',
+    removeSelected: 'Unfavorite selected',
+    removeAll: 'Unfavorite all',
+    selectMode: 'Select',
+    cancelSelect: 'Cancel',
+    selectedCount: (n: number) => `${n} selected`,
   },
 
   albums: {

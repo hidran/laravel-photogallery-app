@@ -206,3 +206,52 @@ test('unfavorite then GET shows is_favorite=false in response', function () {
     $response = $this->getJson("/api/v1/photos/{$photo->id}");
     expect($response->json('data.is_favorite'))->toBeFalse();
 });
+
+// --- Batch unfavorite ---
+
+test('DELETE /photos/favorites/batch removes selected favorites', function () {
+    $user = authenticateUser();
+    $photos = Photo::factory()->processed()->count(3)->create();
+    $user->favoritePhotos()->attach($photos->pluck('id'));
+
+    $this->deleteJson('/api/v1/photos/favorites/batch', [
+        'photo_ids' => [$photos[0]->id, $photos[1]->id],
+    ])->assertNoContent();
+
+    expect($user->favoritePhotos()->count())->toBe(1);
+    expect($user->favoritePhotos()->first()->id)->toBe($photos[2]->id);
+});
+
+test('DELETE /photos/favorites/batch with all=true removes all favorites', function () {
+    $user = authenticateUser();
+    $photos = Photo::factory()->processed()->count(3)->create();
+    $user->favoritePhotos()->attach($photos->pluck('id'));
+
+    $this->deleteJson('/api/v1/photos/favorites/batch', [
+        'all' => true,
+    ])->assertNoContent();
+
+    expect($user->favoritePhotos()->count())->toBe(0);
+});
+
+test('batch unfavorite does not affect other users favorites', function () {
+    $userA = authenticateUser();
+    $userB = User::factory()->create();
+    $photo = Photo::factory()->processed()->create();
+
+    $userA->favoritePhotos()->attach($photo->id);
+    $userB->favoritePhotos()->attach($photo->id);
+
+    $this->deleteJson('/api/v1/photos/favorites/batch', [
+        'all' => true,
+    ])->assertNoContent();
+
+    expect($userA->favoritePhotos()->count())->toBe(0);
+    expect($userB->favoritePhotos()->count())->toBe(1);
+});
+
+test('batch unfavorite requires authentication', function () {
+    $this->deleteJson('/api/v1/photos/favorites/batch', [
+        'all' => true,
+    ])->assertUnauthorized();
+});

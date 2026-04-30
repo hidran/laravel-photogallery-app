@@ -71,3 +71,11 @@ export async function addFavorite(id: string): Promise<void> {
 export async function removeFavorite(id: string): Promise<void> {
   await apiClient.delete(`/photos/${id}/favorite`);
 }
+
+export async function removeFavoritesBatch(photoIds: string[]): Promise<void> {
+  await apiClient.delete('/photos/favorites/batch', { data: { photo_ids: photoIds } });
+}
+
+export async function removeAllFavorites(): Promise<void> {
+  await apiClient.delete('/photos/favorites/batch', { data: { all: true } });
+}

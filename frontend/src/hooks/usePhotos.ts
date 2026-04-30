@@ -11,6 +11,8 @@ import {
   deletePhoto,
   addFavorite,
   removeFavorite,
+  removeFavoritesBatch,
+  removeAllFavorites,
 } from '../api/photos';
 import type { PhotosIndexParams, UpdatePhotoPayload } from '../api/photos';
 import type { Photo, PaginatedResponse, SingleResponse } from '../types';
@@ -117,6 +119,28 @@ export function useToggleFavorite() {
     onSettled: (_data, _error, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['photos'] });
       queryClient.invalidateQueries({ queryKey: ['photo', id] });
+    },
+  });
+}
+
+export function useRemoveFavoritesBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (photoIds: string[]) => removeFavoritesBatch(photoIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
+    },
+  });
+}
+
+export function useRemoveAllFavorites() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => removeAllFavorites(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
     },
   });
 }

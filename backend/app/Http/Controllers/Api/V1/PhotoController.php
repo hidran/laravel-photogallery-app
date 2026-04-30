@@ -190,11 +190,34 @@ final class PhotoController extends Controller
     }
 
     /**
+     * DELETE /photos/favorites/batch — unfavorite multiple photos at once.
+     *
+     * Body: { "photo_ids": ["uuid", ...] } or { "all": true }
+     */
+    public function unfavoriteBatch(Request $request): Response
+    {
+        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
+            throw new AuthorizationException;
+        }
+
+        if ($request->boolean('all')) {
+            $request->user()->favoritePhotos()->detach();
+        } else {
+            $validated = $request->validate([
+                'photo_ids' => ['required', 'array', 'min:1'],
+                'photo_ids.*' => ['uuid'],
+            ]);
+            $request->user()->favoritePhotos()->detach($validated['photo_ids']);
+        }
+
+        return response()->noContent();
+    }
+
+    /**
      * Combine policy + token-ability gate (CLAUDE.md rule 10). Throws the
      * same AuthorizationException either way so the universal-envelope
      * 403 fires from bootstrap/app.php.
-     */
-    /**
+     *
      * @param  Photo|class-string<Photo>  $target
      */
     private function ensureCan(Request $request, string $action, Photo|string $target, TokenAbility $required): void
