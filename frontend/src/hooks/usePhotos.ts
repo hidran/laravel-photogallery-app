@@ -71,7 +71,14 @@ export function useToggleFavorite() {
 
       queryClient.setQueryData<SingleResponse<Photo>>(['photo', id], (old) => {
         if (!old) return old;
-        return { ...old, data: { ...old.data, is_favorite: !isFavorite } };
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            is_favorite: !isFavorite,
+            favorites_count: old.data.favorites_count + (isFavorite ? -1 : 1),
+          },
+        };
       });
 
       return { previousPhoto };

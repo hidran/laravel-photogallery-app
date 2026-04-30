@@ -21,10 +21,8 @@ use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -59,8 +57,10 @@ final class PhotosTable
                     ->formatStateUsing(fn (int $state): string => HumanBytes::format($state))
                     ->sortable(),
 
-                ToggleColumn::make('is_favorite')
-                    ->label('Favorite'),
+                TextColumn::make('favorited_by_count')
+                    ->counts('favoritedBy')
+                    ->label('Favorites')
+                    ->sortable(),
 
                 TextColumn::make('processing_status')
                     ->label('Status')
@@ -85,8 +85,9 @@ final class PhotosTable
                     ->relationship('tags', 'name')
                     ->multiple(),
 
-                TernaryFilter::make('is_favorite')
-                    ->label('Favorite'),
+                Filter::make('has_favorites')
+                    ->query(fn (Builder $query): Builder => $query->has('favoritedBy'))
+                    ->label('Has favorites'),
 
                 Filter::make('created_at')
                     ->form([
@@ -147,15 +148,6 @@ final class PhotosTable
                         ->action(function (Collection $records, array $data): void {
                             $records->each->update(['album_id' => $data['album_id']]);
                             Notification::make()->title('Photos assigned to album')->success()->send();
-                        }),
-                    BulkAction::make('toggleFavorite')
-                        ->label('Toggle Favorite')
-                        ->icon('heroicon-o-heart')
-                        ->action(function (Collection $records): void {
-                            $records->each(function (Photo $photo): void {
-                                $photo->update(['is_favorite' => ! $photo->is_favorite]);
-                            });
-                            Notification::make()->title('Favorites toggled')->success()->send();
                         }),
                     BulkAction::make('reprocess')
                         ->label('Reprocess')

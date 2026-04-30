@@ -43,6 +43,7 @@ export interface Photo {
   file_size: number;
   mime_type: string;
   is_favorite: boolean;
+  favorites_count: number;
   exif: PhotoExif | null;
   processing_status: ProcessingStatus;
   processing_error: string | null;

@@ -54,13 +54,18 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
             type="button"
             onClick={handleFavoriteClick}
             aria-label={photo.is_favorite ? copy.favorites.remove : copy.favorites.add}
-            className="shrink-0 rounded-full p-1.5 transition-colors hover:bg-white/20"
+            className="relative shrink-0 rounded-full p-1.5 transition-colors hover:bg-white/20"
           >
             <Heart
               className={`h-5 w-5 ${
                 photo.is_favorite ? 'fill-red-500 text-red-500' : 'text-white'
               }`}
             />
+            {photo.favorites_count > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                {photo.favorites_count}
+              </span>
+            )}
           </button>
         </div>
       </div>
