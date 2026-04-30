@@ -77,11 +77,16 @@ final class PhotoController extends Controller
 
     public function index(IndexPhotosRequest $request): AnonymousResourceCollection
     {
+        // Resolve user via Sanctum guard directly — public route has no
+        // auth:sanctum middleware, so $request->user() is null even with
+        // a valid token. auth('sanctum')->user() resolves it optionally.
+        $user = auth('sanctum')->user();
+
         $page = PhotoQuery::for(Photo::query()->with(PhotoData::WITH)->withCount(PhotoData::WITH_COUNT))
             ->withSearch($request->validated('search'))
             ->withTags($request->validated('tags'))
             ->withAlbum($request->validated('album_id'))
-            ->withFavorites($request->boolean('favorites'), $request->user()?->id)
+            ->withFavorites($request->boolean('favorites'), $user?->id)
             ->applySort(
                 $request->validated('sort'),
                 $request->validated('order'),

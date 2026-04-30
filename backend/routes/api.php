@@ -41,7 +41,9 @@ Route::middleware(['throttle:api', 'auth:sanctum'])->group(function () {
 });
 
 Route::middleware('throttle:api')->group(function () {
-    // Public reads.
+    // Public reads — guests allowed. The 'auth:sanctum' guard is applied
+    // as optional so $request->user() resolves when a valid token is sent
+    // (needed for per-user is_favorite). Does NOT reject guests.
     Route::get('/photos', [PhotoController::class, 'index']);
     Route::get('/photos/{photo}', [PhotoController::class, 'show'])->middleware(ETag::class);
 

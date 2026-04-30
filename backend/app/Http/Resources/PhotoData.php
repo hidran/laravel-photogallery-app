@@ -43,7 +43,7 @@ final class PhotoData extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $viewer = $request->user();
+        $viewer = $request->user() ?? auth('sanctum')->user();
         $isOwnerOrAdmin = $viewer !== null && $viewer->can('view', $this->resource);
         $isCompleted = $this->processing_status?->value === 'completed';
 
