@@ -994,7 +994,7 @@ Refactors favorites from a `is_favorite` boolean column on `photos` to a `favori
 ---
 
 ### T090 — Migration: create `favorites` pivot table + drop `is_favorite` column
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T080
 - **Parallel with:** —
@@ -1008,7 +1008,7 @@ Refactors favorites from a `is_favorite` boolean column on `photos` to a `favori
 - **Commit:** `feat(db): favorites pivot table, drop is_favorite column`
 
 ### T091 — Update Photo + User models for favorites relationship
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T090
 - **Parallel with:** T092
@@ -1021,7 +1021,7 @@ Refactors favorites from a `is_favorite` boolean column on `photos` to a `favori
 - **Commit:** `refactor(models): favorites relationship via pivot`
 
 ### T092 — Update PhotoController favorite/unfavorite + PhotoData resource
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T091
 - **Parallel with:** T093
@@ -1035,7 +1035,7 @@ Refactors favorites from a `is_favorite` boolean column on `photos` to a `favori
 - **Commit:** `refactor(api): favorites via pivot table`
 
 ### T093 — Update Filament PhotoResource for favorites pivot
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T091
 - **Parallel with:** T092
@@ -1047,7 +1047,7 @@ Refactors favorites from a `is_favorite` boolean column on `photos` to a `favori
 - **Commit:** `refactor(filament): favorites as pivot in PhotoResource`
 
 ### T094 — Update frontend hooks + components for favorites pivot
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** frontend-dev
 - **Depends on:** T092
 - **Parallel with:** —
@@ -1060,7 +1060,7 @@ Refactors favorites from a `is_favorite` boolean column on `photos` to a `favori
 - **Commit:** `refactor(frontend): favorites via pivot`
 
 ### T095 — Update tests for favorites refactor
-- **Status:** [ ]
+- **Status:** [x]
 - **Owner:** backend-dev
 - **Depends on:** T092, T093
 - **Parallel with:** —
