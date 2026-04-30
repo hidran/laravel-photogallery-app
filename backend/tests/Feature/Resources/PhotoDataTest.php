@@ -33,8 +33,9 @@ it('exposes the documented top-level keys', function () {
 
     expect($payload)->toHaveKeys([
         'id', 'title', 'description', 'filename', 'urls', 'width', 'height',
-        'file_size', 'mime_type', 'is_favorite', 'exif', 'processing_status',
-        'processing_error', 'tags', 'owner', 'created_at', 'updated_at',
+        'file_size', 'mime_type', 'is_favorite', 'favorites_count', 'exif',
+        'processing_status', 'processing_error', 'tags', 'owner',
+        'created_at', 'updated_at',
     ]);
 });
 

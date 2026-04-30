@@ -48,9 +48,8 @@ final class UploadPhotosAction
         array $tagNames,
         array $titles = [],
         ?string $description = null,
-        bool $isFavorite = false,
     ): array {
-        [$photos, $jobs] = DB::transaction(function () use ($files, $user, $albumId, $tagNames, $titles, $description, $isFavorite): array {
+        [$photos, $jobs] = DB::transaction(function () use ($files, $user, $albumId, $tagNames, $titles, $description): array {
             $photos = [];
             $jobs = [];
 
@@ -71,7 +70,6 @@ final class UploadPhotosAction
                     'original_path' => $path,
                     'file_size' => $file->getSize(),
                     'mime_type' => $file->getMimeType(),
-                    'is_favorite' => $isFavorite,
                     'processing_status' => ProcessingStatus::Pending,
                 ]);
 

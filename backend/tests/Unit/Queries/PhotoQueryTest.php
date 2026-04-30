@@ -63,13 +63,26 @@ it('filters by album_id', function () {
     expect($page->pluck('id')->all())->toBe([$inAlbum->id]);
 });
 
-it('filters by favorites only', function () {
-    $fav = Photo::factory()->create(['is_favorite' => true]);
-    Photo::factory()->create(['is_favorite' => false]);
+it('filters by favorites for the given user', function () {
+    $user = User::factory()->create();
+    $fav = Photo::factory()->create();
+    $notFav = Photo::factory()->create();
+    $user->favoritePhotos()->attach($fav->id);
 
-    $page = PhotoQuery::for()->withFavorites(true)->paginate(null, 10);
+    $page = PhotoQuery::for()->withFavorites(true, $user->id)->paginate(null, 10);
 
     expect($page->pluck('id')->all())->toBe([$fav->id]);
+});
+
+it('does not filter favorites when no userId provided', function () {
+    $user = User::factory()->create();
+    $fav = Photo::factory()->create();
+    $notFav = Photo::factory()->create();
+    $user->favoritePhotos()->attach($fav->id);
+
+    $page = PhotoQuery::for()->withFavorites(true, null)->paginate(null, 10);
+
+    expect($page->count())->toBe(2);
 });
 
 it('filters by owner via withOwner', function () {
@@ -103,9 +116,13 @@ it('orders by title asc when requested', function () {
     expect($page->pluck('title')->all())->toBe(['Alpha', 'Bravo', 'Charlie']);
 });
 
-it('puts favorites first when sort=favorites', function () {
-    $unfav = Photo::factory()->create(['is_favorite' => false, 'created_at' => now()]);
-    $fav = Photo::factory()->create(['is_favorite' => true, 'created_at' => now()->subDay()]);
+it('puts most-favorited first when sort=favorites', function () {
+    $user1 = User::factory()->create();
+    $user2 = User::factory()->create();
+    $unfav = Photo::factory()->create(['created_at' => now()]);
+    $fav = Photo::factory()->create(['created_at' => now()->subDay()]);
+    $user1->favoritePhotos()->attach($fav->id);
+    $user2->favoritePhotos()->attach($fav->id);
 
     $page = PhotoQuery::for()->applySort('favorites', 'desc')->paginate(null, 10);
 
@@ -119,16 +136,16 @@ it('combines multiple filters', function () {
 
     $hit = Photo::factory()->create([
         'user_id' => $alice->id,
-        'is_favorite' => true,
         'title' => 'Sunny beach day',
     ]);
     $hit->tags()->attach($tag);
+    $alice->favoritePhotos()->attach($hit->id);
 
-    Photo::factory()->create(['user_id' => $alice->id, 'is_favorite' => false]);
+    Photo::factory()->create(['user_id' => $alice->id]);
 
     $page = PhotoQuery::for()
         ->withOwner($alice->id)
-        ->withFavorites(true)
+        ->withFavorites(true, $alice->id)
         ->withTags(['beach'])
         ->withSearch('beach')
         ->applySort('created_at', 'desc')

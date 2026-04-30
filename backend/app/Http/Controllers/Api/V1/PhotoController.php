@@ -58,7 +58,6 @@ final class PhotoController extends Controller
             tagNames: $tagNames,
             titles: $validated['titles'] ?? [],
             description: $validated['description'] ?? null,
-            isFavorite: (bool) ($validated['is_favorite'] ?? false),
         );
 
         // Load relations for the response.
@@ -78,11 +77,11 @@ final class PhotoController extends Controller
 
     public function index(IndexPhotosRequest $request): AnonymousResourceCollection
     {
-        $page = PhotoQuery::for(Photo::query()->with(PhotoData::WITH))
+        $page = PhotoQuery::for(Photo::query()->with(PhotoData::WITH)->withCount(PhotoData::WITH_COUNT))
             ->withSearch($request->validated('search'))
             ->withTags($request->validated('tags'))
             ->withAlbum($request->validated('album_id'))
-            ->withFavorites($request->boolean('favorites'))
+            ->withFavorites($request->boolean('favorites'), $request->user()?->id)
             ->applySort(
                 $request->validated('sort'),
                 $request->validated('order'),
@@ -98,6 +97,7 @@ final class PhotoController extends Controller
     public function show(Photo $photo): JsonResponse
     {
         $photo->load(PhotoData::WITH);
+        $photo->loadCount(PhotoData::WITH_COUNT);
 
         return PhotoData::make($photo)->response();
     }
@@ -159,28 +159,32 @@ final class PhotoController extends Controller
     /**
      * PUT /photos/{photo}/favorite — idempotent. Always returns 204
      * (DESIGN.md §6.2 favorite block) regardless of prior state.
+     *
+     * Any authenticated user can favorite any photo — no ownership check.
      */
     public function favorite(Request $request, Photo $photo): Response
     {
-        $this->ensureCan($request, 'update', $photo, TokenAbility::PhotosWrite);
-
-        if (! $photo->is_favorite) {
-            $photo->forceFill(['is_favorite' => true])->save();
+        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
+            throw new AuthorizationException;
         }
+
+        $request->user()->favoritePhotos()->syncWithoutDetaching([$photo->id]);
 
         return response()->noContent();
     }
 
     /**
      * DELETE /photos/{photo}/favorite — idempotent.
+     *
+     * Any authenticated user can unfavorite any photo — no ownership check.
      */
     public function unfavorite(Request $request, Photo $photo): Response
     {
-        $this->ensureCan($request, 'update', $photo, TokenAbility::PhotosWrite);
-
-        if ($photo->is_favorite) {
-            $photo->forceFill(['is_favorite' => false])->save();
+        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
+            throw new AuthorizationException;
         }
+
+        $request->user()->favoritePhotos()->detach($photo->id);
 
         return response()->noContent();
     }

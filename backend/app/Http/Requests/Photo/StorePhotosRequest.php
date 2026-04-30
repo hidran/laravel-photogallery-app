@@ -44,7 +44,6 @@ final class StorePhotosRequest extends FormRequest
             'tags.*' => ['string', 'exists:tags,slug'],
             'new_tags' => ['nullable', 'array', 'max:20'],
             'new_tags.*' => ['string', 'min:1', 'max:100', 'regex:/^[\w\s\-\.]+$/u'],
-            'is_favorite' => ['nullable', 'in:0,1'],
         ];
     }
 }

@@ -28,7 +28,7 @@ final class UpdatePhotoRequest extends FormRequest
      */
     public function rules(): array
     {
-        $others = 'description,album_id,tags,new_tags,is_favorite';
+        $others = 'description,album_id,tags,new_tags';
 
         return [
             'title' => ['required_without_all:'.$others, 'string', 'min:1', 'max:255'],
@@ -42,7 +42,6 @@ final class UpdatePhotoRequest extends FormRequest
             'tags.*' => ['string', 'exists:tags,slug'],
             'new_tags' => ['nullable', 'array', 'max:20'],
             'new_tags.*' => ['string', 'min:1', 'max:100', 'regex:/^[\w\s\-\.]+$/u'],
-            'is_favorite' => ['nullable', 'boolean'],
         ];
     }
 }

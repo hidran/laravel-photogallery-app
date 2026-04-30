@@ -133,6 +133,6 @@ it('PATCH /photos/{id} requires at least one supported field', function () {
 
 it('PATCH /photos/{id} accepts a single field', function () {
     $request = makeUpdateRequest();
-    $v = Validator::make(['is_favorite' => true], $request->rules());
+    $v = Validator::make(['title' => 'New title'], $request->rules());
     expect($v->fails())->toBeFalse();
 });

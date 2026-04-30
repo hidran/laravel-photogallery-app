@@ -36,18 +36,6 @@ dataset('mutating_endpoints_with_owner_resource', function () {
 
             return ['method' => 'deleteJson', 'url' => "/api/v1/photos/{$photo->id}", 'body' => [], 'owner' => $owner];
         },
-        'PUT favorite' => function () {
-            $owner = User::factory()->create();
-            $photo = Photo::factory()->processed()->create(['user_id' => $owner->id]);
-
-            return ['method' => 'putJson', 'url' => "/api/v1/photos/{$photo->id}/favorite", 'body' => [], 'owner' => $owner];
-        },
-        'DELETE favorite' => function () {
-            $owner = User::factory()->create();
-            $photo = Photo::factory()->processed()->create(['user_id' => $owner->id]);
-
-            return ['method' => 'deleteJson', 'url' => "/api/v1/photos/{$photo->id}/favorite", 'body' => [], 'owner' => $owner];
-        },
         'PATCH album' => function () {
             $owner = User::factory()->create();
             $album = Album::factory()->create(['user_id' => $owner->id]);

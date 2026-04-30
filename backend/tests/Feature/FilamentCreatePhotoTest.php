@@ -28,7 +28,6 @@ test('admin can create a photo with all required fields populated', function () 
             'original_path' => [$file],
             'title' => 'Sunset over the bay',
             'description' => 'A beautiful sunset',
-            'is_favorite' => true,
         ])
         ->call('create')
         ->assertHasNoFormErrors();
