@@ -36,9 +36,12 @@ final class PhotoQuery
         $driver = DB::connection()->getDriverName();
 
         if (in_array($driver, ['mysql', 'pgsql'], true)) {
+            // Strip FULLTEXT boolean operators to prevent resource abuse
+            // (e.g. wildcard scans via `*` or forced term exclusion via `-`).
+            $sanitized = preg_replace('/[+\-><()\~\*\"@]+/', ' ', $term);
             $this->query->whereRaw(
                 'MATCH(title, description) AGAINST (? IN BOOLEAN MODE)',
-                [$term]
+                [trim((string) $sanitized)]
             );
         } else {
             $needle = '%'.addcslashes($term, '%_').'%';

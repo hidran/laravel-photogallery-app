@@ -30,10 +30,15 @@ final class HealthController extends Controller
 
         $healthy = ! in_array('error', $checks, true);
 
-        return response()->json(
-            array_merge(['status' => $healthy ? 'ok' : 'unavailable'], $checks),
-            $healthy ? 200 : 503
-        );
+        if ($healthy) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        // Log detailed check results server-side but don't expose subsystem
+        // names in the public response (information disclosure risk).
+        logger()->warning('Health check failed', $checks);
+
+        return response()->json(['status' => 'unavailable'], 503);
     }
 
     private function probeStorage(): string

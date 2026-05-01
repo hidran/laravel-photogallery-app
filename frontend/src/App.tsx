@@ -5,6 +5,8 @@ import { Toaster } from 'sonner';
 import { queryClient } from './lib/queryClient';
 import { copy } from './data/copy';
 import { Shell } from './components/Shell';
+import { RequireAuth } from './components/RequireAuth';
+import { AuthEventListener } from './components/AuthEventListener';
 
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
@@ -16,9 +18,16 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <AuthEventListener />
         <Suspense fallback={<div>{copy.gallery.loading}</div>}>
           <Routes>
-            <Route element={<Shell />}>
+            <Route
+              element={
+                <RequireAuth>
+                  <Shell />
+                </RequireAuth>
+              }
+            >
               <Route path="/" element={<GalleryPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/albums/:albumId" element={<AlbumPage />} />

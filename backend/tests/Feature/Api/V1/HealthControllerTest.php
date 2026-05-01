@@ -22,11 +22,8 @@ it('returns 200 with status=ok when storage and queue both pass', function () {
     $response = $this->getJson('/api/v1/health');
 
     $response->assertOk()
-        ->assertJson([
-            'status' => 'ok',
-            'storage' => 'ok',
-            'queue' => 'ok',
-        ]);
+        ->assertJson(['status' => 'ok'])
+        ->assertJsonMissing(['storage', 'queue']);
 });
 
 it('returns 503 with status=unavailable when queue table is missing', function () {
@@ -36,9 +33,5 @@ it('returns 503 with status=unavailable when queue table is missing', function (
     $response = $this->getJson('/api/v1/health');
 
     $response->assertStatus(503)
-        ->assertJson([
-            'status' => 'unavailable',
-            'storage' => 'ok',
-            'queue' => 'error',
-        ]);
+        ->assertExactJson(['status' => 'unavailable']);
 });

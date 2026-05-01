@@ -20,7 +20,14 @@ final class AdminUserSeeder extends Seeder
     public function run(): void
     {
         $email = (string) config('photogallery.admin.email', env('ADMIN_EMAIL', 'admin@example.com'));
-        $password = (string) env('ADMIN_PASSWORD', 'password');
+        $password = env('ADMIN_PASSWORD');
+
+        if ($password === null || $password === '') {
+            throw new \RuntimeException(
+                'ADMIN_PASSWORD env var must be set before seeding. '
+                .'Set it in .env or pass it inline: ADMIN_PASSWORD=secret php artisan db:seed'
+            );
+        }
 
         User::updateOrCreate(
             ['email' => $email],

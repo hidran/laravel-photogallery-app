@@ -14,6 +14,16 @@ final class BatchController extends Controller
 {
     public function show(Request $request, string $batchId): JsonResponse
     {
+        // Verify batch ownership before revealing any metadata (IDOR prevention).
+        $ownsBatch = Photo::query()
+            ->where('batch_id', $batchId)
+            ->where('user_id', $request->user()->id)
+            ->exists();
+
+        if (! $ownsBatch) {
+            return response()->json(['message' => 'Batch not found.'], 404);
+        }
+
         $batch = Bus::findBatch($batchId);
 
         if (! $batch) {

@@ -134,6 +134,13 @@ final class PhotoController extends Controller
             abort(404);
         }
 
+        // Whitelist Content-Type to prevent serving polyglot files (e.g. SVG
+        // with embedded scripts) with a dangerous MIME type.
+        $safeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        $contentType = in_array($photo->mime_type, $safeTypes, true)
+            ? $photo->mime_type
+            : 'application/octet-stream';
+
         return response()->streamDownload(
             function () use ($photo) {
                 $stream = Storage::disk('photos_private')->readStream($photo->original_path);
@@ -146,7 +153,7 @@ final class PhotoController extends Controller
                 }
             },
             $photo->filename,
-            ['Content-Type' => $photo->mime_type],
+            ['Content-Type' => $contentType],
         );
     }
 

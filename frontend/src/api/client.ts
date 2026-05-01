@@ -40,8 +40,11 @@ apiClient.interceptors.response.use(
 
     if (status === 401) {
       clearToken();
+      // Emit a custom event so the React Router tree can handle navigation
+      // instead of a hard window.location redirect (prevents full page reload,
+      // is testable, and avoids latent open-redirect if ?redirect= is added).
       if (!window.location.pathname.startsWith('/login')) {
-        window.location.href = '/login';
+        window.dispatchEvent(new CustomEvent('auth:logout'));
       }
       return Promise.reject(error);
     }
