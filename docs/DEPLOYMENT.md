@@ -407,3 +407,37 @@ aws ecs update-service --region eu-west-1 \
 For RDS rollback: snapshots are retained for 7 days (`BackupRetentionPeriod`). Restore via `aws rds restore-db-instance-from-db-snapshot` and update the stack to point at the new instance.
 
 For frontend rollback: re-run `aws s3 sync` with an older `dist/` build and invalidate CloudFront.
+
+---
+
+## Destroy
+
+Tear down everything `deploy.sh` created:
+
+```bash
+./infra/destroy.sh
+```
+
+The script:
+
+1. Asks you to type the stack name to confirm (use `--force` to skip — CI only).
+2. Empties all three S3 buckets (frontend, photos-public, photos-private). CloudFormation refuses to delete non-empty buckets.
+3. Deletes the CloudFormation stack — VPC, subnets, security groups, RDS, ALB, ECS cluster + services, CloudFront, SQS, IAM roles, all of it.
+4. Deletes the ECR repository (which lives outside CloudFormation).
+
+**Resources that survive:**
+
+- **RDS final snapshot** — `DeletionPolicy: Snapshot` on the RDS resource creates a snapshot at deletion time. It accrues storage cost (~$0.095/GB/month) until you delete it manually:
+  ```bash
+  aws rds delete-db-snapshot --region eu-west-1 \
+    --db-snapshot-identifier <snapshot-id-printed-by-script>
+  ```
+- **CloudWatch log group** `/ecs/photogallery-production` — keeps logs from prior runs.
+  ```bash
+  aws logs delete-log-group --region eu-west-1 \
+    --log-group-name /ecs/photogallery-production
+  ```
+
+The destroy script prints the surviving resource IDs and the exact deletion commands at the end.
+
+**Stack delete typically takes 10–15 minutes** (RDS snapshot creation is the slowest step). CloudFront distribution disable is also slow but happens in parallel. If the waiter times out, check the CloudFormation console for stuck resources (usually a security group with leftover ENIs from ECS tasks that haven't fully drained), wait a few minutes, and re-run the script.
