@@ -316,32 +316,12 @@ Resources:
                 AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
 
   # ============================================================
-  # ECR Repository
-  # ============================================================
-  ECRRepository:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: !Sub photogallery-${Environment}
-      ImageScanningConfiguration:
-        ScanOnPush: true
-      LifecyclePolicy:
-        LifecyclePolicyText: |
-          {
-            "rules": [{
-              "rulePriority": 1,
-              "description": "Keep last 10 images",
-              "selection": {
-                "tagStatus": "any",
-                "countType": "imageCountMoreThan",
-                "countNumber": 10
-              },
-              "action": { "type": "expire" }
-            }]
-          }
-
-  # ============================================================
   # ECS Cluster + Service
   # ============================================================
+  # Note: ECR repository is managed by deploy.sh (outside CFN).
+  # This avoids the chicken-and-egg of CFN trying to create an ECS
+  # service before any image exists, and prevents stack deletion
+  # from purging production images.
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
@@ -632,10 +612,6 @@ Outputs:
   FrontendURL:
     Description: Frontend CloudFront URL
     Value: !Sub https://${FrontendDistribution.DomainName}
-
-  ECRRepositoryURI:
-    Description: ECR Repository URI for docker push
-    Value: !GetAtt ECRRepository.RepositoryUri
 
   RDSEndpoint:
     Description: RDS MariaDB endpoint
