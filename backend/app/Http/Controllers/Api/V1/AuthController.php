@@ -33,6 +33,8 @@ final class AuthController extends Controller
             'password' => Hash::make($request->validated('password')),
         ]);
 
+        $user->sendEmailVerificationNotification();
+
         return $this->issueToken(
             $user,
             $request->validated('device_name', 'unknown'),
@@ -69,6 +71,32 @@ final class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return UserData::make($request->user())->response();
+    }
+
+    public function verifyEmail(Request $request, string $id, string $hash): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+            abort(403, 'Invalid verification link.');
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
+
+        return response()->json(['message' => 'Email verified.']);
+    }
+
+    public function resendVerification(Request $request): JsonResponse
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Already verified.']);
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return response()->json(['message' => 'Verification link sent.']);
     }
 
     private function issueToken(User $user, string $deviceName, int $status): JsonResponse

@@ -17,6 +17,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 final class AppServiceProvider extends ServiceProvider
@@ -30,6 +31,12 @@ final class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Force HTTPS for all generated URLs in production so signed URLs,
+        // asset links, and route() calls never produce http:// links.
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         Photo::observe(PhotoObserver::class);
 
         // Admin bypass for every policy (DESIGN.md §10.3). Returning null

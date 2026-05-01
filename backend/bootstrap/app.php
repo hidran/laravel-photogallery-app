@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ForceJsonResponse;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Security headers on all responses (HSTS, X-Content-Type-Options, etc.)
+        $middleware->append(SecurityHeaders::class);
+
         // Force every /api/v1/* request to look JSON-typed so the framework
         // returns the universal JSON envelope (DESIGN.md §11.1) and never
         // a Whoops/HTML error page.

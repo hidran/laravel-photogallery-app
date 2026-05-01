@@ -35,6 +35,16 @@ Route::middleware('throttle:auth')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
 });
 
+// Email verification routes for SPA token-mode auth.
+Route::middleware(['throttle:auth', 'auth:sanctum'])->group(function () {
+    Route::get('/auth/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+        ->middleware('signed')
+        ->name('verification.verify');
+
+    Route::post('/auth/email/resend', [AuthController::class, 'resendVerification'])
+        ->middleware('throttle:6,1');
+});
+
 Route::middleware(['throttle:api', 'auth:sanctum'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
@@ -57,8 +67,9 @@ Route::middleware('throttle:api')->group(function () {
         ->name('api.v1.photos.original')
         ->middleware(['signed', 'auth:sanctum']);
 
-    // Mutating routes — Sanctum token + in-controller tokenCan gate.
-    Route::middleware('auth:sanctum')->group(function () {
+    // Mutating routes — Sanctum token + verified email + in-controller tokenCan gate.
+    // Unverified users can read (browse gallery) but cannot create/modify resources.
+    Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::post('/photos', [PhotoController::class, 'store']);
         Route::patch('/photos/{photo}', [PhotoController::class, 'update']);
         Route::delete('/photos/{photo}', [PhotoController::class, 'destroy']);
