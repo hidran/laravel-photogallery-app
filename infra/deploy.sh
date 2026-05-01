@@ -142,11 +142,14 @@ if [ "$STACK_EXISTS" = false ]; then
         "AdminPassword=$ADMIN_PASSWORD"
     )
 else
-    # Re-use previous parameter values (avoids re-prompting)
+    # Re-use previous parameter values for secrets. The ParameterKey=Foo,UsePreviousValue=true
+    # syntax is the documented form for `aws cloudformation deploy` (different from
+    # update-stack). Using just "Foo=UsePreviousValue=true" silently sets the literal
+    # string as the value — corrupting the secret.
     CFN_PARAMS+=(
-        "DBPassword=UsePreviousValue=true"
-        "AppKey=UsePreviousValue=true"
-        "AdminPassword=UsePreviousValue=true"
+        "ParameterKey=DBPassword,UsePreviousValue=true"
+        "ParameterKey=AppKey,UsePreviousValue=true"
+        "ParameterKey=AdminPassword,UsePreviousValue=true"
     )
 fi
 
