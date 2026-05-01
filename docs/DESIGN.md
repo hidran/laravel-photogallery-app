@@ -262,77 +262,70 @@ frontend/
 ├── src/
 │   ├── api/                                ← Typed API wrappers (no axios calls outside)
 │   │   ├── client.ts
+│   │   ├── index.ts
 │   │   ├── photos.ts
 │   │   ├── albums.ts
 │   │   ├── tags.ts
 │   │   ├── batch.ts
 │   │   └── auth.ts
-│   ├── components/
-│   │   ├── common/
-│   │   │   ├── Button.tsx
-│   │   │   ├── ConfirmDialog.tsx
-│   │   │   ├── EmptyState.tsx
-│   │   │   ├── ErrorBoundary.tsx
-│   │   │   ├── Modal.tsx                       # uses react-focus-lock
-│   │   │   └── Spinner.tsx
-│   │   ├── gallery/
-│   │   │   ├── ExifPanel.tsx
-│   │   │   ├── MasonryGrid.tsx
-│   │   │   ├── PhotoCard.tsx
-│   │   │   ├── PhotoLightbox.tsx
-│   │   │   └── ProcessingOverlay.tsx
-│   │   ├── layout/
-│   │   │   ├── Navbar.tsx
-│   │   │   ├── Shell.tsx
-│   │   │   └── Sidebar.tsx
-│   │   ├── providers/
-│   │   │   └── KeyboardShortcutsProvider.tsx
-│   │   └── upload/
-│   │       ├── DropZone.tsx
-│   │       ├── UploadModal.tsx
-│   │       └── UploadProgressList.tsx
+│   ├── components/                         ← Flat structure (no subdirectories)
+│   │   ├── ConfirmDialog.tsx                   # Styled confirmation modal (replaces window.confirm)
+│   │   ├── DropZone.tsx
+│   │   ├── ErrorBoundary.tsx
+│   │   ├── ExifPanel.tsx
+│   │   ├── KeyboardShortcutsProvider.tsx
+│   │   ├── MasonryGrid.tsx
+│   │   ├── Modal.tsx                           # uses react-focus-lock
+│   │   ├── Navbar.tsx
+│   │   ├── PhotoCard.tsx                       # Pinterest-style hover, delete button
+│   │   ├── PhotoLightbox.tsx                   # Inline edit panel, tag creation
+│   │   ├── ProcessingOverlay.tsx
+│   │   ├── Shell.tsx
+│   │   ├── Sidebar.tsx                         # Dark theme, album CRUD, tag creation, stats
+│   │   ├── UploadModal.tsx                     # Album + tag selection before upload
+│   │   └── UploadProgressList.tsx
+│   ├── contexts/
+│   │   └── KeyboardShortcutsContext.ts
 │   ├── data/                               ← All UI strings + config constants
 │   │   ├── copy.ts
 │   │   ├── nav.ts
-│   │   ├── polling.ts                          # BATCH_MS, PHOTO_MS, QUEUE_MS, DEBOUNCE_MS
+│   │   ├── polling.ts
 │   │   └── shortcuts.ts
 │   ├── hooks/
+│   │   ├── index.ts
+│   │   ├── useAlbums.ts
 │   │   ├── useAuth.ts
-│   │   ├── useBatchPoll.ts                     # Single polling loop after upload
 │   │   ├── useDebounce.ts
 │   │   ├── useKeyboardShortcuts.ts
+│   │   ├── useLightboxNav.ts                   # Syncs lightbox with ?photo= URL param
 │   │   ├── usePhotos.ts                        # TanStack Query — useInfiniteQuery
-│   │   ├── useAlbums.ts
+│   │   ├── useRegisterShortcut.ts
 │   │   ├── useTags.ts
-│   │   └── useUpload.ts
+│   │   ├── useUpload.ts                        # Upload mutation + batch polling
+│   │   └── useUploadFlow.ts                    # Orchestrates upload + batch + completion
 │   ├── lib/
-│   │   ├── formatBytes.ts
 │   │   └── queryClient.ts
 │   ├── pages/
-│   │   ├── AlbumPage.tsx
-│   │   ├── FavoritesPage.tsx
-│   │   ├── GalleryPage.tsx
-│   │   ├── LoginPage.tsx
+│   │   ├── AlbumPage.tsx                       # Album description editing (owner only)
+│   │   ├── FavoritesPage.tsx                   # Multi-select unfavorite
+│   │   ├── GalleryPage.tsx                     # Multi-select + bulk delete
+│   │   ├── LoginPage.tsx                       # Login + register modes
 │   │   └── NotFoundPage.tsx
+│   ├── test/
+│   │   └── setup.ts                            # Vitest setup with jest-dom
 │   ├── types/
 │   │   ├── album.ts
+│   │   ├── api.ts
+│   │   ├── index.ts
 │   │   ├── photo.ts
-│   │   ├── tag.ts
-│   │   └── api.ts                              # PaginatedResponse<T>, ApiError, etc.
+│   │   └── tag.ts
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── index.css                               # @import "tailwindcss"; @theme {}; reduced-motion
-├── tests/
-│   ├── components/
-│   │   ├── PhotoLightbox.test.tsx
-│   │   └── UploadModal.test.tsx
-│   └── hooks/
-│       ├── useDebounce.test.ts
-│       ├── useKeyboardShortcuts.test.ts
-│       └── useUpload.test.ts
-├── e2e/
+├── e2e/                                    ← Playwright E2E tests
+│   ├── a11y.spec.ts                            # axe-core WCAG 2.0 AA scans
 │   ├── auth.spec.ts
-│   ├── batch.spec.ts
+│   ├── favorites.spec.ts
 │   ├── gallery.spec.ts
 │   ├── lightbox.spec.ts
 │   └── upload.spec.ts
@@ -342,6 +335,8 @@ frontend/
 ├── playwright.config.ts
 ├── .prettierrc
 ├── tsconfig.json
+├── tsconfig.app.json
+├── tsconfig.node.json
 └── vite.config.ts
 ```
 
@@ -481,9 +476,10 @@ Standard Laravel queue tables. Read by the Filament `QueueMonitor` widget. In pr
 
 ```php
 // Photo
-public function user(): BelongsTo            // → User
+public function user(): BelongsTo            // → User (owner)
 public function album(): BelongsTo           // → Album
 public function tags(): BelongsToMany        // → Tag (photo_tag pivot)
+public function favoritedBy(): BelongsToMany // → User (favorites pivot)
 public function coverOf(): HasOne            // inverse of Album.coverPhoto
 
 // Album
@@ -497,15 +493,16 @@ public function photos(): BelongsToMany      // → Photo
 // User
 public function photos(): HasMany            // → Photo (user_id)
 public function albums(): HasMany            // → Album (user_id)
+public function favoritePhotos(): BelongsToMany // → Photo (favorites pivot)
 public function tokens(): MorphMany          // Sanctum HasApiTokens
 public function isAdmin(): bool              // attribute getter from is_admin column
 ```
 
 **Cascade summary:**
-- Delete `Photo` → `photo_tag` rows CASCADE; `albums.cover_photo_id` SET NULL; `PhotoObserver` deletes 4 files.
+- Delete `Photo` → `photo_tag` rows CASCADE; `favorites` rows CASCADE; `albums.cover_photo_id` SET NULL; `PhotoObserver` deletes 4 files.
 - Delete `Album` → `photos.album_id` SET NULL; photos survive.
 - Delete `Tag` → `photo_tag` rows CASCADE; photos survive (admin-only operation).
-- Delete `User` → all owned `photos` and `albums` CASCADE; tokens CASCADE via Sanctum morph.
+- Delete `User` → all owned `photos` and `albums` CASCADE; `favorites` rows CASCADE; tokens CASCADE via Sanctum morph.
 
 ---
 
@@ -518,7 +515,7 @@ public function isAdmin(): bool              // attribute getter from is_admin c
 - **Uniform envelope:** every success response wraps in `{ "data": ... }`. List endpoints add `links` and `meta`.
 - **Cursor pagination** (UUID v7 keys are sortable): `meta.next_cursor`, `meta.prev_cursor`, no `total`.
 - **Timestamps:** ISO-8601 UTC.
-- **Rate limits:** `/auth/*` ≤ 10/min/IP; everything else ≤ 120/min/IP AND ≤ 300/min/user.
+- **Rate limits:** `/auth/*` ≤ 10/min/IP; API endpoints ≤ 120/min/IP AND ≤ 300/min/user; Filament admin ≤ 120/min/user.
 - **ETag** on `GET /photos/{id}` and `GET /albums/{id}`: `W/"<sha1(updated_at)>"`. Clients sending matching `If-None-Match` get `304`.
 - **Errors:** universal envelope per §11.
 
@@ -588,7 +585,6 @@ public function isAdmin(): bool              // attribute getter from is_admin c
   | `album_id` | UUID | no | must exist + be owned by auth user |
   | `tags[]` | string[] (slugs) | no | up to 20; existing slugs only |
   | `new_tags[]` | string[] (names) | no | up to 20; created if missing |
-  | `is_favorite` | `0`/`1` | no | default `0` |
 
 - **Behavior** (wrapped in `DB::transaction`):
   1. Upsert any `new_tags[]` names → tag rows (slug auto-generated, collision-resolved).
@@ -645,6 +641,13 @@ Unmark for the requesting user. **Idempotent.**
 - **Body:** empty
 - **204 No Content** — removes row from `favorites` pivot if present
 - **Errors:** 404
+
+#### `DELETE /photos/favorites/batch`
+Unfavorite multiple photos at once, or clear all favorites for the requesting user.
+- **Auth:** token (any authenticated user)
+- **Body:** `{ "photo_ids": ["uuid", ...] }` or `{ "all": true }`
+- **204 No Content** — removes matching rows from `favorites` pivot
+- **Errors:** 401, 422
 
 #### `GET /photos/batch/{batchId}`
 Poll batch progress. **One** polling loop covers everything (no per-photo polling needed).
@@ -808,17 +811,17 @@ Universal codes (`401`, `429`, `500`) omitted; each endpoint also returns those 
 Panel mounted at `/admin` (path `admin`, primary color `#6366F1`, `web` guard).
 
 ### 7.1 PhotoResource
-**Table columns:** thumbnail (ImageColumn 60×60), title (searchable, sortable), `album.name`, tags (badges), file_size (human bytes), `is_favorite` (ToggleColumn), `processing_status` (badge: pending=gray, processing=blue, completed=green, failed=red), created_at (since format).
+**Table columns:** thumbnail (ImageColumn 60×60), title (searchable, sortable, wrap), `album.name` (toggleable), tags (badges, toggleable), file_size (human bytes, toggleable hidden by default), `favorited_by_count` (count of users who favorited, toggleable hidden by default), `processing_status` (badge: pending=gray, processing=info, completed=success, failed=danger), created_at (since format, toggleable). Columns use `grow(false)` where appropriate to prevent horizontal overflow.
 
-**Filters:** album (SelectFilter), tags (multi-relationship), is_favorite (TernaryFilter), date range, processing_status.
+**Filters:** album (SelectFilter), tags (multi-relationship), has_favorites (Filter on `favoritedBy` relationship), date range, processing_status.
 
 **Header actions:** CreateAction.
 
 **Row actions:** ViewAction, EditAction, DeleteAction, custom **ReprocessAction** (dispatches `ProcessPhoto` and resets `processing_attempts=0`, `status='pending'`).
 
-**Bulk actions:** DeleteBulkAction, AssignToAlbumBulkAction, ToggleFavoriteBulkAction, ReprocessBulkAction.
+**Bulk actions:** DeleteBulkAction, AssignToAlbumBulkAction, ReprocessBulkAction.
 
-**Form:** FileUpload on `original_path` (disk `photos_private`, image preview, max 10240 KB), title, description, album select with createOptionForm, tags multi-select with createOptionForm, is_favorite toggle.
+**Form:** FileUpload on `original_path` (disk `photos_private`, image preview, max 10240 KB), title, description, album select with createOptionForm, tags multi-select with createOptionForm.
 
 ### 7.2 AlbumResource
 **Table:** cover_photo thumbnail, name (searchable), `photos_count`, created_at.
@@ -935,8 +938,27 @@ export default defineConfig({
 @import "tailwindcss";
 
 @theme {
+  /* Brand palette */
+  --color-brand-50: oklch(0.97 0.02 270);
+  --color-brand-100: oklch(0.93 0.04 270);
   --color-brand-500: oklch(0.65 0.2 270);
+  --color-brand-600: oklch(0.55 0.22 270);
+  --color-brand-700: oklch(0.45 0.2 270);
+
+  /* Accent (warm) */
+  --color-accent: oklch(0.75 0.15 55);
+  --color-accent-hover: oklch(0.68 0.15 55);
+
+  /* Surface + sidebar (dark sidebar design) */
+  --color-surface: oklch(0.985 0.002 250);
+  --color-sidebar: oklch(0.16 0.02 260);
+  --color-sidebar-hover: oklch(0.22 0.02 260);
+  --color-sidebar-active: oklch(0.25 0.04 270);
+  --color-sidebar-text: oklch(0.7 0.01 250);
+  --color-sidebar-text-bright: oklch(0.92 0.01 250);
+
   --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Inter", system-ui, sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {
