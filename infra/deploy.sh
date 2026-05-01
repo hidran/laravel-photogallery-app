@@ -118,20 +118,20 @@ aws ecs wait services-stable \
 # Step 4: Run migrations + seed
 echo ">>> Step 4: Running migrations..."
 
-# Get networking info for run-task
-PRIVATE_SUBNETS=$(aws cloudformation describe-stack-resources --region "$REGION" --stack-name "$STACK_NAME" \
-  --query "StackResources[?LogicalResourceId=='PrivateSubnetA'].PhysicalResourceId" --output text)
+# Get networking info for run-task (public subnets — no NAT gateway)
+PUBLIC_SUBNET_A=$(aws cloudformation describe-stack-resources --region "$REGION" --stack-name "$STACK_NAME" \
+  --query "StackResources[?LogicalResourceId=='PublicSubnetA'].PhysicalResourceId" --output text)
+PUBLIC_SUBNET_B=$(aws cloudformation describe-stack-resources --region "$REGION" --stack-name "$STACK_NAME" \
+  --query "StackResources[?LogicalResourceId=='PublicSubnetB'].PhysicalResourceId" --output text)
 ECS_SG=$(aws cloudformation describe-stack-resources --region "$REGION" --stack-name "$STACK_NAME" \
   --query "StackResources[?LogicalResourceId=='ECSSecurityGroup'].PhysicalResourceId" --output text)
-PRIVATE_SUBNET_B=$(aws cloudformation describe-stack-resources --region "$REGION" --stack-name "$STACK_NAME" \
-  --query "StackResources[?LogicalResourceId=='PrivateSubnetB'].PhysicalResourceId" --output text)
 
 aws ecs run-task \
   --region "$REGION" \
   --cluster "$STACK_NAME" \
   --task-definition "${STACK_NAME}" \
   --launch-type FARGATE \
-  --network-configuration "awsvpcConfiguration={subnets=[$PRIVATE_SUBNETS,$PRIVATE_SUBNET_B],securityGroups=[$ECS_SG],assignPublicIp=DISABLED}" \
+  --network-configuration "awsvpcConfiguration={subnets=[$PUBLIC_SUBNET_A,$PUBLIC_SUBNET_B],securityGroups=[$ECS_SG],assignPublicIp=ENABLED}" \
   --overrides '{"containerOverrides":[{"name":"app","command":["sh","-c","php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force"]}]}'
 
 echo ">>> Migrations started (background). Waiting 30s..."
@@ -172,8 +172,8 @@ echo "    Password: (the one you entered above)"
 echo ""
 echo "  GitHub Actions secrets to set:"
 echo "    AWS_DEPLOY_ROLE_ARN    — IAM role ARN for OIDC"
-echo "    PRIVATE_SUBNET_A       — $PRIVATE_SUBNETS"
-echo "    PRIVATE_SUBNET_B       — $PRIVATE_SUBNET_B"
+echo "    PRIVATE_SUBNET_A       — $PUBLIC_SUBNET_A"
+echo "    PRIVATE_SUBNET_B       — $PUBLIC_SUBNET_B"
 echo "    ECS_SECURITY_GROUP     — $ECS_SG"
 echo "    FRONTEND_BUCKET        — $FRONTEND_BUCKET"
 echo "    CLOUDFRONT_DISTRIBUTION_ID — $CF_DIST_ID"

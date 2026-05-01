@@ -57,7 +57,7 @@ jobs:
             --cluster "$ECS_CLUSTER" \
             --task-definition photogallery-production \
             --launch-type FARGATE \
-            --network-configuration "awsvpcConfiguration={subnets=[$PRIVATE_SUBNET_A,$PRIVATE_SUBNET_B],securityGroups=[$ECS_SECURITY_GROUP],assignPublicIp=DISABLED}" \
+            --network-configuration "awsvpcConfiguration={subnets=[$PRIVATE_SUBNET_A,$PRIVATE_SUBNET_B],securityGroups=[$ECS_SECURITY_GROUP],assignPublicIp=ENABLED}" \
             --overrides '{"containerOverrides":[{"name":"app","command":["php","artisan","migrate","--force"]}]}' \
             --started-by "github-actions-migrate"
           sleep 30
