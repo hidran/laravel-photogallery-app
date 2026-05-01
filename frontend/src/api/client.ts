@@ -5,16 +5,16 @@ import type { ApiError } from '../types';
 
 const TOKEN_KEY = 'auth_token';
 
-let token: string | null = localStorage.getItem(TOKEN_KEY);
+let token: string | null = sessionStorage.getItem(TOKEN_KEY);
 
 export function setToken(newToken: string): void {
   token = newToken;
-  localStorage.setItem(TOKEN_KEY, newToken);
+  sessionStorage.setItem(TOKEN_KEY, newToken);
 }
 
 export function clearToken(): void {
   token = null;
-  localStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
 }
 
 export function getToken(): string | null {

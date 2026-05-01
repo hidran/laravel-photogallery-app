@@ -27,36 +27,56 @@ final class InterventionImageProcessor implements ImageProcessor
 
     public function generate(Photo $photo): void
     {
-        $contents = Storage::disk('photos_private')->get($photo->original_path);
-
-        $original = Image::decode($contents);
-        $original->orient();
-
-        $maxDim = (int) config('photogallery.images.max_dimension', 8000);
-        if ($original->width() > $maxDim || $original->height() > $maxDim) {
-            throw new RuntimeException(
-                "Image dimensions ({$original->width()}x{$original->height()}) exceed maximum allowed ({$maxDim}x{$maxDim})."
-            );
+        // Stream the original to a temp file instead of loading the entire
+        // image into a PHP string. This prevents OOM on high-resolution
+        // photos (20+ MP) that exceed PHP's memory limit.
+        $stream = Storage::disk('photos_private')->readStream($photo->original_path);
+        if ($stream === null) {
+            throw new RuntimeException("Cannot read original file: {$photo->original_path}");
         }
 
-        $photo->width = $original->width();
-        $photo->height = $original->height();
-
-        /** @var array<string, array{width: int, quality: int}> $variants */
-        $variants = config('photogallery.images.variants');
-
-        foreach ($variants as $key => $spec) {
-            $variant = clone $original;
-            $variant->scaleDown(width: $spec['width']);
-
-            $encoded = $variant->encode(new JpegEncoder(quality: $spec['quality'], strip: true));
-
-            $path = $this->storage->storeVariant($photo->id, $key, $encoded->toString());
-
-            $column = self::VARIANT_COLUMNS[$key];
-            $photo->{$column} = $path;
+        $tempPath = tempnam(sys_get_temp_dir(), 'photo_process_');
+        if ($tempPath === false) {
+            throw new RuntimeException('Failed to create temp file for image processing');
         }
 
-        $photo->save();
+        try {
+            file_put_contents($tempPath, $stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+
+            $original = Image::decodePath($tempPath);
+            $original->orient();
+
+            $maxDim = (int) config('photogallery.images.max_dimension', 8000);
+            if ($original->width() > $maxDim || $original->height() > $maxDim) {
+                throw new RuntimeException(
+                    "Image dimensions ({$original->width()}x{$original->height()}) exceed maximum allowed ({$maxDim}x{$maxDim})."
+                );
+            }
+
+            $photo->width = $original->width();
+            $photo->height = $original->height();
+
+            /** @var array<string, array{width: int, quality: int}> $variants */
+            $variants = config('photogallery.images.variants');
+
+            foreach ($variants as $key => $spec) {
+                $variant = clone $original;
+                $variant->scaleDown(width: $spec['width']);
+
+                $encoded = $variant->encode(new JpegEncoder(quality: $spec['quality'], strip: true));
+
+                $path = $this->storage->storeVariant($photo->id, $key, $encoded->toString());
+
+                $column = self::VARIANT_COLUMNS[$key];
+                $photo->{$column} = $path;
+            }
+
+            $photo->save();
+        } finally {
+            @unlink($tempPath);
+        }
     }
 }

@@ -49,27 +49,45 @@ final class UploadPhotosAction
         array $titles = [],
         ?string $description = null,
     ): array {
-        [$photos, $jobs] = DB::transaction(function () use ($files, $user, $albumId, $tagNames, $titles, $description): array {
+        // Phase 1: File I/O OUTSIDE the transaction to avoid holding a DB
+        // connection open during heavy encoding/disk writes (issue #2).
+        // Extract EXIF from the ORIGINAL file BEFORE stripGps re-encodes
+        // and destroys all EXIF data (issue #1).
+        $prepared = [];
+        foreach ($files as $index => $file) {
+            $exifData = $this->exif->extract($file->getPathname());
+            $sanitized = $this->exif->stripGps($file);
+            $photoId = (string) Str::uuid7();
+            $path = $this->storage->storeOriginal($sanitized, $photoId);
+
+            $prepared[] = [
+                'photoId' => $photoId,
+                'path' => $path,
+                'exif' => $exifData,
+                'title' => $titles[$index] ?? pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                'filename' => basename($file->getClientOriginalName()),
+                'file_size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+            ];
+        }
+
+        // Phase 2: DB writes only — fast, no file I/O.
+        [$photos, $jobs] = DB::transaction(function () use ($prepared, $user, $albumId, $tagNames, $description): array {
             $photos = [];
             $jobs = [];
 
-            foreach ($files as $index => $file) {
-                $sanitized = $this->exif->stripGps($file);
-                $photoId = (string) Str::uuid7();
-                $path = $this->storage->storeOriginal($sanitized, $photoId);
-
-                $title = $titles[$index] ?? pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-
+            foreach ($prepared as $item) {
                 $photo = Photo::create([
-                    'id' => $photoId,
+                    'id' => $item['photoId'],
                     'user_id' => $user->id,
                     'album_id' => $albumId,
-                    'title' => $title,
+                    'title' => $item['title'],
                     'description' => $description,
-                    'filename' => basename($file->getClientOriginalName()),
-                    'original_path' => $path,
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
+                    'filename' => $item['filename'],
+                    'original_path' => $item['path'],
+                    'file_size' => $item['file_size'],
+                    'mime_type' => $item['mime_type'],
+                    'exif' => $item['exif'] !== [] ? $item['exif'] : null,
                     'processing_status' => ProcessingStatus::Pending,
                 ]);
 

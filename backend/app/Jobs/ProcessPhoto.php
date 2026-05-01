@@ -34,13 +34,20 @@ final class ProcessPhoto implements ShouldQueue
 
         $processor->generate($this->photo);
 
-        $absolutePath = Storage::disk('photos_private')->path($this->photo->original_path);
-        $exifData = $exif->extract($absolutePath);
+        // EXIF is now extracted during upload (before GPS stripping destroys
+        // it). Only re-extract here as a fallback for photos uploaded before
+        // the fix, or if upload-time extraction failed.
+        $updateData = ['processing_status' => ProcessingStatus::Completed];
 
-        $this->photo->update([
-            'exif' => $exifData,
-            'processing_status' => ProcessingStatus::Completed,
-        ]);
+        if (empty($this->photo->exif)) {
+            $absolutePath = Storage::disk('photos_private')->path($this->photo->original_path);
+            $exifData = $exif->extract($absolutePath);
+            if ($exifData !== []) {
+                $updateData['exif'] = $exifData;
+            }
+        }
+
+        $this->photo->update($updateData);
 
         event(new PhotoProcessed($this->photo));
     }

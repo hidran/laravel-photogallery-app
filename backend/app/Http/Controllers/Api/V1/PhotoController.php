@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Photo\UpdatePhotoAction;
 use App\Actions\Photo\UploadPhotosAction;
 use App\Enums\TokenAbility;
 use App\Http\Controllers\Controller;
@@ -15,13 +16,11 @@ use App\Http\Resources\PhotoData;
 use App\Models\Photo;
 use App\Models\Tag;
 use App\Queries\PhotoQuery;
-use App\Services\TagAssigner;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -131,47 +130,16 @@ final class PhotoController extends Controller
         );
     }
 
-    public function update(UpdatePhotoRequest $request, Photo $photo, TagAssigner $tagAssigner): JsonResponse
+    public function update(UpdatePhotoRequest $request, Photo $photo, UpdatePhotoAction $action): JsonResponse
     {
         $this->ensureCan($request, 'update', $photo, TokenAbility::PhotosWrite);
 
         $data = $request->validated();
-        $tags = $data['tags'] ?? null;
+        $tagSlugs = $data['tags'] ?? null;
         $newTags = $data['new_tags'] ?? null;
         unset($data['tags'], $data['new_tags']);
 
-        DB::transaction(function () use ($photo, $data, $tags, $newTags, $tagAssigner): void {
-            $rowChanged = false;
-            if ($data !== []) {
-                $photo->update($data);
-                $rowChanged = true;
-            }
-
-            if ($tags !== null || $newTags !== null) {
-                // Single query — slugs come pre-validated by UpdatePhotoRequest's
-                // `exists:tags,slug` rule, so a missing slug here is impossible.
-                // Skipping the per-slug fallback closes the silent-create
-                // edge case (PR #4 review C1).
-                $existingNames = $tags
-                    ? Tag::query()->whereIn('slug', $tags)->pluck('name')->all()
-                    : [];
-
-                $names = collect($existingNames)
-                    ->merge($newTags ?? [])
-                    ->unique()
-                    ->values()
-                    ->all();
-
-                $tagAssigner->syncByNames($photo, $names);
-
-                // The pivot changed but Eloquent doesn't bump updated_at on
-                // pivot writes. Touching the photo invalidates the ETag so
-                // a refetch sees the new tag set (PR #4 review C2).
-                if (! $rowChanged) {
-                    $photo->touch();
-                }
-            }
-        });
+        $action($photo, $data, $tagSlugs, $newTags);
 
         return PhotoData::make($photo->fresh(PhotoData::WITH))->response();
     }
