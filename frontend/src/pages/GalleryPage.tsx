@@ -78,23 +78,20 @@ export function GalleryPage() {
     });
   }, [photoToDelete, deletePhoto]);
 
-  // Bulk delete
-  const handleDeleteSelected = useCallback(() => {
+  // Bulk delete — sequential to avoid N concurrent mutations
+  const handleDeleteSelected = useCallback(async () => {
     const ids = Array.from(selectedIds);
-    let completed = 0;
-    ids.forEach((id) => {
-      deletePhoto.mutate(id, {
-        onSuccess: () => {
-          completed++;
-          if (completed === ids.length) {
-            setSelectedIds(new Set());
-            setSelectMode(false);
-            setShowBulkDeleteConfirm(false);
-            toast.success(`Deleted ${ids.length} photo${ids.length > 1 ? 's' : ''}`);
-          }
-        },
-      });
-    });
+    try {
+      for (const id of ids) {
+        await deletePhoto.mutateAsync(id);
+      }
+      setSelectedIds(new Set());
+      setSelectMode(false);
+      setShowBulkDeleteConfirm(false);
+      toast.success(`Deleted ${ids.length} photo${ids.length > 1 ? 's' : ''}`);
+    } catch {
+      toast.error(copy.errors.generic);
+    }
   }, [selectedIds, deletePhoto]);
 
   const handleCancelSelect = useCallback(() => {

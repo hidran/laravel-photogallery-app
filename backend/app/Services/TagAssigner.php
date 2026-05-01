@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Photo;
 use App\Models\Tag;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -51,10 +52,20 @@ final class TagAssigner
             return $existing;
         }
 
-        return Tag::create([
-            'name' => $name,
-            'slug' => $this->uniqueSlugFor($name),
-        ]);
+        $slug = $this->uniqueSlugFor($name);
+
+        try {
+            return Tag::create([
+                'name' => $name,
+                'slug' => $slug,
+            ]);
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return Tag::where('slug', $slug)->firstOrFail();
+            }
+
+            throw $e;
+        }
     }
 
     private function uniqueSlugFor(string $name): string

@@ -101,17 +101,25 @@ final class PhpExifExtractor implements ExifExtractor
         $encoded = $image->encodeUsingFileExtension($extension);
 
         $tempPath = tempnam(sys_get_temp_dir(), 'exif_strip_');
-        file_put_contents($tempPath, (string) $encoded);
+        if ($tempPath === false) {
+            throw new \RuntimeException('Failed to create temp file for EXIF stripping');
+        }
 
-        register_shutdown_function(static fn () => @unlink($tempPath));
+        try {
+            file_put_contents($tempPath, (string) $encoded);
 
-        return new UploadedFile(
-            path: $tempPath,
-            originalName: $file->getClientOriginalName(),
-            mimeType: $file->getMimeType(),
-            error: UPLOAD_ERR_OK,
-            test: true,
-        );
+            return new UploadedFile(
+                path: $tempPath,
+                originalName: $file->getClientOriginalName(),
+                mimeType: $file->getMimeType(),
+                error: UPLOAD_ERR_OK,
+                test: true,
+            );
+        } catch (\Throwable $e) {
+            @unlink($tempPath);
+
+            throw $e;
+        }
     }
 
     /**

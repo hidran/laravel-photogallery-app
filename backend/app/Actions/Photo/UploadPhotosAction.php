@@ -87,6 +87,8 @@ final class UploadPhotosAction
 
         $batch = Bus::batch($jobs)->dispatch();
 
+        Photo::whereIn('id', collect($photos)->pluck('id'))->update(['batch_id' => $batch->id]);
+
         return [
             'batch_id' => $batch->id,
             'total' => count($photos),

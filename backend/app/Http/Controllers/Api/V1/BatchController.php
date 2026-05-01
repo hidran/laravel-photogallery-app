@@ -21,11 +21,9 @@ final class BatchController extends Controller
         }
 
         $photos = Photo::query()
-            ->where('created_at', '>=', $batch->createdAt)
-            ->whereIn('processing_status', ['pending', 'processing', 'completed', 'failed'])
-            ->get()
-            ->filter(fn (Photo $photo) => $photo->user_id === $request->user()?->id)
-            ->values();
+            ->where('batch_id', $batchId)
+            ->where('user_id', $request->user()->id)
+            ->get();
 
         $pending = $photos->where('processing_status', 'pending')->count()
             + $photos->where('processing_status', 'processing')->count();

@@ -37,6 +37,10 @@ export function useLogout() {
 }
 
 export function useMe() {
+  // `enabled` is re-evaluated on each render cycle (TanStack Query v5).
+  // After login, `setToken()` runs in the API wrapper before `onSuccess`,
+  // then `queryClient.invalidateQueries` triggers a re-render, at which
+  // point `getToken()` returns the new token and `enabled` becomes true.
   return useQuery({
     queryKey: ['auth', 'me'],
     queryFn: () => me(),

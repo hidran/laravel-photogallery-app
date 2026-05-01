@@ -42,6 +42,7 @@ final class Photo extends Model
         'file_size',
         'mime_type',
         'exif',
+        'batch_id',
         'processing_status',
         'processing_attempts',
         'processing_error',

@@ -16,14 +16,12 @@ import {
 import { toast } from 'sonner';
 import { useAlbums, useCreateAlbum, useUpdateAlbum, useDeleteAlbum } from '../hooks/useAlbums';
 import { useTags } from '../hooks/useTags';
-import { usePhotos } from '../hooks/usePhotos';
 import { getToken } from '../api/client';
 import { copy } from '../data/copy';
 
 export function Sidebar() {
   const { data: albumsData } = useAlbums();
   const { data: tagsData } = useTags();
-  const { data: photosData } = usePhotos({});
   const [searchParams, setSearchParams] = useSearchParams();
   const createAlbum = useCreateAlbum();
   const updateAlbum = useUpdateAlbum();
@@ -41,7 +39,7 @@ export function Sidebar() {
   const albums = albumsData?.data ?? [];
   const tags = tagsData?.data ?? [];
   const isAuthenticated = getToken() !== null;
-  const totalPhotos = photosData?.pages.reduce((sum, page) => sum + page.data.length, 0) ?? 0;
+  const totalPhotos = albums.reduce((sum, album) => sum + album.photos_count, 0);
 
   const activeTags = searchParams.getAll('tags[]');
 

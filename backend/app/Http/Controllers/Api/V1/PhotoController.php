@@ -9,6 +9,7 @@ use App\Enums\TokenAbility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Photo\IndexPhotosRequest;
 use App\Http\Requests\Photo\StorePhotosRequest;
+use App\Http\Requests\Photo\UnfavoriteBatchRequest;
 use App\Http\Requests\Photo\UpdatePhotoRequest;
 use App\Http\Resources\PhotoData;
 use App\Models\Photo;
@@ -222,19 +223,13 @@ final class PhotoController extends Controller
      *
      * Body: { "photo_ids": ["uuid", ...] } or { "all": true }
      */
-    public function unfavoriteBatch(Request $request): Response
+    public function unfavoriteBatch(UnfavoriteBatchRequest $request): Response
     {
-        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
-            throw new AuthorizationException;
-        }
+        $validated = $request->validated();
 
-        if ($request->boolean('all')) {
+        if (! empty($validated['all'])) {
             $request->user()->favoritePhotos()->detach();
         } else {
-            $validated = $request->validate([
-                'photo_ids' => ['required', 'array', 'min:1'],
-                'photo_ids.*' => ['uuid'],
-            ]);
             $request->user()->favoritePhotos()->detach($validated['photo_ids']);
         }
 

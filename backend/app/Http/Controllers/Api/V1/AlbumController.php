@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\TokenAbility;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Album\IndexAlbumsRequest;
 use App\Http\Requests\Album\StoreAlbumRequest;
 use App\Http\Requests\Album\UpdateAlbumRequest;
 use App\Http\Resources\AlbumData;
@@ -21,11 +22,12 @@ use Illuminate\Http\Response;
  */
 final class AlbumController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(IndexAlbumsRequest $request): AnonymousResourceCollection
     {
-        $sort = $request->query('sort', 'newest');
-        $perPage = (int) $request->query('per_page', 24);
-        $cursor = $request->query('cursor');
+        $validated = $request->validated();
+        $sort = $validated['sort'] ?? 'newest';
+        $perPage = (int) ($validated['per_page'] ?? 24);
+        $cursor = $validated['cursor'] ?? null;
 
         $query = Album::query()
             ->with(AlbumData::WITH)
