@@ -337,7 +337,9 @@ Resources:
             CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
             OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3  # AllViewer
             Compress: true
-          - PathPattern: /livewire/*
+          # Livewire endpoints — both /livewire/update (POST) and the asset
+          # at /livewire-{hash}/livewire.min.js. Pattern catches both.
+          - PathPattern: /livewire*
             TargetOriginId: ApiBackend
             ViewerProtocolPolicy: https-only
             AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
@@ -345,14 +347,29 @@ Resources:
             CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
             OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3  # AllViewer
             Compress: true
-          - PathPattern: /storage/*
+          # Filament-published assets served by Laravel
+          - PathPattern: /css/*
             TargetOriginId: ApiBackend
             ViewerProtocolPolicy: https-only
             AllowedMethods: [GET, HEAD, OPTIONS]
             CachedMethods: [GET, HEAD]
             CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
             Compress: true
-          - PathPattern: /vendor/*
+          - PathPattern: /js/*
+            TargetOriginId: ApiBackend
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS]
+            CachedMethods: [GET, HEAD]
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
+            Compress: true
+          - PathPattern: /fonts/*
+            TargetOriginId: ApiBackend
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS]
+            CachedMethods: [GET, HEAD]
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
+            Compress: true
+          - PathPattern: /storage/*
             TargetOriginId: ApiBackend
             ViewerProtocolPolicy: https-only
             AllowedMethods: [GET, HEAD, OPTIONS]
@@ -507,6 +524,13 @@ Resources:
               Value: !Sub https://${FrontendDistribution.DomainName}
             - Name: TRUSTED_PROXIES
               Value: '*'
+            # Session cookies must be Secure since the SPA reaches us over
+            # HTTPS via CloudFront. Without this, the cookies lack the
+            # Secure flag and the Filament admin login redirects in a loop.
+            - Name: SESSION_SECURE_COOKIE
+              Value: 'true'
+            - Name: SESSION_SAME_SITE
+              Value: lax
             - Name: ADMIN_PASSWORD
               Value: !Ref AdminPassword
             - Name: LOG_CHANNEL
