@@ -270,6 +270,28 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
+  # CloudFront Function for SPA routing — rewrites paths without file
+  # extensions to /index.html so React Router can handle deep links.
+  # Only applies to the default (S3) behavior, NOT to /api/*.
+  SpaRoutingFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub photogallery-${Environment}-spa-routing
+      AutoPublish: true
+      FunctionConfig:
+        Runtime: cloudfront-js-2.0
+        Comment: Rewrite SPA routes to /index.html
+      FunctionCode: |
+        function handler(event) {
+            var request = event.request;
+            var uri = request.uri;
+            // If the path has no file extension and isn't /api, serve the SPA
+            if (!uri.includes('.') && !uri.startsWith('/api/')) {
+                request.uri = '/index.html';
+            }
+            return request;
+        }
+
   FrontendDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -293,8 +315,11 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
           Compress: true
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt SpaRoutingFunction.FunctionMetadata.FunctionARN
         CacheBehaviors:
-          # /api/* → ALB (HTTPS frontend, HTTP backend, no caching)
+          # /api/* → ALB (HTTPS frontend, HTTP backend, no caching, no SPA function)
           - PathPattern: /api/*
             TargetOriginId: ApiBackend
             ViewerProtocolPolicy: https-only
@@ -303,16 +328,6 @@ Resources:
             CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
             OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3  # AllViewer (forwards Auth header etc.)
             Compress: true
-        CustomErrorResponses:
-          # SPA routing: return index.html for all 403/404 paths
-          - ErrorCode: 403
-            ResponseCode: 200
-            ResponsePagePath: /index.html
-            ErrorCachingMinTTL: 0
-          - ErrorCode: 404
-            ResponseCode: 200
-            ResponsePagePath: /index.html
-            ErrorCachingMinTTL: 0
         PriceClass: PriceClass_100
         HttpVersion: http2and3
 

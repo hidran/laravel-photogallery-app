@@ -56,7 +56,9 @@ export function useUploadFlow(onComplete?: () => void): UploadFlowResult {
       if (meta) payload.meta = meta;
       uploadMutation.mutate(payload, {
         onSuccess: (response) => {
-          setBatchId(response.data.batch_id);
+          if (response?.data?.batch_id) {
+            setBatchId(response.data.batch_id);
+          }
         },
       });
     },

@@ -6,7 +6,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Photo\UpdatePhotoAction;
 use App\Actions\Photo\UploadPhotosAction;
+use App\DTOs\UpdatePhotoCommand;
+use App\DTOs\UploadPhotosCommand;
 use App\Enums\TokenAbility;
+use App\Http\Controllers\Concerns\AuthorizesWithToken;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Photo\IndexPhotosRequest;
 use App\Http\Requests\Photo\StorePhotosRequest;
@@ -29,6 +32,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final class PhotoController extends Controller
 {
+    use AuthorizesWithToken;
     /**
      * POST /photos — upload 1-20 photos, dispatch ProcessPhoto batch.
      *
@@ -53,17 +57,18 @@ final class PhotoController extends Controller
             ->values()
             ->all();
 
-        $result = $action(
+        $result = $action(new UploadPhotosCommand(
             files: $validated['files'],
             user: $request->user(),
             albumId: $validated['album_id'] ?? null,
             tagNames: $tagNames,
             titles: $validated['titles'] ?? [],
             description: $validated['description'] ?? null,
-        );
+        ));
 
         // Batch-load relations in a single query per relation instead of N+1.
-        $photos = collect($result['photos']);
+        // Use Eloquent\Collection (not Support\Collection) — only the former has load().
+        $photos = new \Illuminate\Database\Eloquent\Collection($result['photos']);
         $photos->load(PhotoData::WITH);
 
         return response()->json([
@@ -166,7 +171,11 @@ final class PhotoController extends Controller
         $newTags = $data['new_tags'] ?? null;
         unset($data['tags'], $data['new_tags']);
 
-        $action($photo, $data, $tagSlugs, $newTags);
+        $action($photo, new UpdatePhotoCommand(
+            data: $data,
+            tagSlugs: $tagSlugs,
+            newTagNames: $newTags,
+        ));
 
         return PhotoData::make($photo->fresh(PhotoData::WITH))->response();
     }
@@ -187,9 +196,7 @@ final class PhotoController extends Controller
      */
     public function destroyBatch(Request $request): Response
     {
-        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
-            throw new AuthorizationException;
-        }
+        $this->ensureTokenAbility($request, TokenAbility::PhotosWrite);
 
         $validated = $request->validate([
             'photo_ids' => ['required', 'array', 'min:1', 'max:500'],
@@ -216,9 +223,7 @@ final class PhotoController extends Controller
      */
     public function favorite(Request $request, Photo $photo): Response
     {
-        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
-            throw new AuthorizationException;
-        }
+        $this->ensureTokenAbility($request, TokenAbility::PhotosWrite);
 
         $request->user()->favoritePhotos()->syncWithoutDetaching([$photo->id]);
 
@@ -232,9 +237,7 @@ final class PhotoController extends Controller
      */
     public function unfavorite(Request $request, Photo $photo): Response
     {
-        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
-            throw new AuthorizationException;
-        }
+        $this->ensureTokenAbility($request, TokenAbility::PhotosWrite);
 
         $request->user()->favoritePhotos()->detach($photo->id);
 
@@ -259,20 +262,5 @@ final class PhotoController extends Controller
         return response()->noContent();
     }
 
-    /**
-     * Combine policy + token-ability gate (CLAUDE.md rule 10). Throws the
-     * same AuthorizationException either way so the universal-envelope
-     * 403 fires from bootstrap/app.php.
-     *
-     * @param  Photo|class-string<Photo>  $target
-     */
-    private function ensureCan(Request $request, string $action, Photo|string $target, TokenAbility $required): void
-    {
-        if (! $request->user()?->tokenCan($required->value)) {
-            throw new AuthorizationException;
-        }
-        if ($request->user()?->cannot($action, $target)) {
-            throw new AuthorizationException;
-        }
-    }
+
 }
