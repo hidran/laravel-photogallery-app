@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useLogin, useRegister } from '../hooks';
 import { copy } from '../data/copy';
 import type { ApiError } from '../types';
@@ -7,25 +10,52 @@ import { AxiosError } from 'axios';
 
 type AuthMode = 'login' | 'register';
 
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+const registerSchema = z
+  .object({
+    name: z.string().min(1, 'Name is required'),
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    passwordConfirmation: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.passwordConfirmation, {
+    message: "Passwords don't match",
+    path: ['passwordConfirmation'],
+  });
+
+type LoginFormData = z.infer<typeof loginSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>;
+
 export function LoginPage() {
   const navigate = useNavigate();
   const loginMutation = useLogin();
   const registerMutation = useRegister();
 
   const [mode, setMode] = useState<AuthMode>('login');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState('');
 
   const isLogin = mode === 'login';
   const mutation = isLogin ? loginMutation : registerMutation;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({});
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
+
+  const registerForm = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { name: '', email: '', password: '', passwordConfirmation: '' },
+  });
+
+  // Cast to unify union types — both forms share email/password fields,
+  // and register-only fields are guarded by `!isLogin` checks below.
+  const activeForm = (isLogin ? loginForm : registerForm) as ReturnType<typeof useForm<RegisterFormData>>;
+
+  const onSubmit = (data: LoginFormData | RegisterFormData) => {
     setGeneralError('');
 
     const onSuccess = () => {
@@ -35,7 +65,6 @@ export function LoginPage() {
     const onError = (error: Error) => {
       if (error instanceof AxiosError && error.response?.status === 422) {
         const apiError = error.response.data as ApiError;
-        setErrors(apiError.errors ?? {});
         setGeneralError(apiError.message);
       } else {
         setGeneralError(copy.errors.generic);
@@ -43,10 +72,11 @@ export function LoginPage() {
     };
 
     if (isLogin) {
-      loginMutation.mutate({ email, password }, { onSuccess, onError });
+      loginMutation.mutate(data as LoginFormData, { onSuccess, onError });
     } else {
+      const { passwordConfirmation, ...rest } = data as RegisterFormData;
       registerMutation.mutate(
-        { name, email, password, password_confirmation: passwordConfirmation },
+        { ...rest, password_confirmation: passwordConfirmation },
         { onSuccess, onError },
       );
     }
@@ -54,8 +84,9 @@ export function LoginPage() {
 
   const toggleMode = () => {
     setMode(isLogin ? 'register' : 'login');
-    setErrors({});
     setGeneralError('');
+    loginForm.reset();
+    registerForm.reset();
   };
 
   return (
@@ -65,7 +96,7 @@ export function LoginPage() {
           {isLogin ? copy.auth.loginHeading : copy.auth.registerHeading}
         </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={activeForm.handleSubmit(onSubmit)} className="space-y-4">
           {generalError && <p className="text-center text-sm text-red-600">{generalError}</p>}
 
           {!isLogin && (
@@ -76,12 +107,12 @@ export function LoginPage() {
               <input
                 id="name"
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
+                {...registerForm.register('name')}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              {errors['name'] && <p className="mt-1 text-sm text-red-600">{errors['name'][0]}</p>}
+              {registerForm.formState.errors.name && (
+                <p className="mt-1 text-sm text-red-600">{registerForm.formState.errors.name.message}</p>
+              )}
             </div>
           )}
 
@@ -92,12 +123,12 @@ export function LoginPage() {
             <input
               id="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              {...activeForm.register('email')}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-            {errors['email'] && <p className="mt-1 text-sm text-red-600">{errors['email'][0]}</p>}
+            {activeForm.formState.errors.email && (
+              <p className="mt-1 text-sm text-red-600">{activeForm.formState.errors.email.message}</p>
+            )}
           </div>
 
           <div>
@@ -107,13 +138,11 @@ export function LoginPage() {
             <input
               id="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              {...activeForm.register('password')}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-            {errors['password'] && (
-              <p className="mt-1 text-sm text-red-600">{errors['password'][0]}</p>
+            {activeForm.formState.errors.password && (
+              <p className="mt-1 text-sm text-red-600">{activeForm.formState.errors.password.message}</p>
             )}
           </div>
 
@@ -128,11 +157,14 @@ export function LoginPage() {
               <input
                 id="password_confirmation"
                 type="password"
-                value={passwordConfirmation}
-                onChange={(e) => setPasswordConfirmation(e.target.value)}
-                required
+                {...registerForm.register('passwordConfirmation')}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
+              {registerForm.formState.errors.passwordConfirmation && (
+                <p className="mt-1 text-sm text-red-600">
+                  {registerForm.formState.errors.passwordConfirmation.message}
+                </p>
+              )}
             </div>
           )}
 

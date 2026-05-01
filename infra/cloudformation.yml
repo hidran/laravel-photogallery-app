@@ -468,7 +468,7 @@ Resources:
             - Name: ADMIN_PASSWORD
               Value: !Ref AdminPassword
             - Name: LOG_CHANNEL
-              Value: stderr
+              Value: errorlog
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -596,7 +596,7 @@ Resources:
             - Name: ADMIN_PASSWORD
               Value: !Ref AdminPassword
             - Name: LOG_CHANNEL
-              Value: stderr
+              Value: errorlog
           LogConfiguration:
             LogDriver: awslogs
             Options:

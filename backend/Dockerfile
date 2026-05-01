@@ -4,10 +4,18 @@
 # ==============================================================
 
 # Stage 1: Install Composer dependencies
+# Use --ignore-platform-reqs because composer:2 image lacks ext-intl, ext-gd etc.
+# The final production stage installs them all and runs autoload regeneration.
 FROM composer:2 AS vendor
 WORKDIR /app
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist --optimize-autoloader
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --no-interaction \
+    --prefer-dist \
+    --no-autoloader \
+    --ignore-platform-reqs
 
 # Stage 2: Production image
 FROM php:8.4-fpm-alpine AS production
@@ -45,21 +53,26 @@ COPY docker/nginx.conf /etc/nginx/nginx.conf
 # Supervisor config (runs both nginx + php-fpm)
 COPY docker/supervisord.conf /etc/supervisord.conf
 
+# Install Composer binary so we can regenerate autoload in this stage
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 # App code
 WORKDIR /var/www/html
 COPY --chown=www-data:www-data . .
 COPY --from=vendor --chown=www-data:www-data /app/vendor ./vendor
 
-# Laravel optimizations
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache \
-    && php artisan event:cache
+# Regenerate optimized autoloader now that all PHP extensions are present
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 
 # Storage directories
 RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
+# Entrypoint: cache config/routes at runtime so prod env vars are captured.
+# Build-time caching captures local-dev defaults from .env (wrong DB driver, etc.).
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 80
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["/entrypoint.sh"]
