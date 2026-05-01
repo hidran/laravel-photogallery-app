@@ -20,4 +20,15 @@ return [
         'api_per_ip_per_minute' => 120,
         'api_per_user_per_minute' => 300,
     ],
+    'auth' => [
+        // When true: registration sends a verification email and mutating
+        // routes require a verified email. When false: users are
+        // auto-verified at registration and can use the app immediately.
+        // Default is false because real email infrastructure (SES/SMTP)
+        // must be configured for it to work usefully.
+        'email_verification_enabled' => filter_var(
+            env('EMAIL_VERIFICATION_ENABLED', false),
+            FILTER_VALIDATE_BOOLEAN,
+        ),
+    ],
 ];

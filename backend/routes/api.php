@@ -67,9 +67,14 @@ Route::middleware('throttle:api')->group(function () {
         ->name('api.v1.photos.original')
         ->middleware(['signed', 'auth:sanctum']);
 
-    // Mutating routes — Sanctum token + verified email + in-controller tokenCan gate.
-    // Unverified users can read (browse gallery) but cannot create/modify resources.
-    Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    // Mutating routes — Sanctum token + (optional) verified email + in-controller tokenCan gate.
+    // The 'verified' middleware is only added when EMAIL_VERIFICATION_ENABLED=true,
+    // since real email infrastructure (SES/SMTP) is required for verification to work.
+    $mutatingMiddleware = config('photogallery.auth.email_verification_enabled')
+        ? ['auth:sanctum', 'verified']
+        : ['auth:sanctum'];
+
+    Route::middleware($mutatingMiddleware)->group(function () {
         Route::post('/photos', [PhotoController::class, 'store']);
         Route::patch('/photos/{photo}', [PhotoController::class, 'update']);
         Route::delete('/photos/{photo}', [PhotoController::class, 'destroy']);

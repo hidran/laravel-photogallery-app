@@ -33,7 +33,13 @@ final class AuthController extends Controller
             'password' => Hash::make($request->validated('password')),
         ]);
 
-        $user->sendEmailVerificationNotification();
+        if (config('photogallery.auth.email_verification_enabled')) {
+            $user->sendEmailVerificationNotification();
+        } else {
+            // Email verification is disabled — auto-verify so the user can
+            // immediately use mutating endpoints without a verification step.
+            $user->forceFill(['email_verified_at' => now()])->save();
+        }
 
         return $this->issueToken(
             $user,
