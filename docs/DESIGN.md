@@ -11,14 +11,19 @@ Two deployable artifacts in one monorepo:
 ```
 laravelapp/
 ├── CLAUDE.md
+├── README.md
 ├── docs/
-│   ├── REQUIREMENTS.md     ← business layer
-│   ├── DESIGN.md           ← this file (engineering layer)
-│   ├── TASKS.md            ← execution layer
-│   ├── SPEC-REVIEW.md      ← architectural decision log
-│   └── SPEC-VALIDATION.md  ← comprehension check
-├── backend/                ← Laravel 13 API + Filament admin
-└── frontend/               ← React 19 + Vite 6 + Tailwind v4 SPA
+│   ├── REQUIREMENTS.md        ← business layer
+│   ├── DESIGN.md              ← this file (engineering layer)
+│   ├── TASKS.md               ← execution layer (124 tasks, 14 phases)
+│   ├── SPEC-REVIEW.md         ← architectural decision log
+│   ├── SPEC-COVERAGE.md       ← implementation audit (DESIGN.md → code)
+│   ├── REVIEW-FIXES.md        ← code review fix log
+│   ├── CONTRIBUTING.md        ← contributor guide
+│   ├── PARALLEL-WORKFLOW.md   ← git worktree patterns
+│   └── BATCH-*.md             ← per-session work logs
+├── backend/                   ← Laravel 13 API + Filament admin
+└── frontend/                  ← React 19 + Vite 6 + Tailwind v4 SPA
 ```
 
 The two artifacts communicate via a JSON REST API at `/api/v1`. Backend handles persistence, auth, file uploads, and asynchronous image processing. Frontend renders the public gallery and member tools. Filament v5 (mounted inside the Laravel app at `/admin`) is the admin panel.

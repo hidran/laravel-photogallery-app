@@ -11,8 +11,12 @@
 | `CLAUDE.md` (this file) | How we work — rules, principles, style | Every session, automatic |
 | `docs/REQUIREMENTS.md` | What we're building, in plain language | Before starting any task — read the relevant feature |
 | `docs/DESIGN.md` | Technical blueprint — schemas, contracts, file paths | Before implementing — read the section the task references |
-| `docs/TASKS.md` | 80+ atomic tasks across 13 phases | Pick a task; check it off when done |
+| `docs/TASKS.md` | 124 atomic tasks across 14 phases | Pick a task; check it off when done |
 | `docs/SPEC-REVIEW.md` | Decision log explaining why architectural choices were made | When you disagree with a rule and want context |
+| `docs/SPEC-COVERAGE.md` | Audit mapping every DESIGN.md section to code + test locations | When checking implementation completeness |
+| `docs/REVIEW-FIXES.md` | Log of code review findings and their fixes | When investigating why code was changed |
+| `docs/CONTRIBUTING.md` | Contributor guide — workflow, style, testing | When onboarding |
+| `docs/PARALLEL-WORKFLOW.md` | Git worktree patterns for parallel agent development | When dispatching parallel agents |
 
 ---
 

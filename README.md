@@ -16,14 +16,16 @@ A full-stack photo gallery application. Users upload photos (JPG/PNG/WebP, up to
 | [CLAUDE.md](CLAUDE.md) | How we work — rules, principles, style |
 | [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) | What we're building |
 | [docs/DESIGN.md](docs/DESIGN.md) | Technical blueprint — schemas, contracts, file paths |
-| [docs/TASKS.md](docs/TASKS.md) | Atomic tasks across 13 phases |
+| [docs/TASKS.md](docs/TASKS.md) | 124 atomic tasks across 14 phases |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution guidelines |
+| [docs/SPEC-COVERAGE.md](docs/SPEC-COVERAGE.md) | Implementation audit — every spec section mapped to code |
+| [docs/SPEC-REVIEW.md](docs/SPEC-REVIEW.md) | Architectural decision log |
 
 ## Quickstart
 
 ### Prerequisites
 
-- PHP 8.3+
+- PHP 8.4+
 - Node.js 20+
 - Composer
 - npm
