@@ -282,11 +282,27 @@ Resources:
             OriginAccessControlId: !Ref CloudFrontOAC
             S3OriginConfig:
               OriginAccessIdentity: ''
+          - Id: ApiBackend
+            DomainName: !GetAtt ALB.DNSName
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+              OriginSSLProtocols: [TLSv1.2]
+              HTTPPort: 80
         DefaultCacheBehavior:
           TargetOriginId: S3Frontend
           ViewerProtocolPolicy: redirect-to-https
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
           Compress: true
+        CacheBehaviors:
+          # /api/* → ALB (HTTPS frontend, HTTP backend, no caching)
+          - PathPattern: /api/*
+            TargetOriginId: ApiBackend
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+            CachedMethods: [GET, HEAD]
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
+            OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3  # AllViewer (forwards Auth header etc.)
+            Compress: true
         CustomErrorResponses:
           # SPA routing: return index.html for all 403/404 paths
           - ErrorCode: 403
@@ -410,7 +426,7 @@ Resources:
             - Name: APP_DEBUG
               Value: 'false'
             - Name: APP_URL
-              Value: !Sub https://${ALB.DNSName}
+              Value: !Sub https://${FrontendDistribution.DomainName}
             - Name: APP_KEY
               Value: !Ref AppKey
             - Name: DB_CONNECTION
@@ -542,7 +558,7 @@ Resources:
             - Name: APP_DEBUG
               Value: 'false'
             - Name: APP_URL
-              Value: !Sub https://${ALB.DNSName}
+              Value: !Sub https://${FrontendDistribution.DomainName}
             - Name: APP_KEY
               Value: !Ref AppKey
             - Name: DB_CONNECTION
@@ -606,8 +622,8 @@ Resources:
 # ============================================================
 Outputs:
   APIURL:
-    Description: Backend API URL
-    Value: !Sub http://${ALB.DNSName}/api/v1
+    Description: Backend API URL (via CloudFront — HTTPS, same origin as frontend)
+    Value: !Sub https://${FrontendDistribution.DomainName}/api/v1
 
   FrontendURL:
     Description: Frontend CloudFront URL
