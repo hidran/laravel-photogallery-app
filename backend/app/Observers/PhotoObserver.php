@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Models\Photo;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 final class PhotoObserver
@@ -20,18 +21,25 @@ final class PhotoObserver
      */
     public function deleted(Photo $photo): void
     {
-        if ($photo->original_path) {
-            Storage::disk('photos_private')->delete($photo->original_path);
-        }
+        $paths = [
+            ['disk' => 'photos_private', 'path' => $photo->original_path],
+            ['disk' => 'photos', 'path' => $photo->thumbnail_path],
+            ['disk' => 'photos', 'path' => $photo->medium_path],
+            ['disk' => 'photos', 'path' => $photo->large_path],
+        ];
 
-        $variants = array_filter([
-            $photo->thumbnail_path,
-            $photo->medium_path,
-            $photo->large_path,
-        ]);
-
-        if ($variants) {
-            Storage::disk('photos')->delete($variants);
+        foreach ($paths as $item) {
+            if ($item['path'] === null) {
+                continue;
+            }
+            try {
+                Storage::disk($item['disk'])->delete($item['path']);
+            } catch (\Throwable $e) {
+                Log::warning("Failed to delete file on {$item['disk']}: {$item['path']}", [
+                    'photo_id' => $photo->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 }

@@ -133,15 +133,11 @@ export function Navbar() {
           <ChevronDown className="h-3.5 w-3.5" />
         </button>
         {sortOpen && (
-          <div
-            role="menu"
-            className="absolute right-0 z-10 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
-          >
+          <div className="absolute right-0 z-10 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
             {(Object.keys(sortLabels) as SortOption[]).map((option) => (
               <button
                 key={option}
                 type="button"
-                role="menuitem"
                 onClick={() => handleSortChange(option)}
                 className={`block w-full px-3 py-1.5 text-left text-sm ${
                   currentSort === option

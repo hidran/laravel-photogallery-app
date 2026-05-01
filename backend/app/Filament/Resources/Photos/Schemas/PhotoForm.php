@@ -11,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Str;
 
 final class PhotoForm
 {
@@ -63,7 +64,11 @@ final class PhotoForm
                             ->maxLength(255),
                     ])
                     ->createOptionUsing(function (array $data): string {
-                        $tag = Tag::create(['name' => $data['name']]);
+                        $slug = Str::slug($data['name']);
+                        $tag = Tag::firstOrCreate(
+                            ['slug' => $slug],
+                            ['name' => $data['name']],
+                        );
 
                         return $tag->id;
                     }),

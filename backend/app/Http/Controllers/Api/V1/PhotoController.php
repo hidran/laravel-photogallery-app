@@ -74,7 +74,7 @@ final class PhotoController extends Controller
             ],
         ], 202)->header(
             'Location',
-            url("/api/v1/photos/batch/{$result['batch_id']}"),
+            route('api.v1.photos.batch', $result['batch_id']),
         );
     }
 

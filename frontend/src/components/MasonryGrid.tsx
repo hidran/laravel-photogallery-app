@@ -57,19 +57,7 @@ export function MasonryGrid({
               {...(currentUserId ? { isOwner: photo.owner.id === currentUserId } : {})}
             />
             {renderOverlay && (
-              <div
-                className="absolute inset-0 cursor-pointer"
-                onClick={() => onClick?.(photo)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onClick?.(photo);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={`Select ${photo.title}`}
-              >
+              <div className="absolute inset-0 cursor-pointer" onClick={() => onClick?.(photo)}>
                 {renderOverlay(photo)}
               </div>
             )}

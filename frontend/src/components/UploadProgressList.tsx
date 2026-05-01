@@ -42,9 +42,9 @@ export function UploadProgressList({ files, batchPhotos }: UploadProgressListPro
 
   return (
     <ul className="mt-4 max-h-60 space-y-2 overflow-y-auto">
-      {files.map((file, index) => (
+      {files.map((file) => (
         <li
-          key={`${file.name}-${index}`}
+          key={`${file.name}-${file.size}-${file.lastModified}`}
           className="flex items-center justify-between rounded bg-gray-50 px-3 py-2"
         >
           <span className="truncate text-sm text-gray-700">{file.name}</span>

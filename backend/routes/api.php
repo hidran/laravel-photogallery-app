@@ -73,6 +73,6 @@ Route::middleware('throttle:api')->group(function () {
 
     // Batch progress — auth required (must be batch creator).
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/photos/batch/{batchId}', [BatchController::class, 'show']);
+        Route::get('/photos/batch/{batchId}', [BatchController::class, 'show'])->name('api.v1.photos.batch');
     });
 });

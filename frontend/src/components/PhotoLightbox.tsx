@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import FocusLock from 'react-focus-lock';
 import { X, Heart, Trash2, ChevronLeft, ChevronRight, Info, Pencil } from 'lucide-react';
@@ -12,6 +12,7 @@ import {
 } from '../hooks';
 import type { ShortcutHandler } from '../hooks';
 import { copy } from '../data/copy';
+import { ConfirmDialog } from './ConfirmDialog';
 import { ExifPanel } from './ExifPanel';
 import { useMe } from '../hooks/useAuth';
 import type { Photo } from '../types';
@@ -28,7 +29,6 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
   const [showExif, setShowExif] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const toggleFavorite = useToggleFavorite();
   const deletePhoto = useDeletePhoto();
@@ -68,15 +68,6 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
   );
   const prevPhoto = currentIndex > 0 ? photos[currentIndex - 1] : undefined;
   const nextPhoto = currentIndex < photos.length - 1 ? photos[currentIndex + 1] : undefined;
-
-  useEffect(() => {
-    previousFocusRef.current = document.activeElement as HTMLElement | null;
-    return () => {
-      if (previousFocusRef.current) {
-        previousFocusRef.current.focus();
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const original = document.body.style.overflow;
@@ -191,7 +182,7 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
       onClick={handleBackdropClick}
     >
-      <FocusLock returnFocus={false}>
+      <FocusLock returnFocus>
         <div
           role="dialog"
           aria-modal="true"
@@ -410,29 +401,16 @@ export function PhotoLightbox({ photo, photos, onClose, onNavigate }: PhotoLight
           </div>
 
           {/* Delete confirmation dialog */}
-          {showDeleteConfirm && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70">
-              <div className="mx-4 max-w-sm rounded-lg bg-gray-800 p-6 text-white shadow-xl">
-                <p className="mb-4 text-sm">{copy.lightbox.deleteConfirm}</p>
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="rounded-md px-3 py-1.5 text-sm text-gray-300 hover:text-white"
-                  >
-                    {copy.common.cancel}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleConfirmDelete}
-                    className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700"
-                  >
-                    {copy.lightbox.delete}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          <ConfirmDialog
+            isOpen={showDeleteConfirm}
+            onClose={() => setShowDeleteConfirm(false)}
+            onConfirm={handleConfirmDelete}
+            title={copy.lightbox.delete}
+            message={copy.lightbox.deleteConfirm}
+            confirmLabel={copy.common.delete}
+            variant="danger"
+            isPending={deletePhoto.isPending}
+          />
         </div>
       </FocusLock>
     </div>,

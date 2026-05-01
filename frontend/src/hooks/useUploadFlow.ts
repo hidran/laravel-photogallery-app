@@ -17,10 +17,17 @@ export function useUploadFlow(onComplete?: () => void): UploadFlowResult {
   const [files, setFiles] = useState<File[]>([]);
   const queryClient = useQueryClient();
   const onCompleteRef = useRef(onComplete);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
   });
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const uploadMutation = useUpload();
   const batchQuery = useBatchPoll(batchId);
@@ -32,11 +39,11 @@ export function useUploadFlow(onComplete?: () => void): UploadFlowResult {
   useEffect(() => {
     if (finished && batchId) {
       queryClient.invalidateQueries({ queryKey: ['photos'] });
-      queueMicrotask(() => {
+      if (mountedRef.current) {
         setBatchId(null);
         setFiles([]);
-        onCompleteRef.current?.();
-      });
+      }
+      onCompleteRef.current?.();
     }
   }, [finished, batchId, queryClient]);
 

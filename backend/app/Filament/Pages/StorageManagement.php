@@ -12,6 +12,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use UnitEnum;
@@ -86,16 +87,18 @@ final class StorageManagement extends Page
      */
     private function getFolderStats(Filesystem $disk, string $folder): array
     {
-        $files = $disk->files($folder);
-        $totalSize = 0;
+        return Cache::remember("storage_stats_{$folder}", 60, function () use ($disk, $folder) {
+            $files = $disk->files($folder);
+            $totalSize = 0;
 
-        foreach ($files as $file) {
-            $totalSize += $disk->size($file);
-        }
+            foreach ($files as $file) {
+                $totalSize += $disk->size($file);
+            }
 
-        return [
-            'size' => HumanBytes::format($totalSize),
-            'count' => count($files),
-        ];
+            return [
+                'size' => HumanBytes::format($totalSize),
+                'count' => count($files),
+            ];
+        });
     }
 }

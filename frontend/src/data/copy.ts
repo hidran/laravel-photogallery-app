@@ -44,6 +44,8 @@ export const copy = {
     deleteSelected: 'Delete selected',
     deleteSelectedConfirm: (n: number) =>
       `Are you sure you want to delete ${n} photo${n > 1 ? 's' : ''}? This cannot be undone.`,
+    photoDeleted: 'Photo deleted',
+    photosDeleted: (n: number) => `Deleted ${n} photo${n > 1 ? 's' : ''}`,
   },
 
   upload: {
@@ -123,10 +125,10 @@ export const copy = {
 
   tags: {
     title: 'Tags',
-    add: 'Add tag',
+    add: 'Filter by tag',
     remove: 'Remove tag',
-    placeholder: 'New tag...',
-    createHint: 'Press Enter to create',
+    placeholder: 'Filter by tag...',
+    createHint: 'Press Enter to filter',
   },
 
   stats: {

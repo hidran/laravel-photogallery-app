@@ -52,6 +52,9 @@ final class ProcessPhoto implements ShouldQueue
         $this->photo->update([
             'processing_status' => ProcessingStatus::Failed,
             'processing_error' => 'Processing failed. Please try again or contact support.',
+            'thumbnail_path' => null,
+            'medium_path' => null,
+            'large_path' => null,
         ]);
     }
 }

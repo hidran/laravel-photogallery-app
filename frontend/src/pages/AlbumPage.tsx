@@ -41,7 +41,7 @@ export function AlbumPage() {
     deletePhoto.mutate(photoToDelete.id, {
       onSuccess: () => {
         setPhotoToDelete(null);
-        toast.success('Photo deleted');
+        toast.success(copy.gallery.photoDeleted);
       },
     });
   }, [photoToDelete, deletePhoto]);

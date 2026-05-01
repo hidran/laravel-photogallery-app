@@ -23,8 +23,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
-    void error;
-    void info;
+    console.error('[ErrorBoundary]', error, info.componentStack);
     toast.error(copy.errors.generic);
   }
 

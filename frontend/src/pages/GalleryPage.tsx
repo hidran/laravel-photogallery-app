@@ -73,7 +73,7 @@ export function GalleryPage() {
     deletePhoto.mutate(photoToDelete.id, {
       onSuccess: () => {
         setPhotoToDelete(null);
-        toast.success('Photo deleted');
+        toast.success(copy.gallery.photoDeleted);
       },
     });
   }, [photoToDelete, deletePhoto]);
@@ -88,7 +88,7 @@ export function GalleryPage() {
       setSelectedIds(new Set());
       setSelectMode(false);
       setShowBulkDeleteConfirm(false);
-      toast.success(`Deleted ${ids.length} photo${ids.length > 1 ? 's' : ''}`);
+      toast.success(copy.gallery.photosDeleted(ids.length));
     } catch {
       toast.error(copy.errors.generic);
     }

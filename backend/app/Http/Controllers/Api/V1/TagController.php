@@ -28,6 +28,6 @@ final class TagController extends Controller
             default => $query->orderBy('photos_count', 'desc')->orderBy('name'),
         };
 
-        return TagData::collection($query->get());
+        return TagData::collection($query->limit(500)->get());
     }
 }

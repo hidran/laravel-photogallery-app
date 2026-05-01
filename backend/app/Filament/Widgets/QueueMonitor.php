@@ -8,6 +8,7 @@ use App\Enums\ProcessingStatus;
 use App\Models\Photo;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 final class QueueMonitor extends StatsOverviewWidget
@@ -18,19 +19,21 @@ final class QueueMonitor extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $pendingJobs = DB::table('jobs')->count();
-        $failedJobs = DB::table('failed_jobs')->count();
-        $photosProcessing = Photo::query()
-            ->where('processing_status', ProcessingStatus::Processing)
-            ->count();
+        $stats = Cache::remember('queue_monitor_stats', 10, function () {
+            return [
+                'pending' => DB::table('jobs')->count(),
+                'failed' => DB::table('failed_jobs')->count(),
+                'processing' => Photo::where('processing_status', ProcessingStatus::Processing)->count(),
+            ];
+        });
 
         return [
-            Stat::make('Pending Jobs', $pendingJobs)
-                ->color($pendingJobs > 0 ? 'warning' : 'success'),
-            Stat::make('Failed Jobs', $failedJobs)
-                ->color($failedJobs > 0 ? 'danger' : 'success'),
-            Stat::make('Photos Processing', $photosProcessing)
-                ->color($photosProcessing > 0 ? 'info' : 'success'),
+            Stat::make('Pending Jobs', $stats['pending'])
+                ->color($stats['pending'] > 0 ? 'warning' : 'success'),
+            Stat::make('Failed Jobs', $stats['failed'])
+                ->color($stats['failed'] > 0 ? 'danger' : 'success'),
+            Stat::make('Photos Processing', $stats['processing'])
+                ->color($stats['processing'] > 0 ? 'info' : 'success'),
         ];
     }
 }

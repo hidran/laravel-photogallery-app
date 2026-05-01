@@ -108,8 +108,7 @@ export function useToggleFavorite() {
       if (context?.previousPhoto) {
         queryClient.setQueryData(['photo', id], context.previousPhoto);
       }
-      // Refetch lists to restore correct state
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      // onSettled handles list refetch for both success and error
     },
     onSettled: (_data, _error, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['photos'] });

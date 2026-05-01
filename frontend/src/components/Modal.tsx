@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef } from 'react';
+import { useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import FocusLock from 'react-focus-lock';
 
@@ -11,16 +11,6 @@ interface ModalProps {
 
 export function Modal({ isOpen, onClose, children, title }: ModalProps) {
   const titleId = useId();
-  const previousFocusRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      previousFocusRef.current = document.activeElement as HTMLElement | null;
-    } else if (previousFocusRef.current) {
-      previousFocusRef.current.focus();
-      previousFocusRef.current = null;
-    }
-  }, [isOpen]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -51,7 +41,7 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
     >
-      <FocusLock returnFocus={false}>
+      <FocusLock returnFocus>
         <div
           role="dialog"
           aria-modal="true"

@@ -54,11 +54,11 @@ export function PhotoCard({ photo, onClick, onDelete, isOwner }: PhotoCardProps)
       />
 
       {/* Hover overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100" />
 
       {/* Top-right actions — visible on hover */}
       {isOwner && onDelete && (
-        <div className="absolute right-2 top-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <div className="absolute right-2 top-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
           <button
             type="button"
             onClick={handleDeleteClick}
@@ -71,7 +71,7 @@ export function PhotoCard({ photo, onClick, onDelete, isOwner }: PhotoCardProps)
       )}
 
       {/* Bottom info bar — visible on hover */}
-      <div className="absolute inset-x-0 bottom-0 translate-y-1 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+      <div className="absolute inset-x-0 bottom-0 translate-y-1 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
         <div className="flex items-end justify-between p-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-white drop-shadow-sm">

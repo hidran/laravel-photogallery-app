@@ -60,12 +60,17 @@ final class PhotoQuery
             return $this;
         }
 
-        // AND logic: each tag must be attached. We enforce this by
-        // counting matching pivot rows per photo and requiring the
-        // count to equal the number of slugs requested.
-        $this->query->whereHas('tags', function (Builder $q) use ($slugs): void {
-            $q->whereIn('slug', $slugs);
-        }, '=', count($slugs));
+        // AND logic: each tag must be attached. Uses a subquery with
+        // JOIN + HAVING instead of whereHas correlated subquery for
+        // better scalability on large datasets.
+        $this->query->whereIn('photos.id', function ($sub) use ($slugs): void {
+            $sub->select('photo_tag.photo_id')
+                ->from('photo_tag')
+                ->join('tags', 'tags.id', '=', 'photo_tag.tag_id')
+                ->whereIn('tags.slug', $slugs)
+                ->groupBy('photo_tag.photo_id')
+                ->havingRaw('COUNT(DISTINCT photo_tag.tag_id) = ?', [count($slugs)]);
+        });
 
         return $this;
     }
