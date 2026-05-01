@@ -21,6 +21,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * DESIGN.md §6.2 — Photo CRUD + favorites.
@@ -105,6 +107,27 @@ final class PhotoController extends Controller
         $photo->loadCount(PhotoData::WITH_COUNT);
 
         return PhotoData::make($photo)->response();
+    }
+
+    /**
+     * GET /photos/{photo}/original — serve the original file from the private disk.
+     * Protected by signed URL + auth:sanctum + ownership/admin check.
+     */
+    public function original(Request $request, Photo $photo): StreamedResponse
+    {
+        if ($request->user()?->cannot('view', $photo)) {
+            throw new AuthorizationException;
+        }
+
+        if (! $photo->original_path || ! Storage::disk('photos_private')->exists($photo->original_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('photos_private')->download(
+            $photo->original_path,
+            $photo->filename,
+            ['Content-Type' => $photo->mime_type],
+        );
     }
 
     public function update(UpdatePhotoRequest $request, Photo $photo, TagAssigner $tagAssigner): JsonResponse

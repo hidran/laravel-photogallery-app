@@ -52,6 +52,11 @@ Route::middleware('throttle:api')->group(function () {
 
     Route::get('/tags', [TagController::class, 'index']);
 
+    // Signed URL route for original file download (owner/admin only).
+    Route::get('/photos/{photo}/original', [PhotoController::class, 'original'])
+        ->name('api.v1.photos.original')
+        ->middleware(['signed', 'auth:sanctum']);
+
     // Mutating routes — Sanctum token + in-controller tokenCan gate.
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/photos', [PhotoController::class, 'store']);

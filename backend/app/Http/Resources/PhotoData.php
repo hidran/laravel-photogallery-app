@@ -70,10 +70,9 @@ final class PhotoData extends JsonResource
                 false,
             ),
             'favorites_count' => $this->favorited_by_count ?? 0,
-            // exif may carry GPS / device serials; processing_error may
-            // leak path fragments and worker context — both are owner+admin
-            // only (DESIGN.md §6.6 + security review S1 on PR #4).
-            'exif' => $isOwnerOrAdmin ? $this->exif : null,
+            // EXIF is safe for all users — GPS is stripped during processing.
+            // processing_error may leak path fragments — owner+admin only.
+            'exif' => $this->exif,
             'processing_status' => $this->processing_status?->value,
             'processing_error' => $isOwnerOrAdmin ? $this->processing_error : null,
             'album' => $this->whenLoaded('album', fn () => [
@@ -109,11 +108,13 @@ final class PhotoData extends JsonResource
                 now()->addSeconds($ttl)
             );
         } catch (\Throwable) {
-            // Local disk doesn't support temporaryUrl — fall back to a
-            // non-signed URL the browser still routes through Laravel's
-            // signed-route middleware in dev. T073 (DiskPhotoStorage) will
-            // own the signed-URL contract once it ships in Phase 6.
-            return Storage::disk('photos_private')->url($this->original_path);
+            // Local disk doesn't support temporaryUrl — use a signed
+            // Laravel route that serves the file through the controller.
+            return url()->signedRoute(
+                'api.v1.photos.original',
+                ['photo' => $this->id],
+                now()->addSeconds($ttl),
+            );
         }
     }
 }

@@ -87,17 +87,18 @@ it('declares the eager-load WITH constant per CLAUDE.md DRY rule', function () {
     expect(PhotoData::WITH)->toContain('album:id,name', 'tags:id,name,slug', 'user:id,name');
 });
 
-// PR #4 security review S1 — exif + processing_error are owner+admin only.
+// EXIF is visible to all users (GPS is stripped during processing).
+// processing_error is owner+admin only (may leak server paths).
 
-it('hides exif from anonymous viewers', function () {
+it('shows exif to anonymous viewers (GPS already stripped during processing)', function () {
     $photo = Photo::factory()->processed()->create([
-        'exif' => ['GPS' => ['lat' => 1.0, 'lng' => 2.0], 'Make' => 'Apple'],
+        'exif' => ['Make' => 'Apple', 'ISO' => 100],
     ]);
     $photo->load(PhotoData::WITH);
 
     $payload = renderPhotoData($photo, viewer: null);
 
-    expect($payload['exif'])->toBeNull();
+    expect($payload['exif'])->toBe(['Make' => 'Apple', 'ISO' => 100]);
 });
 
 it('hides processing_error from anonymous viewers', function () {
