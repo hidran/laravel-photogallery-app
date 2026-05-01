@@ -69,7 +69,8 @@ return [
                 'region' => env('AWS_DEFAULT_REGION'),
                 'bucket' => env('AWS_BUCKET_PUBLIC'),
                 'url' => env('AWS_URL'),
-                'visibility' => 'public',
+                // No 'visibility' — modern S3 buckets disable ACLs.
+                // Public read access is granted via bucket policy instead.
                 'throw' => true,
             ]
             : [
