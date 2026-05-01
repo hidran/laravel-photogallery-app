@@ -1,0 +1,45 @@
+version: 0.2
+
+# CodeBuild spec for the Laravel backend.
+# Builds the production Docker image, pushes to ECR, and emits
+# imagedefinitions.json which the CodePipeline ECS Deploy action
+# uses to update the API + Worker services.
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+      - COMMIT_HASH=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c 1-7)
+      - IMAGE_TAG="${COMMIT_HASH:-latest}"
+      - echo "Image tag: $IMAGE_TAG"
+
+  build:
+    commands:
+      - echo Building Docker image...
+      - cd backend
+      - docker build --platform linux/amd64
+        -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        -t "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+        .
+
+  post_build:
+    commands:
+      - echo Pushing to ECR...
+      - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+
+      # imagedefinitions.json is consumed by the CodePipeline ECS Deploy
+      # action. It updates the named container's image in the live task
+      # definition. The container name MUST match the one in the task
+      # definition (CloudFormation: app, worker).
+      - cd ..
+      - printf '[{"name":"app","imageUri":"%s"}]' "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" > imagedefinitions-api.json
+      - printf '[{"name":"worker","imageUri":"%s"}]' "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" > imagedefinitions-worker.json
+      - cat imagedefinitions-api.json
+      - cat imagedefinitions-worker.json
+
+artifacts:
+  files:
+    - imagedefinitions-api.json
+    - imagedefinitions-worker.json

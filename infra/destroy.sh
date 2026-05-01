@@ -62,6 +62,25 @@ if [ "$FORCE" = false ]; then
 fi
 
 # ============================================================
+# Step 0: Tear down pipeline stack (if present)
+# ============================================================
+PIPELINE_STACK="${STACK_NAME}-pipeline"
+if aws cloudformation describe-stacks --region "$REGION" --stack-name "$PIPELINE_STACK" >/dev/null 2>&1; then
+    echo ">>> Step 0: Deleting pipeline stack '$PIPELINE_STACK'..."
+
+    # Empty pipeline artifact bucket so CFN can delete it
+    ARTIFACT_BUCKET="photogallery-${ACCOUNT_ID}-pipeline-artifacts"
+    if aws s3api head-bucket --bucket "$ARTIFACT_BUCKET" --region "$REGION" 2>/dev/null; then
+        aws s3 rm "s3://$ARTIFACT_BUCKET" --recursive --region "$REGION" --quiet || true
+    fi
+
+    aws cloudformation delete-stack --region "$REGION" --stack-name "$PIPELINE_STACK"
+    aws cloudformation wait stack-delete-complete --region "$REGION" --stack-name "$PIPELINE_STACK"
+    echo "    Pipeline stack deleted."
+    echo ""
+fi
+
+# ============================================================
 # Step 1: Empty S3 buckets (CloudFormation can't delete non-empty buckets)
 # ============================================================
 echo ">>> Step 1: Emptying S3 buckets..."

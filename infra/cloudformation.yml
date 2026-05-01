@@ -694,10 +694,14 @@ Outputs:
   APIURL:
     Description: Backend API URL (via CloudFront — HTTPS, same origin as frontend)
     Value: !Sub https://${FrontendDistribution.DomainName}/api/v1
+    Export:
+      Name: !Sub ${AWS::StackName}-APIURL
 
   FrontendURL:
     Description: Frontend CloudFront URL
     Value: !Sub https://${FrontendDistribution.DomainName}
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendURL
 
   RDSEndpoint:
     Description: RDS MariaDB endpoint
@@ -714,6 +718,8 @@ Outputs:
   FrontendBucketName:
     Description: S3 bucket for frontend static files
     Value: !Ref FrontendBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendBucketName
 
   SQSQueueURL:
     Description: SQS Queue URL for Laravel
@@ -722,3 +728,23 @@ Outputs:
   CloudFrontDistributionId:
     Description: CloudFront distribution ID (for cache invalidation)
     Value: !Ref FrontendDistribution
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontDistributionId
+
+  PublicSubnetA:
+    Description: Public subnet A id (for run-task)
+    Value: !Ref PublicSubnetA
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnetA
+
+  PublicSubnetB:
+    Description: Public subnet B id (for run-task)
+    Value: !Ref PublicSubnetB
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnetB
+
+  ECSSecurityGroup:
+    Description: ECS task security group id (for run-task)
+    Value: !Ref ECSSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-ECSSecurityGroup

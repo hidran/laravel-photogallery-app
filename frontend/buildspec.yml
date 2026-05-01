@@ -1,0 +1,36 @@
+version: 0.2
+
+# CodeBuild spec for the React/Vite frontend.
+# Builds the SPA, syncs to the frontend S3 bucket, and invalidates
+# CloudFront's /index.html (versioned hashed assets don't need it).
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - cd frontend
+      - npm ci
+
+  build:
+    commands:
+      - echo "Building frontend with VITE_API_BASE_URL=$VITE_API_BASE_URL"
+      - npm run build
+
+  post_build:
+    commands:
+      - echo "Syncing dist/ to s3://$FRONTEND_BUCKET/ ..."
+      - aws s3 sync dist/ "s3://$FRONTEND_BUCKET/"
+        --delete
+        --cache-control "public, max-age=31536000, immutable"
+        --exclude "index.html"
+        --exclude "*.json"
+
+      - echo "Uploading index.html with no-cache headers..."
+      - aws s3 cp dist/index.html "s3://$FRONTEND_BUCKET/index.html"
+        --cache-control "no-cache, no-store, must-revalidate"
+
+      - echo "Invalidating CloudFront /index.html..."
+      - aws cloudfront create-invalidation
+        --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID"
+        --paths "/index.html"

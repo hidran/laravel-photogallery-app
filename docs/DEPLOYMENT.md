@@ -120,6 +120,94 @@ Re-running is safe at any time. If the script fails partway through (e.g., docke
 
 ---
 
+## CodePipeline (AWS-native CD)
+
+The repo also ships an AWS-native pipeline (CodePipeline + CodeBuild) as an alternative to GitHub Actions. Source is GitHub via a CodeStar Connection — no AWS keys live in GitHub, no IAM users, just an installed GitHub App. Pipeline definition is `infra/pipeline.yml`.
+
+### Pipeline shape
+
+```
+┌─────────┐   ┌────────────────────┐   ┌─────────┐   ┌────────────────────┐
+│ Source  │──▶│ Build (parallel)   │──▶│ Migrate │──▶│ Deploy (parallel)  │
+│ GitHub  │   │  • Backend image   │   │ run-task│   │  • ECS API service │
+│ (push)  │   │  • Frontend Vite   │   │ artisan │   │  • ECS Worker svc  │
+└─────────┘   └────────────────────┘   └─────────┘   └────────────────────┘
+                       │
+                       └─ Frontend stage also syncs to S3 + invalidates CF
+```
+
+The Frontend build is a CodeBuild project that does **both** the build AND the deploy (S3 sync + CloudFront invalidation) in `post_build` — there's no separate deploy stage for the frontend because S3 deploy actions can't invalidate CloudFront.
+
+### One-time setup
+
+1. **Create a CodeStar Connection to GitHub.** In the AWS Console:
+   - Developer Tools → Settings → Connections → Create connection
+   - Provider: GitHub, name: `photogallery-github`
+   - Click "Install a new app" — opens GitHub, asks you to authorize the AWS Connector for GitHub for your repo.
+   - Connection moves from `PENDING` to `AVAILABLE`.
+   - Copy the ARN: `arn:aws:codeconnections:eu-west-1:<account>:connection/<uuid>`
+
+2. **Deploy the pipeline stack:**
+
+   ```bash
+   ./infra/deploy-pipeline.sh <github-owner> <github-repo> <connection-arn>
+   ```
+
+   Example:
+   ```bash
+   ./infra/deploy-pipeline.sh hidran photogallerypro \
+     arn:aws:codeconnections:eu-west-1:548754016049:connection/abc-123
+   ```
+
+   The script verifies that the app stack exists and the connection is `AVAILABLE` before deploying. Stack name: `photogallery-production-pipeline`.
+
+3. **Push to `main`.** The pipeline picks up changes automatically (via the connection's webhook).
+
+### What runs on push
+
+| Stage | Action | Detail |
+|---|---|---|
+| Source | GitHub | CodeStar Connection pulls the source commit |
+| Build | BackendImage | `backend/buildspec.yml` — `docker build --platform linux/amd64`, push two tags (commit-sha + latest), emit `imagedefinitions-{api,worker}.json` |
+| Build | FrontendBuild | `frontend/buildspec.yml` — `npm run build` with `VITE_API_BASE_URL` from stack output, then `aws s3 sync` + CloudFront invalidation |
+| Migrate | RunMigrations | `backend/buildspec-migrate.yml` — `aws ecs run-task` running `php artisan migrate --force`, waits for completion, fails build if exit code ≠ 0 |
+| Deploy | DeployAPI | CodePipeline ECS Deploy action consumes `imagedefinitions-api.json`, registers a new task definition revision, updates the service |
+| Deploy | DeployWorker | Same, for the worker service |
+
+The pipeline does NOT update the CloudFormation stack itself — only application code (Docker image + frontend bundle). Infrastructure changes (template edits) still require `./infra/deploy.sh`.
+
+### CodeBuild permissions
+
+The CodeBuild service role has scoped permissions:
+- ECR push to `photogallery-production` repo
+- S3 read/write on the frontend bucket
+- CloudFront `CreateInvalidation` (resource: `*` — CloudFront doesn't support resource-level)
+- ECS `RunTask` + describe + log read for the migration step
+- `iam:PassRole` filtered to `ecs-tasks.amazonaws.com` only
+
+### Cost
+
+CodePipeline: $1/active pipeline/month. CodeBuild: charged per build-minute on the build instance (`BUILD_GENERAL1_SMALL` = $0.005/min). A typical full pipeline run takes 5–8 minutes of build time = ~$0.04 per push. Negligible at low push volumes.
+
+### Picking between CodePipeline and GitHub Actions
+
+Both pipelines deploy to the same infrastructure. Pick one:
+
+| | CodePipeline | GitHub Actions |
+|---|---|---|
+| Where it runs | AWS | GitHub-hosted runners |
+| Auth to AWS | CodeStar Connection (GitHub App) | OIDC role |
+| Cost | $1/mo + build minutes | Free tier covers most repos |
+| Speed | Slower (CodeBuild cold start) | Faster |
+| Visibility | AWS Console | GitHub UI |
+| Vendor lock-in | Higher | Lower |
+
+For most users, **GitHub Actions is the better choice** — faster, free, less infrastructure. CodePipeline makes more sense when you want everything in one cloud (audit, billing, SSO) or when other AWS-native tools (CodeDeploy Blue/Green, CodeStar) are part of the workflow.
+
+You can run BOTH simultaneously without conflict — both end up updating the same ECS services with `:latest` images. Whichever finishes last wins.
+
+---
+
 ## GitHub Actions CD
 
 `.github/workflows/deploy.yml` does the same thing as `deploy.sh` but on every push to `main`. Set up:
