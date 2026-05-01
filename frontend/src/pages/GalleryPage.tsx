@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Trash2, X, Check, MousePointer2, ImageOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { usePhotos, useDeletePhoto } from '../hooks';
+import { usePhotos, useDeletePhoto, useDeletePhotosBatch } from '../hooks';
 import { useMe } from '../hooks/useAuth';
 import { useLightboxNav } from '../hooks/useLightboxNav';
 import { MasonryGrid } from '../components/MasonryGrid';
@@ -19,6 +19,7 @@ export function GalleryPage() {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
   const deletePhoto = useDeletePhoto();
+  const deletePhotosBatch = useDeletePhotosBatch();
   const { data: meData } = useMe();
   const currentUserId = meData?.data?.id;
 
@@ -78,13 +79,11 @@ export function GalleryPage() {
     });
   }, [photoToDelete, deletePhoto]);
 
-  // Bulk delete — sequential to avoid N concurrent mutations
+  // Bulk delete — single API call for all selected photos.
   const handleDeleteSelected = useCallback(async () => {
     const ids = Array.from(selectedIds);
     try {
-      for (const id of ids) {
-        await deletePhoto.mutateAsync(id);
-      }
+      await deletePhotosBatch.mutateAsync(ids);
       setSelectedIds(new Set());
       setSelectMode(false);
       setShowBulkDeleteConfirm(false);
@@ -92,7 +91,7 @@ export function GalleryPage() {
     } catch {
       toast.error(copy.errors.generic);
     }
-  }, [selectedIds, deletePhoto]);
+  }, [selectedIds, deletePhotosBatch]);
 
   const handleCancelSelect = useCallback(() => {
     setSelectMode(false);
@@ -232,7 +231,7 @@ export function GalleryPage() {
         message={copy.gallery.deleteSelectedConfirm(selectedIds.size)}
         confirmLabel={copy.common.delete}
         variant="danger"
-        isPending={deletePhoto.isPending}
+        isPending={deletePhoto.isPending || deletePhotosBatch.isPending}
       />
 
       {/* Single photo delete confirm */}

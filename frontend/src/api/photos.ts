@@ -65,6 +65,10 @@ export async function deletePhoto(id: string): Promise<void> {
   await apiClient.delete(`/photos/${id}`);
 }
 
+export async function deletePhotosBatch(photoIds: string[]): Promise<void> {
+  await apiClient.delete('/photos/batch', { data: { photo_ids: photoIds } });
+}
+
 export async function addFavorite(id: string): Promise<void> {
   await apiClient.put(`/photos/${id}/favorite`);
 }

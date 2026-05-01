@@ -4,6 +4,7 @@ import {
   getPhoto,
   updatePhoto,
   deletePhoto,
+  deletePhotosBatch,
   addFavorite,
   removeFavorite,
   removeFavoritesBatch,
@@ -48,6 +49,17 @@ export function useDeletePhoto() {
 
   return useMutation({
     mutationFn: (id: string) => deletePhoto(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
+    },
+  });
+}
+
+export function useDeletePhotosBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (photoIds: string[]) => deletePhotosBatch(photoIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photos'] });
     },

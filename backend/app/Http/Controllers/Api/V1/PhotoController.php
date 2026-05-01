@@ -62,8 +62,9 @@ final class PhotoController extends Controller
             description: $validated['description'] ?? null,
         );
 
-        // Load relations for the response.
-        $photos = collect($result['photos'])->each(fn (Photo $p) => $p->load(PhotoData::WITH));
+        // Batch-load relations in a single query per relation instead of N+1.
+        $photos = collect($result['photos']);
+        $photos->load(PhotoData::WITH);
 
         return response()->json([
             'data' => [
@@ -84,7 +85,17 @@ final class PhotoController extends Controller
         // a valid token. auth('sanctum')->user() resolves it optionally.
         $user = auth('sanctum')->user();
 
-        $page = PhotoQuery::for(Photo::query()->with(PhotoData::WITH)->withCount(PhotoData::WITH_COUNT))
+        $query = Photo::query()->with(PhotoData::WITH)->withCount(PhotoData::WITH_COUNT);
+
+        // Only load favoritedBy rows for the current viewer — prevents loading
+        // thousands of favorites per photo just to check is_favorite.
+        if ($user !== null) {
+            $query->with([
+                'favoritedBy' => fn ($q) => $q->where('users.id', $user->id),
+            ]);
+        }
+
+        $page = PhotoQuery::for($query)
             ->withSearch($request->validated('search'))
             ->withTags($request->validated('tags'))
             ->withAlbum($request->validated('album_id'))
@@ -123,8 +134,17 @@ final class PhotoController extends Controller
             abort(404);
         }
 
-        return Storage::disk('photos_private')->download(
-            $photo->original_path,
+        return response()->streamDownload(
+            function () use ($photo) {
+                $stream = Storage::disk('photos_private')->readStream($photo->original_path);
+                if ($stream === false) {
+                    abort(500, 'Unable to read original file.');
+                }
+                fpassthru($stream);
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            },
             $photo->filename,
             ['Content-Type' => $photo->mime_type],
         );
@@ -149,6 +169,34 @@ final class PhotoController extends Controller
         $this->ensureCan($request, 'delete', $photo, TokenAbility::PhotosWrite);
 
         $photo->delete();
+
+        return response()->noContent();
+    }
+
+    /**
+     * DELETE /photos/batch — delete multiple photos owned by the current user.
+     *
+     * Body: { "photo_ids": ["uuid", ...] }
+     */
+    public function destroyBatch(Request $request): Response
+    {
+        if (! $request->user()?->tokenCan(TokenAbility::PhotosWrite->value)) {
+            throw new AuthorizationException;
+        }
+
+        $validated = $request->validate([
+            'photo_ids' => ['required', 'array', 'min:1', 'max:500'],
+            'photo_ids.*' => ['uuid'],
+        ]);
+
+        $photos = Photo::query()
+            ->whereIn('id', $validated['photo_ids'])
+            ->where('user_id', $request->user()->id)
+            ->get();
+
+        foreach ($photos as $photo) {
+            $photo->delete();
+        }
 
         return response()->noContent();
     }

@@ -24,10 +24,18 @@ final class DiskPhotoStorage implements PhotoStorage
         $extension = in_array($ext, $allowed, true) ? $ext : 'jpg';
         $relativePath = "originals/{$photoId}.{$extension}";
 
-        Storage::disk('photos_private')->put(
-            $relativePath,
-            $file->getContent(),
-        );
+        $stream = fopen($file->getPathname(), 'r');
+        if ($stream === false) {
+            throw new RuntimeException("Cannot open upload for reading: {$file->getPathname()}");
+        }
+
+        try {
+            Storage::disk('photos_private')->put($relativePath, $stream);
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
 
         return $relativePath;
     }
@@ -69,9 +77,13 @@ final class DiskPhotoStorage implements PhotoStorage
                 $photo->original_path,
                 now()->addSeconds($ttlSeconds),
             );
-        } catch (RuntimeException) {
+        } catch (RuntimeException $e) {
             // Local disk driver does not support temporaryUrl().
-            // Falling back to plain URL is acceptable in dev only.
+            // Re-throw in production; fallback only acceptable in dev.
+            if (app()->environment('production')) {
+                throw $e;
+            }
+
             return $disk->url($photo->original_path);
         }
     }

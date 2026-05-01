@@ -16,6 +16,7 @@ use App\Services\TagAssigner;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -54,11 +55,13 @@ final class UploadPhotosAction
         // Extract EXIF from the ORIGINAL file BEFORE stripGps re-encodes
         // and destroys all EXIF data (issue #1).
         $prepared = [];
+        $storedPaths = [];
         foreach ($files as $index => $file) {
             $exifData = $this->exif->extract($file->getPathname());
             $sanitized = $this->exif->stripGps($file);
             $photoId = (string) Str::uuid7();
             $path = $this->storage->storeOriginal($sanitized, $photoId);
+            $storedPaths[] = $path;
 
             $prepared[] = [
                 'photoId' => $photoId,
@@ -71,41 +74,50 @@ final class UploadPhotosAction
             ];
         }
 
-        // Phase 2: DB writes only — fast, no file I/O.
-        [$photos, $jobs] = DB::transaction(function () use ($prepared, $user, $albumId, $tagNames, $description): array {
-            $photos = [];
-            $jobs = [];
+        try {
+            // Phase 2: DB writes only — fast, no file I/O.
+            [$photos, $jobs] = DB::transaction(function () use ($prepared, $user, $albumId, $tagNames, $description): array {
+                $photos = [];
+                $jobs = [];
 
-            foreach ($prepared as $item) {
-                $photo = Photo::create([
-                    'id' => $item['photoId'],
-                    'user_id' => $user->id,
-                    'album_id' => $albumId,
-                    'title' => $item['title'],
-                    'description' => $description,
-                    'filename' => $item['filename'],
-                    'original_path' => $item['path'],
-                    'file_size' => $item['file_size'],
-                    'mime_type' => $item['mime_type'],
-                    'exif' => $item['exif'] !== [] ? $item['exif'] : null,
-                    'processing_status' => ProcessingStatus::Pending,
-                ]);
+                foreach ($prepared as $item) {
+                    $photo = Photo::create([
+                        'id' => $item['photoId'],
+                        'user_id' => $user->id,
+                        'album_id' => $albumId,
+                        'title' => $item['title'],
+                        'description' => $description,
+                        'filename' => $item['filename'],
+                        'original_path' => $item['path'],
+                        'file_size' => $item['file_size'],
+                        'mime_type' => $item['mime_type'],
+                        'exif' => $item['exif'] !== [] ? $item['exif'] : null,
+                        'processing_status' => ProcessingStatus::Pending,
+                    ]);
 
-                if ($tagNames !== []) {
-                    $this->tagAssigner->syncByNames($photo, $tagNames);
+                    if ($tagNames !== []) {
+                        $this->tagAssigner->syncByNames($photo, $tagNames);
+                    }
+
+                    event(new PhotoUploaded($photo));
+                    $photos[] = $photo;
+                    $jobs[] = new ProcessPhoto($photo);
                 }
 
-                event(new PhotoUploaded($photo));
-                $photos[] = $photo;
-                $jobs[] = new ProcessPhoto($photo);
+                return [$photos, $jobs];
+            });
+
+            $batch = Bus::batch($jobs)->dispatch();
+
+            Photo::whereIn('id', collect($photos)->pluck('id'))->update(['batch_id' => $batch->id]);
+        } catch (\Throwable $e) {
+            // Rollback orphaned originals if DB or batch dispatch failed.
+            foreach ($storedPaths as $path) {
+                Storage::disk('photos_private')->delete($path);
             }
 
-            return [$photos, $jobs];
-        });
-
-        $batch = Bus::batch($jobs)->dispatch();
-
-        Photo::whereIn('id', collect($photos)->pluck('id'))->update(['batch_id' => $batch->id]);
+            throw $e;
+        }
 
         return [
             'batch_id' => $batch->id,

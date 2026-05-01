@@ -5,6 +5,7 @@ export {
   usePhoto,
   useUpdatePhoto,
   useDeletePhoto,
+  useDeletePhotosBatch,
   useToggleFavorite,
   useRemoveFavoritesBatch,
   useRemoveAllFavorites,

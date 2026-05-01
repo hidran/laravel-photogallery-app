@@ -56,6 +56,17 @@ final class ProcessPhoto implements ShouldQueue
     {
         report($e);
 
+        // Clean up partial variant files from previous retry attempts.
+        $paths = array_filter([
+            $this->photo->thumbnail_path,
+            $this->photo->medium_path,
+            $this->photo->large_path,
+        ]);
+
+        if ($paths !== []) {
+            Storage::disk('photos')->delete($paths);
+        }
+
         $this->photo->update([
             'processing_status' => ProcessingStatus::Failed,
             'processing_error' => 'Processing failed. Please try again or contact support.',

@@ -107,9 +107,14 @@ final class PhotoData extends JsonResource
                 $this->original_path,
                 now()->addSeconds($ttl)
             );
-        } catch (\Throwable) {
+        } catch (\RuntimeException $e) {
             // Local disk doesn't support temporaryUrl — use a signed
             // Laravel route that serves the file through the controller.
+            // Re-throw in production; fallback only acceptable in dev.
+            if (app()->environment('production')) {
+                throw $e;
+            }
+
             return url()->signedRoute(
                 'api.v1.photos.original',
                 ['photo' => $this->id],

@@ -105,6 +105,10 @@ final class PhpExifExtractor implements ExifExtractor
             throw new \RuntimeException('Failed to create temp file for EXIF stripping');
         }
 
+        // Register shutdown cleanup so the temp file is removed even on
+        // successful return (the UploadedFile wrapper doesn't delete it).
+        register_shutdown_function(static fn () => @unlink($tempPath));
+
         try {
             file_put_contents($tempPath, (string) $encoded);
 

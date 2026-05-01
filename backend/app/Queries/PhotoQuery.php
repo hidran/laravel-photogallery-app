@@ -41,7 +41,7 @@ final class PhotoQuery
                 [$term]
             );
         } else {
-            $needle = '%'.str_replace('%', '\%', $term).'%';
+            $needle = '%'.addcslashes($term, '%_').'%';
             $this->query->where(function (Builder $q) use ($needle): void {
                 $q->where('title', 'like', $needle)
                     ->orWhere('description', 'like', $needle);
