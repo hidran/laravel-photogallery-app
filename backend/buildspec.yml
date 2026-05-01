@@ -36,10 +36,17 @@ phases:
       - cd ..
       - printf '[{"name":"app","imageUri":"%s"}]' "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" > imagedefinitions-api.json
       - printf '[{"name":"worker","imageUri":"%s"}]' "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" > imagedefinitions-worker.json
+
+      # image-uri.json is consumed by Fn::GetParam in the CloudFormation
+      # deploy action's ParameterOverrides, so the stack update uses the
+      # commit-sha-tagged image (not :latest, which can race with parallel
+      # builds).
+      - printf '{"ImageURI":"%s","ImageTag":"%s"}' "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" "$IMAGE_TAG" > image-uri.json
       - cat imagedefinitions-api.json
-      - cat imagedefinitions-worker.json
+      - cat image-uri.json
 
 artifacts:
   files:
     - imagedefinitions-api.json
     - imagedefinitions-worker.json
+    - image-uri.json

@@ -1,27 +1,64 @@
 version: 0.2
 
-# CodeBuild spec for running Laravel migrations as a one-shot ECS task.
-# Runs after the new image is pushed to ECR but before ECS rolls out the
-# new task definition. This way migrations land before any new app
-# instance tries to query the DB with the new schema.
+# CodeBuild spec for running Laravel migrations using the JUST-BUILT image.
+#
+# Runs after the new image is pushed to ECR but before the CloudFormation
+# deploy action updates the running services. Steps:
+#
+#   1. Read the new image URI from BackendBuildOutput artifact.
+#   2. Take the current task definition and register a new revision with
+#      the new image — this gives us a task def we can run-task with.
+#   3. Run-task with that revision, executing `php artisan migrate --force`.
+#   4. Wait for completion and bail if exit code != 0.
+#
+# We do NOT deregister the temp revision afterward — ECS keeps INACTIVE
+# task definitions free of charge and they're useful for rollback.
 
 phases:
+  install:
+    commands:
+      - yum install -y jq
+
   build:
     commands:
-      - echo "Running migrations against the live RDS instance..."
+      # The BackendBuildOutput artifact lands at $CODEBUILD_SRC_DIR_BackendBuildOutput
+      - IMAGE_URI=$(jq -r '.ImageURI' "$CODEBUILD_SRC_DIR_BackendBuildOutput/image-uri.json")
+      - echo "Using image $IMAGE_URI for migration task"
+
+      # Snapshot the active task definition and rewrite the image
+      - aws ecs describe-task-definition
+        --region "$AWS_DEFAULT_REGION"
+        --task-definition "$ECS_TASK_DEFINITION"
+        --query taskDefinition > current-td.json
+
+      - jq --arg img "$IMAGE_URI"
+        '.containerDefinitions[0].image = $img
+         | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+               .compatibilities, .registeredAt, .registeredBy, .deregisteredAt)'
+        current-td.json > new-td.json
+
+      - NEW_TD_ARN=$(aws ecs register-task-definition
+        --region "$AWS_DEFAULT_REGION"
+        --cli-input-json file://new-td.json
+        --query 'taskDefinition.taskDefinitionArn'
+        --output text)
+      - echo "Registered task def $NEW_TD_ARN"
+
+      # Run migrations
       - |
         TASK_ARN=$(aws ecs run-task \
           --region "$AWS_DEFAULT_REGION" \
           --cluster "$ECS_CLUSTER" \
-          --task-definition "$ECS_TASK_DEFINITION" \
+          --task-definition "$NEW_TD_ARN" \
           --launch-type FARGATE \
           --network-configuration "awsvpcConfiguration={subnets=[$PUBLIC_SUBNET_A,$PUBLIC_SUBNET_B],securityGroups=[$ECS_SECURITY_GROUP],assignPublicIp=ENABLED}" \
           --overrides '{"containerOverrides":[{"name":"app","command":["php","artisan","migrate","--force"]}]}' \
           --started-by "codepipeline-migrate" \
           --query 'tasks[0].taskArn' \
           --output text)
-      - echo "Migration task ARN $TASK_ARN"
+      - echo "Migration task $TASK_ARN"
       - aws ecs wait tasks-stopped --region "$AWS_DEFAULT_REGION" --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN"
+
       - |
         EXIT_CODE=$(aws ecs describe-tasks \
           --region "$AWS_DEFAULT_REGION" \
@@ -30,6 +67,7 @@ phases:
           --query 'tasks[0].containers[0].exitCode' \
           --output text)
       - echo "Migration exit code $EXIT_CODE"
+
       - |
         if [ "$EXIT_CODE" != "0" ]; then
           echo "Migration failed. Tail of task logs:"

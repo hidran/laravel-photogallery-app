@@ -127,16 +127,25 @@ The repo also ships an AWS-native pipeline (CodePipeline + CodeBuild) as an alte
 ### Pipeline shape
 
 ```
-┌─────────┐   ┌────────────────────┐   ┌─────────┐   ┌────────────────────┐
-│ Source  │──▶│ Build (parallel)   │──▶│ Migrate │──▶│ Deploy (parallel)  │
-│ GitHub  │   │  • Backend image   │   │ run-task│   │  • ECS API service │
-│ (push)  │   │  • Frontend Vite   │   │ artisan │   │  • ECS Worker svc  │
-└─────────┘   └────────────────────┘   └─────────┘   └────────────────────┘
-                       │
+┌─────────┐   ┌────────────────────┐   ┌─────────────┐   ┌────────────────────┐
+│ Source  │──▶│ Build (parallel)   │──▶│   Migrate   │──▶│   DeployInfra      │
+│ GitHub  │   │  • Backend image   │   │ run-task    │   │ CloudFormation     │
+│ (push)  │   │  • Frontend Vite   │   │ artisan     │   │ deploy (template + │
+└─────────┘   └────────────────────┘   └─────────────┘   │ ECS rolling)       │
+                       │                                  └────────────────────┘
                        └─ Frontend stage also syncs to S3 + invalidates CF
 ```
 
-The Frontend build is a CodeBuild project that does **both** the build AND the deploy (S3 sync + CloudFront invalidation) in `post_build` — there's no separate deploy stage for the frontend because S3 deploy actions can't invalidate CloudFront.
+Two important design choices:
+
+1. **Frontend deploys during build** — the Vite build, `aws s3 sync`, and CloudFront invalidation all happen inside one CodeBuild project. There's no separate "deploy frontend" stage because the native S3 deploy action can't invalidate CloudFront.
+
+2. **Single `DeployInfra` stage covers both code and infrastructure changes.** A native CloudFormation deploy action takes the template from the source artifact and the just-built image URI from the backend build output, then applies them together. This means:
+   - Editing `infra/cloudformation.yml` and pushing → template change deploys automatically
+   - Editing app code and pushing → new image rolls out via ECS task definition update
+   - Editing both → one CloudFormation update covers both
+
+   `ParameterOverrides` only sets `Environment` and `ContainerImage`. All other parameters (DB password, app key, admin password) are omitted, so CloudFormation inherits their previous values. The pipeline never sees secrets.
 
 ### One-time setup
 
@@ -167,14 +176,13 @@ The Frontend build is a CodeBuild project that does **both** the build AND the d
 
 | Stage | Action | Detail |
 |---|---|---|
-| Source | GitHub | CodeStar Connection pulls the source commit |
-| Build | BackendImage | `backend/buildspec.yml` — `docker build --platform linux/amd64`, push two tags (commit-sha + latest), emit `imagedefinitions-{api,worker}.json` |
-| Build | FrontendBuild | `frontend/buildspec.yml` — `npm run build` with `VITE_API_BASE_URL` from stack output, then `aws s3 sync` + CloudFront invalidation |
-| Migrate | RunMigrations | `backend/buildspec-migrate.yml` — `aws ecs run-task` running `php artisan migrate --force`, waits for completion, fails build if exit code ≠ 0 |
-| Deploy | DeployAPI | CodePipeline ECS Deploy action consumes `imagedefinitions-api.json`, registers a new task definition revision, updates the service |
-| Deploy | DeployWorker | Same, for the worker service |
+| Source | GitHub | CodeStar Connection pulls the commit |
+| Build | BackendImage | `backend/buildspec.yml` — `docker build --platform linux/amd64`, pushes two tags (`commit-sha` + `latest`), emits `image-uri.json` and `imagedefinitions-*.json` |
+| Build | FrontendBuild | `frontend/buildspec.yml` — `npm run build` with `VITE_API_BASE_URL`, then `aws s3 sync` + CloudFront invalidation |
+| Migrate | RunMigrations | `backend/buildspec-migrate.yml` — registers a temp task def revision with the new image, runs `php artisan migrate --force` via `aws ecs run-task`, fails the pipeline if exit code ≠ 0 |
+| DeployInfra | UpdateStack | Native CloudFormation deploy action — applies any template change AND sets `ContainerImage` to the new tagged image, which triggers an ECS rolling deploy of both API and Worker services |
 
-The pipeline does NOT update the CloudFormation stack itself — only application code (Docker image + frontend bundle). Infrastructure changes (template edits) still require `./infra/deploy.sh`.
+The pipeline owns the full lifecycle. Editing `infra/cloudformation.yml` and pushing is sufficient to update the production stack. No more need to run `./infra/deploy.sh` for routine updates.
 
 ### CodeBuild permissions
 

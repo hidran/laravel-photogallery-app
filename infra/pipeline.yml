@@ -143,19 +143,48 @@ Resources:
                 Action: codestar-connections:UseConnection
                 Resource: !Ref CodeStarConnectionArn
 
-              # ECS rolling deploy action
+              # CloudFormation deploy action
               - Effect: Allow
                 Action:
-                  - ecs:DescribeServices
-                  - ecs:DescribeTaskDefinition
-                  - ecs:DescribeTasks
-                  - ecs:ListTasks
-                  - ecs:RegisterTaskDefinition
-                  - ecs:UpdateService
-                Resource: '*'
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:GetTemplate
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:SetStackPolicy
+                  - cloudformation:UpdateStack
+                  - cloudformation:ValidateTemplate
+                Resource:
+                  - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AppStackName}/*
+                  - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AppStackName}-*/*
+
+              # PassRole to the CloudFormation execution role
               - Effect: Allow
                 Action: iam:PassRole
-                Resource: '*'
+                Resource: !GetAtt CloudFormationExecutionRole.Arn
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: cloudformation.amazonaws.com
+
+  # CloudFormation assumes this role to actually create/modify resources.
+  # Broad permissions because the app stack covers VPC, RDS, ECS, IAM, etc.
+  CloudFormationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: { Service: cloudformation.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        # In a stricter setup, replace this with a scoped-down policy
+        # that only covers the resource types in cloudformation.yml.
+        # AdministratorAccess is the simplest correct choice for a
+        # solo-account deploy.
+        - arn:aws:iam::aws:policy/AdministratorAccess
 
   # ============================================================
   # CodeBuild projects
@@ -323,35 +352,40 @@ Resources:
                 - Name: SourceArtifact
 
         # ----------------------------------------------------
-        # Deploy: rolling ECS update for API + Worker
+        # DeployInfra: apply template changes AND new image in one step
+        #
+        # Uses a CloudFormation deploy action driven by:
+        #   - SourceArtifact (provides infra/cloudformation.yml)
+        #   - BackendBuildOutput (provides image-uri.json)
+        #
+        # Parameters NOT in ParameterOverrides keep their previous value
+        # (this is how we inherit DBPassword, AppKey, AdminPassword
+        # without putting them in the pipeline). ContainerImage is set
+        # to the just-built image via Fn::GetParam.
         # ----------------------------------------------------
-        - Name: Deploy
+        - Name: DeployInfra
           Actions:
-            - Name: DeployAPI
+            - Name: UpdateStack
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
-                Provider: ECS
+                Provider: CloudFormation
                 Version: '1'
               Configuration:
-                ClusterName: !Ref AppStackName
-                ServiceName: !Sub ${AppStackName}-api
-                FileName: imagedefinitions-api.json
+                ActionMode: CREATE_UPDATE
+                StackName: !Ref AppStackName
+                Capabilities: CAPABILITY_IAM
+                RoleArn: !GetAtt CloudFormationExecutionRole.Arn
+                TemplatePath: SourceArtifact::infra/cloudformation.yml
+                ParameterOverrides: !Sub |
+                  {
+                    "Environment": "production",
+                    "ContainerImage": {
+                      "Fn::GetParam": ["BackendBuildOutput", "image-uri.json", "ImageURI"]
+                    }
+                  }
               InputArtifacts:
-                - Name: BackendBuildOutput
-              RunOrder: 1
-
-            - Name: DeployWorker
-              ActionTypeId:
-                Category: Deploy
-                Owner: AWS
-                Provider: ECS
-                Version: '1'
-              Configuration:
-                ClusterName: !Ref AppStackName
-                ServiceName: !Sub ${AppStackName}-worker
-                FileName: imagedefinitions-worker.json
-              InputArtifacts:
+                - Name: SourceArtifact
                 - Name: BackendBuildOutput
               RunOrder: 1
 
