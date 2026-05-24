@@ -6,6 +6,7 @@ namespace App\Policies;
 
 use App\Models\Album;
 use App\Models\User;
+use App\Policies\Concerns\OwnsResource;
 
 /**
  * DESIGN.md §6.4 / §10.3 — ownership rules for album mutations.
@@ -13,6 +14,8 @@ use App\Models\User;
  */
 final class AlbumPolicy
 {
+    use OwnsResource;
+
     /**
      * Any authenticated user with the albums:write ability can create
      * an album. Returning a Gate-friendly bool here so the dual-gate
@@ -26,16 +29,16 @@ final class AlbumPolicy
 
     public function view(User $user, Album $album): bool
     {
-        return $album->user_id === $user->id;
+        return $this->ownerMatches($user, $album);
     }
 
     public function update(User $user, Album $album): bool
     {
-        return $album->user_id === $user->id;
+        return $this->ownerMatches($user, $album);
     }
 
     public function delete(User $user, Album $album): bool
     {
-        return $album->user_id === $user->id;
+        return $this->ownerMatches($user, $album);
     }
 }

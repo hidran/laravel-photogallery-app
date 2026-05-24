@@ -6,6 +6,7 @@ namespace App\Policies;
 
 use App\Models\Photo;
 use App\Models\User;
+use App\Policies\Concerns\OwnsResource;
 
 /**
  * DESIGN.md §6.4 / §10.3 — ownership rules for photo mutations and the
@@ -15,6 +16,8 @@ use App\Models\User;
  */
 final class PhotoPolicy
 {
+    use OwnsResource;
+
     public function create(User $user): bool
     {
         return true;
@@ -22,16 +25,16 @@ final class PhotoPolicy
 
     public function view(User $user, Photo $photo): bool
     {
-        return $photo->user_id === $user->id;
+        return $this->ownerMatches($user, $photo);
     }
 
     public function update(User $user, Photo $photo): bool
     {
-        return $photo->user_id === $user->id;
+        return $this->ownerMatches($user, $photo);
     }
 
     public function delete(User $user, Photo $photo): bool
     {
-        return $photo->user_id === $user->id;
+        return $this->ownerMatches($user, $photo);
     }
 }

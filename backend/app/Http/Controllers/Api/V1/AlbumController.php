@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\TokenAbility;
+use App\Http\Controllers\Concerns\AuthorizesWithToken;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Album\IndexAlbumsRequest;
 use App\Http\Requests\Album\StoreAlbumRequest;
 use App\Http\Requests\Album\UpdateAlbumRequest;
 use App\Http\Resources\AlbumData;
 use App\Models\Album;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -22,6 +22,8 @@ use Illuminate\Http\Response;
  */
 final class AlbumController extends Controller
 {
+    use AuthorizesWithToken;
+
     public function index(IndexAlbumsRequest $request): AnonymousResourceCollection
     {
         $validated = $request->validated();
@@ -63,10 +65,7 @@ final class AlbumController extends Controller
         // create() policy method is intentionally permissive but its
         // existence keeps every mutation symmetric and lets policies
         // tighten without controller edits (PR #4 review S3).
-        $this->ensureAbility($request, TokenAbility::AlbumsWrite);
-        if ($request->user()?->cannot('create', Album::class)) {
-            throw new AuthorizationException;
-        }
+        $this->ensureCan($request, 'create', Album::class, TokenAbility::AlbumsWrite);
 
         $album = Album::create([
             ...$request->validated(),
@@ -80,7 +79,7 @@ final class AlbumController extends Controller
 
     public function update(UpdateAlbumRequest $request, Album $album): JsonResponse
     {
-        $this->ensureCan($request, 'update', $album);
+        $this->ensureCan($request, 'update', $album, TokenAbility::AlbumsWrite);
 
         $album->update($request->validated());
         $album->load(AlbumData::WITH)->loadCount('photos');
@@ -90,25 +89,10 @@ final class AlbumController extends Controller
 
     public function destroy(Request $request, Album $album): Response
     {
-        $this->ensureCan($request, 'delete', $album);
+        $this->ensureCan($request, 'delete', $album, TokenAbility::AlbumsWrite);
 
         $album->delete();
 
         return response()->noContent();
-    }
-
-    private function ensureAbility(Request $request, TokenAbility $required): void
-    {
-        if (! $request->user()?->tokenCan($required->value)) {
-            throw new AuthorizationException;
-        }
-    }
-
-    private function ensureCan(Request $request, string $action, Album $album): void
-    {
-        $this->ensureAbility($request, TokenAbility::AlbumsWrite);
-        if ($request->user()?->cannot($action, $album)) {
-            throw new AuthorizationException;
-        }
     }
 }
