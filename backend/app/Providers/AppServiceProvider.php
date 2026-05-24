@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Contracts\ExifExtractor;
+use App\Contracts\ExifReader;
+use App\Contracts\GpsStripper;
 use App\Contracts\ImageProcessor;
 use App\Contracts\PhotoStorage;
 use App\Models\Photo;
@@ -25,7 +26,8 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(ImageProcessor::class, InterventionImageProcessor::class);
-        $this->app->bind(ExifExtractor::class, PhpExifExtractor::class);
+        $this->app->bind(ExifReader::class, PhpExifExtractor::class);
+        $this->app->bind(GpsStripper::class, PhpExifExtractor::class);
         $this->app->bind(PhotoStorage::class, DiskPhotoStorage::class);
     }
 

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Imaging;
 
-use App\Contracts\ExifExtractor;
+use App\Contracts\ExifReader;
+use App\Contracts\GpsStripper;
 use Illuminate\Http\UploadedFile;
 use Intervention\Image\Laravel\Facades\Image;
 
-final class PhpExifExtractor implements ExifExtractor
+final class PhpExifExtractor implements ExifReader, GpsStripper
 {
     /**
      * Extract sanitized EXIF data from a local file path.

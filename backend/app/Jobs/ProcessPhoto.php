@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Contracts\ExifExtractor;
+use App\Contracts\ExifReader;
 use App\Contracts\ImageProcessor;
 use App\Enums\ProcessingStatus;
 use App\Models\Photo;
@@ -27,7 +27,7 @@ final class ProcessPhoto implements ShouldQueue
 
     public function __construct(public readonly Photo $photo) {}
 
-    public function handle(ImageProcessor $processor, ExifExtractor $exif): void
+    public function handle(ImageProcessor $processor, ExifReader $exif): void
     {
         $this->photo->update(['processing_status' => ProcessingStatus::Processing]);
 

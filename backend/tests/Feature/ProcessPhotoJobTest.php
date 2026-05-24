@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Contracts\ExifExtractor;
+use App\Contracts\ExifReader;
 use App\Contracts\ImageProcessor;
 use App\Enums\ProcessingStatus;
 use App\Jobs\ProcessPhoto;
@@ -57,7 +57,7 @@ test('ProcessPhoto job sets status to failed on error', function () {
     try {
         $job->handle(
             app(ImageProcessor::class),
-            app(ExifExtractor::class),
+            app(ExifReader::class),
         );
     } catch (Throwable $e) {
         $job->failed($e);

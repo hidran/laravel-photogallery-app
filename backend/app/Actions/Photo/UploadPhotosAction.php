@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace App\Actions\Photo;
 
-use App\Contracts\ExifExtractor;
+use App\Contracts\ExifReader;
+use App\Contracts\GpsStripper;
 use App\Contracts\PhotoStorage;
+use App\DTOs\UploadPhotosCommand;
 use App\Enums\ProcessingStatus;
 use App\Jobs\ProcessPhoto;
 use App\Models\Photo;
-use App\Models\Tag;
-use App\Models\User;
 use App\Services\TagAssigner;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -31,33 +30,25 @@ final class UploadPhotosAction
 {
     public function __construct(
         private readonly PhotoStorage $storage,
-        private readonly ExifExtractor $exif,
+        private readonly ExifReader $exifReader,
+        private readonly GpsStripper $gpsStripper,
         private readonly TagAssigner $tagAssigner,
     ) {}
 
     /**
-     * @param  list<UploadedFile>  $files
-     * @param  list<string>  $titles  Per-file titles (index-matched); falls back to filename stem.
-     * @param  list<string>  $tagNames  Tag names to sync onto every uploaded photo.
      * @return array{batch_id: string, total: int, photos: list<Photo>}
      */
-    public function __invoke(
-        array $files,
-        User $user,
-        ?string $albumId,
-        array $tagNames,
-        array $titles = [],
-        ?string $description = null,
-    ): array {
+    public function __invoke(UploadPhotosCommand $command): array
+    {
         // Phase 1: File I/O OUTSIDE the transaction to avoid holding a DB
         // connection open during heavy encoding/disk writes (issue #2).
         // Extract EXIF from the ORIGINAL file BEFORE stripGps re-encodes
         // and destroys all EXIF data (issue #1).
         $prepared = [];
         $storedPaths = [];
-        foreach ($files as $index => $file) {
-            $exifData = $this->exif->extract($file->getPathname());
-            $sanitized = $this->exif->stripGps($file);
+        foreach ($command->files as $index => $file) {
+            $exifData = $this->exifReader->extract($file->getPathname());
+            $sanitized = $this->gpsStripper->stripGps($file);
             $photoId = (string) Str::uuid7();
             $path = $this->storage->storeOriginal($sanitized, $photoId);
             $storedPaths[] = $path;
@@ -66,7 +57,7 @@ final class UploadPhotosAction
                 'photoId' => $photoId,
                 'path' => $path,
                 'exif' => $exifData,
-                'title' => $titles[$index] ?? pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                'title' => $command->titles[$index] ?? pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
                 'filename' => basename($file->getClientOriginalName()),
                 'file_size' => $file->getSize(),
                 'mime_type' => $file->getMimeType(),
@@ -75,17 +66,17 @@ final class UploadPhotosAction
 
         try {
             // Phase 2: DB writes only — fast, no file I/O.
-            [$photos, $jobs] = DB::transaction(function () use ($prepared, $user, $albumId, $tagNames, $description): array {
+            [$photos, $jobs] = DB::transaction(function () use ($prepared, $command): array {
                 $photos = [];
                 $jobs = [];
 
                 foreach ($prepared as $item) {
                     $photo = Photo::create([
                         'id' => $item['photoId'],
-                        'user_id' => $user->id,
-                        'album_id' => $albumId,
+                        'user_id' => $command->user->id,
+                        'album_id' => $command->albumId,
                         'title' => $item['title'],
-                        'description' => $description,
+                        'description' => $command->description,
                         'filename' => $item['filename'],
                         'original_path' => $item['path'],
                         'file_size' => $item['file_size'],
@@ -94,8 +85,8 @@ final class UploadPhotosAction
                         'processing_status' => ProcessingStatus::Pending,
                     ]);
 
-                    if ($tagNames !== []) {
-                        $this->tagAssigner->syncByNames($photo, $tagNames);
+                    if ($command->tagNames !== []) {
+                        $this->tagAssigner->syncByNames($photo, $command->tagNames);
                     }
 
                     $photos[] = $photo;

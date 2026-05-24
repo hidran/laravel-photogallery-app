@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Photo;
 
+use App\DTOs\UpdatePhotoCommand;
 use App\Models\Photo;
 use App\Models\Tag;
 use App\Services\TagAssigner;
@@ -22,32 +23,23 @@ final class UpdatePhotoAction
         private readonly TagAssigner $tagAssigner,
     ) {}
 
-    /**
-     * @param  array<string, mixed>  $data  Validated fields (title, description, album_id).
-     * @param  list<string>|null  $tagSlugs  Existing tag slugs to sync.
-     * @param  list<string>|null  $newTagNames  New tag names to create and attach.
-     */
-    public function __invoke(
-        Photo $photo,
-        array $data,
-        ?array $tagSlugs,
-        ?array $newTagNames,
-    ): Photo {
-        DB::transaction(function () use ($photo, $data, $tagSlugs, $newTagNames): void {
+    public function __invoke(Photo $photo, UpdatePhotoCommand $command): Photo
+    {
+        DB::transaction(function () use ($photo, $command): void {
             $rowChanged = false;
 
-            if ($data !== []) {
-                $photo->update($data);
+            if ($command->data !== []) {
+                $photo->update($command->data);
                 $rowChanged = true;
             }
 
-            if ($tagSlugs !== null || $newTagNames !== null) {
-                $existingNames = $tagSlugs
-                    ? Tag::query()->whereIn('slug', $tagSlugs)->pluck('name')->all()
+            if ($command->tagSlugs !== null || $command->newTagNames !== null) {
+                $existingNames = $command->tagSlugs
+                    ? Tag::query()->whereIn('slug', $command->tagSlugs)->pluck('name')->all()
                     : [];
 
                 $names = collect($existingNames)
-                    ->merge($newTagNames ?? [])
+                    ->merge($command->newTagNames ?? [])
                     ->unique()
                     ->values()
                     ->all();

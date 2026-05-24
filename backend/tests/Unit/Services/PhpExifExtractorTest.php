@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Contracts\ExifExtractor;
+use App\Contracts\ExifReader;
+use App\Contracts\GpsStripper;
 use App\Services\Imaging\PhpExifExtractor;
 use Illuminate\Http\UploadedFile;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -44,10 +45,11 @@ it('returns an empty array for an unreadable path', function () {
     expect($result)->toBe([]);
 });
 
-it('implements the ExifExtractor contract', function () {
+it('implements the ExifReader and GpsStripper contracts', function () {
     $extractor = makeExtractor();
 
-    expect($extractor)->toBeInstanceOf(ExifExtractor::class);
+    expect($extractor)->toBeInstanceOf(ExifReader::class);
+    expect($extractor)->toBeInstanceOf(GpsStripper::class);
 });
 
 it('stripGps returns an UploadedFile', function () {
