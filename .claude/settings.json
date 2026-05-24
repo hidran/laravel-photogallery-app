@@ -3,18 +3,26 @@
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "filePattern": "backend/**/*.php",
-        "command": "cd backend && vendor/bin/pint --dirty --format agent"
-      },
-      {
-        "matcher": "Edit|Write",
-        "filePattern": "frontend/**/*.{ts,tsx,css}",
-        "command": "cd frontend && npx prettier --write"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); echo \"$f\" | grep -qE '/backend/.*\\.php$' && (cd backend && vendor/bin/pint --dirty --format agent) || true"
+          },
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); echo \"$f\" | grep -qE '/frontend/.*\\.(ts|tsx|css)$' && (cd frontend && npx prettier --write \"$f\") || true"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
       {
-        "command": "echo \"$PROMPT\" | grep -qiE 'rm -rf|git push --force|git reset --hard' && echo 'BLOCKED: Destructive command detected. Please confirm you want to proceed.' && exit 1 || exit 0"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.prompt' | grep -qiE 'rm -rf|git push --force|git reset --hard' && { echo 'BLOCKED: Destructive command detected. Please confirm you want to proceed.' >&2; exit 1; } || exit 0"
+          }
+        ]
       }
     ]
   }
