@@ -1,13 +1,15 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Trash2, X, Check, MousePointer2, ImageOff } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePhotos, useDeletePhoto, useDeletePhotosBatch } from '../hooks';
-import { useMe } from '../hooks/useAuth';
 import { useLightboxNav } from '../hooks/useLightboxNav';
 import { MasonryGrid } from '../components/MasonryGrid';
 import { PhotoLightbox } from '../components/PhotoLightbox';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { SelectionToolbar } from '../components/gallery/SelectionToolbar';
+import { SelectModeButton } from '../components/gallery/SelectModeButton';
+import { EmptyState } from '../components/gallery/EmptyState';
 import { copy } from '../data/copy';
 import type { Photo } from '../types';
 import type { PhotosIndexParams } from '../api/photos';
@@ -20,8 +22,6 @@ export function GalleryPage() {
   const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
   const deletePhoto = useDeletePhoto();
   const deletePhotosBatch = useDeletePhotosBatch();
-  const { data: meData } = useMe();
-  const currentUserId = meData?.data?.id;
 
   const params: PhotosIndexParams = useMemo(() => {
     const result: PhotosIndexParams = {};
@@ -64,7 +64,6 @@ export function GalleryPage() {
     [selectMode, toggleSelect, openLightbox],
   );
 
-  // Single photo delete from card
   const handleCardDelete = useCallback((photo: Photo) => {
     setPhotoToDelete(photo);
   }, []);
@@ -79,7 +78,6 @@ export function GalleryPage() {
     });
   }, [photoToDelete, deletePhoto]);
 
-  // Bulk delete — single API call for all selected photos.
   const handleDeleteSelected = useCallback(async () => {
     const ids = Array.from(selectedIds);
     try {
@@ -114,74 +112,21 @@ export function GalleryPage() {
 
   if (allPhotos.length === 0) {
     const hasFilters = searchParams.has('search') || searchParams.getAll('tags[]').length > 0;
-    return (
-      <div className="flex flex-col items-center gap-4 py-24 text-center">
-        <div className="rounded-2xl bg-gray-100 p-6">
-          <ImageOff className="h-10 w-10 text-gray-400" />
-        </div>
-        <div>
-          <p className="text-lg font-semibold text-gray-800">
-            {hasFilters ? 'No results' : 'Your gallery is empty'}
-          </p>
-          <p className="mt-1 text-sm text-gray-500">
-            {hasFilters ? 'Try different filters or search terms' : copy.gallery.emptyState}
-          </p>
-        </div>
-        {!hasFilters && (
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent('open-upload-modal'))}
-            className="mt-2 rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
-          >
-            {copy.upload.title}
-          </button>
-        )}
-      </div>
-    );
+    return <EmptyState hasFilters={hasFilters} />;
   }
 
   return (
     <>
-      {/* Select toolbar */}
       {selectMode && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl bg-gray-100 px-4 py-2.5">
-          <span className="text-sm font-medium text-gray-700">
-            {copy.gallery.selectedCount(selectedIds.size)}
-          </span>
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowBulkDeleteConfirm(true)}
-              disabled={selectedIds.size === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-40"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              {copy.gallery.deleteSelected}
-            </button>
-            <button
-              type="button"
-              onClick={handleCancelSelect}
-              className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
-            >
-              <X className="h-3.5 w-3.5" />
-              {copy.gallery.cancelSelect}
-            </button>
-          </div>
-        </div>
+        <SelectionToolbar
+          selectedCount={selectedIds.size}
+          onDelete={() => setShowBulkDeleteConfirm(true)}
+          onCancel={handleCancelSelect}
+          isPending={deletePhoto.isPending || deletePhotosBatch.isPending}
+        />
       )}
 
-      {!selectMode && (
-        <div className="mb-4 flex items-center">
-          <button
-            type="button"
-            onClick={() => setSelectMode(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-          >
-            <MousePointer2 className="h-3.5 w-3.5" />
-            {copy.gallery.selectMode}
-          </button>
-        </div>
-      )}
+      {!selectMode && <SelectModeButton onClick={() => setSelectMode(true)} />}
 
       <MasonryGrid
         photos={allPhotos}
@@ -189,7 +134,6 @@ export function GalleryPage() {
         hasMore={!!hasNextPage}
         onClick={handlePhotoClick}
         onDelete={handleCardDelete}
-        {...(currentUserId ? { currentUserId } : {})}
         renderOverlay={
           selectMode
             ? (photo) => (
@@ -222,7 +166,6 @@ export function GalleryPage() {
         />
       )}
 
-      {/* Bulk delete confirm */}
       <ConfirmDialog
         isOpen={showBulkDeleteConfirm}
         onClose={() => setShowBulkDeleteConfirm(false)}
@@ -234,7 +177,6 @@ export function GalleryPage() {
         isPending={deletePhoto.isPending || deletePhotosBatch.isPending}
       />
 
-      {/* Single photo delete confirm */}
       <ConfirmDialog
         isOpen={photoToDelete !== null}
         onClose={() => setPhotoToDelete(null)}

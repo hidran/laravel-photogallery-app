@@ -1,4 +1,5 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
 import { useUpdatePhoto, useAlbums, useTags } from '../hooks';
 import { copy } from '../data/copy';
 import type { Photo } from '../types';
@@ -6,6 +7,14 @@ import type { Photo } from '../types';
 interface LightboxEditFormProps {
   photo: Photo;
   onClose: () => void;
+}
+
+interface EditFormData {
+  title: string;
+  description: string;
+  albumId: string;
+  tagSlugs: string[];
+  newTagInput: string;
 }
 
 export const LightboxEditForm = memo(function LightboxEditForm({
@@ -19,32 +28,54 @@ export const LightboxEditForm = memo(function LightboxEditForm({
   const albums = albumsData?.data ?? [];
   const allTags = tagsData?.data ?? [];
 
-  const [editTitle, setEditTitle] = useState(photo.title);
-  const [editDescription, setEditDescription] = useState(photo.description ?? '');
-  const [editAlbumId, setEditAlbumId] = useState(photo.album?.id ?? '');
-  const [editTagSlugs, setEditTagSlugs] = useState<string[]>(photo.tags.map((t) => t.slug));
-  const [newTagNames, setNewTagNames] = useState<string[]>([]);
-  const [newTagInput, setNewTagInput] = useState('');
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { isSubmitting },
+  } = useForm<EditFormData>({
+    defaultValues: {
+      title: photo.title,
+      description: photo.description ?? '',
+      albumId: photo.album?.id ?? '',
+      tagSlugs: photo.tags.map((t) => t.slug),
+      newTagInput: '',
+    },
+  });
+
+  const tagSlugs = watch('tagSlugs');
+  const newTagInput = watch('newTagInput');
+
+  const handleToggleTag = useCallback(
+    (slug: string) => {
+      setValue(
+        'tagSlugs',
+        tagSlugs.includes(slug) ? tagSlugs.filter((s) => s !== slug) : [...tagSlugs, slug],
+      );
+    },
+    [tagSlugs, setValue],
+  );
 
   const handleAddNewTag = useCallback(() => {
     const name = newTagInput.trim();
-    if (name && !newTagNames.includes(name)) {
-      setNewTagNames((prev) => [...prev, name]);
-      setNewTagInput('');
+    if (name && !tagSlugs.includes(name)) {
+      setValue('tagSlugs', [...tagSlugs, name]);
+      setValue('newTagInput', '');
     }
-  }, [newTagInput, newTagNames]);
+  }, [newTagInput, tagSlugs, setValue]);
 
-  const handleRemoveNewTag = useCallback((name: string) => {
-    setNewTagNames((prev) => prev.filter((n) => n !== name));
-  }, []);
+  const handleRemoveTag = useCallback(
+    (slug: string) => {
+      setValue(
+        'tagSlugs',
+        tagSlugs.filter((s) => s !== slug),
+      );
+    },
+    [tagSlugs, setValue],
+  );
 
-  const handleToggleTag = useCallback((slug: string) => {
-    setEditTagSlugs((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
-    );
-  }, []);
-
-  const handleSaveEdit = useCallback(() => {
+  const onSubmit = (data: EditFormData) => {
     const payload: {
       title: string;
       description: string | null;
@@ -52,45 +83,47 @@ export const LightboxEditForm = memo(function LightboxEditForm({
       tags: string[];
       new_tags?: string[];
     } = {
-      title: editTitle,
-      description: editDescription || null,
-      album_id: editAlbumId || null,
-      tags: editTagSlugs,
+      title: data.title,
+      description: data.description || null,
+      album_id: data.albumId || null,
+      tags: data.tagSlugs.filter((s) => allTags.some((t) => t.slug === s)),
     };
-    if (newTagNames.length > 0) payload.new_tags = newTagNames;
+
+    const newTags = data.tagSlugs.filter((s) => !allTags.some((t) => t.slug === s));
+    if (newTags.length > 0) {
+      payload.new_tags = newTags;
+    }
 
     updatePhoto.mutate(
       { id: photo.id, payload },
       {
         onSuccess: () => {
           onClose();
-          setNewTagNames([]);
-          setNewTagInput('');
         },
       },
     );
-  }, [updatePhoto, photo.id, editTitle, editDescription, editAlbumId, editTagSlugs, newTagNames, onClose]);
+  };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-gray-900/95 p-4 shadow-xl">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="absolute bottom-0 left-0 right-0 bg-gray-900/95 p-4 shadow-xl"
+    >
       <div className="mx-auto flex max-w-2xl flex-col gap-3">
         <input
           type="text"
-          value={editTitle}
-          onChange={(e) => setEditTitle(e.target.value)}
+          {...register('title')}
           placeholder="Title"
           className="rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
         />
         <textarea
-          value={editDescription}
-          onChange={(e) => setEditDescription(e.target.value)}
+          {...register('description')}
           placeholder="Description"
           rows={2}
           className="rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
         />
         <select
-          value={editAlbumId}
-          onChange={(e) => setEditAlbumId(e.target.value)}
+          {...register('albumId')}
           className="rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
         >
           <option value="">No album</option>
@@ -107,7 +140,7 @@ export const LightboxEditForm = memo(function LightboxEditForm({
               type="button"
               onClick={() => handleToggleTag(tag.slug)}
               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                editTagSlugs.includes(tag.slug)
+                tagSlugs.includes(tag.slug)
                   ? 'bg-brand-600 text-white'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
@@ -115,20 +148,22 @@ export const LightboxEditForm = memo(function LightboxEditForm({
               {tag.name}
             </button>
           ))}
-          {newTagNames.map((name) => (
-            <button
-              key={`new-${name}`}
-              type="button"
-              onClick={() => handleRemoveNewTag(name)}
-              className="rounded-full bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700"
-            >
-              {name} &times;
-            </button>
-          ))}
+          {tagSlugs
+            .filter((s) => !allTags.some((t) => t.slug === s))
+            .map((name) => (
+              <button
+                key={`new-${name}`}
+                type="button"
+                onClick={() => handleRemoveTag(name)}
+                className="rounded-full bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700"
+              >
+                {name} &times;
+              </button>
+            ))}
           <input
             type="text"
             value={newTagInput}
-            onChange={(e) => setNewTagInput(e.target.value)}
+            onChange={(e) => setValue('newTagInput', e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -148,15 +183,14 @@ export const LightboxEditForm = memo(function LightboxEditForm({
             {copy.common.cancel}
           </button>
           <button
-            type="button"
-            onClick={handleSaveEdit}
-            disabled={updatePhoto.isPending}
+            type="submit"
+            disabled={isSubmitting || updatePhoto.isPending}
             className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {copy.common.save}
           </button>
         </div>
       </div>
-    </div>
+    </form>
   );
 });

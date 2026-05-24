@@ -1,4 +1,9 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   getPhotos,
   getPhoto,
@@ -10,6 +15,7 @@ import {
   removeFavoritesBatch,
   removeAllFavorites,
 } from '../api/photos';
+import { useMutationWithInvalidate } from './useMutationWithInvalidate';
 import type { PhotosIndexParams, UpdatePhotoPayload } from '../api/photos';
 import type { Photo, PaginatedResponse, SingleResponse } from '../types';
 
@@ -32,38 +38,25 @@ export function usePhoto(id: string) {
 }
 
 export function useUpdatePhoto() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: UpdatePhotoPayload }) =>
+  return useMutationWithInvalidate(
+    ({ id, payload }: { id: string; payload: UpdatePhotoPayload }) =>
       updatePhoto(id, payload),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
-      queryClient.invalidateQueries({ queryKey: ['photo', variables.id] });
-    },
-  });
+    (vars) => [['photos'], ['photo', vars.id]],
+  );
 }
 
 export function useDeletePhoto() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => deletePhoto(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
-    },
-  });
+  return useMutationWithInvalidate(
+    (id: string) => deletePhoto(id),
+    () => [['photos']],
+  );
 }
 
 export function useDeletePhotosBatch() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (photoIds: string[]) => deletePhotosBatch(photoIds),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
-    },
-  });
+  return useMutationWithInvalidate(
+    (photoIds: string[]) => deletePhotosBatch(photoIds),
+    () => [['photos']],
+  );
 }
 
 export function useToggleFavorite() {
@@ -130,23 +123,15 @@ export function useToggleFavorite() {
 }
 
 export function useRemoveFavoritesBatch() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (photoIds: string[]) => removeFavoritesBatch(photoIds),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
-    },
-  });
+  return useMutationWithInvalidate(
+    (photoIds: string[]) => removeFavoritesBatch(photoIds),
+    () => [['photos']],
+  );
 }
 
 export function useRemoveAllFavorites() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () => removeAllFavorites(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
-    },
-  });
+  return useMutationWithInvalidate(
+    () => removeAllFavorites(),
+    () => [['photos']],
+  );
 }

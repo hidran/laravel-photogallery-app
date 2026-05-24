@@ -1,6 +1,7 @@
 import { Heart, Trash2 } from 'lucide-react';
 import type { Photo } from '../types';
 import { useToggleFavorite } from '../hooks';
+import { useUser } from '../contexts/UserContext';
 import { copy } from '../data/copy';
 import { ProcessingOverlay } from './ProcessingOverlay';
 
@@ -8,10 +9,11 @@ interface PhotoCardProps {
   photo: Photo;
   onClick: () => void;
   onDelete?: (photo: Photo) => void;
-  isOwner?: boolean;
 }
 
-export function PhotoCard({ photo, onClick, onDelete, isOwner }: PhotoCardProps) {
+export function PhotoCard({ photo, onClick, onDelete }: PhotoCardProps) {
+  const { user } = useUser();
+  const isOwner = user ? photo.owner.id === user.id : false;
   const toggleFavorite = useToggleFavorite();
 
   const handleFavoriteClick = (e: React.MouseEvent) => {

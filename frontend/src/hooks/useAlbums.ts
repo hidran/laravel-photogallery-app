@@ -1,13 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getAlbums, getAlbum, createAlbum, updateAlbum, deleteAlbum } from '../api/albums';
+import { useMutationWithInvalidate } from './useMutationWithInvalidate';
+import { createQueryHook } from './createQueryHook';
 import type { CreateAlbumPayload, UpdateAlbumPayload } from '../api/albums';
 
-export function useAlbums() {
-  return useQuery({
-    queryKey: ['albums'],
-    queryFn: () => getAlbums(),
-  });
-}
+export const useAlbums = createQueryHook('albums', getAlbums);
 
 export function useAlbum(id: string) {
   return useQuery({
@@ -18,35 +15,23 @@ export function useAlbum(id: string) {
 }
 
 export function useCreateAlbum() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (payload: CreateAlbumPayload) => createAlbum(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['albums'] });
-    },
-  });
+  return useMutationWithInvalidate(
+    (payload: CreateAlbumPayload) => createAlbum(payload),
+    () => [['albums']],
+  );
 }
 
 export function useUpdateAlbum() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: UpdateAlbumPayload }) =>
+  return useMutationWithInvalidate(
+    ({ id, payload }: { id: string; payload: UpdateAlbumPayload }) =>
       updateAlbum(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['albums'] });
-    },
-  });
+    () => [['albums']],
+  );
 }
 
 export function useDeleteAlbum() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => deleteAlbum(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['albums'] });
-    },
-  });
+  return useMutationWithInvalidate(
+    (id: string) => deleteAlbum(id),
+    () => [['albums']],
+  );
 }

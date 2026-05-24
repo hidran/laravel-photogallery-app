@@ -4,6 +4,7 @@ import { Search, Upload, LogOut, ChevronDown, Camera } from 'lucide-react';
 import { useDebounce } from '../hooks';
 import { useMe, useLogout } from '../hooks/useAuth';
 import { getToken } from '../api/client';
+import { eventBus } from '../lib/eventBus';
 import { copy } from '../data/copy';
 
 type SortOption = 'newest' | 'oldest' | 'title_asc' | 'title_desc' | 'favorites_first';
@@ -92,7 +93,7 @@ export function Navbar() {
   }
 
   function handleUploadClick() {
-    window.dispatchEvent(new CustomEvent('open-upload-modal'));
+    eventBus.emit('upload-modal:open', undefined);
   }
 
   function handleLogout() {

@@ -8,7 +8,6 @@ interface MasonryGridProps {
   hasMore?: boolean;
   onClick?: (photo: Photo) => void;
   onDelete?: (photo: Photo) => void;
-  currentUserId?: string;
   renderOverlay?: ((photo: Photo) => ReactNode) | undefined;
 }
 
@@ -52,7 +51,6 @@ export function MasonryGrid({
   hasMore,
   onClick,
   onDelete,
-  currentUserId,
   renderOverlay,
 }: MasonryGridProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -110,7 +108,6 @@ export function MasonryGrid({
                   photo={photo}
                   onClick={() => onClick?.(photo)}
                   {...(onDelete ? { onDelete } : {})}
-                  {...(currentUserId ? { isOwner: photo.owner.id === currentUserId } : {})}
                 />
                 {renderOverlay && (
                   <div

@@ -1,9 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
 import { getTags } from '../api/tags';
+import { createQueryHook } from './createQueryHook';
 
-export function useTags() {
-  return useQuery({
-    queryKey: ['tags'],
-    queryFn: () => getTags(),
-  });
-}
+export const useTags = createQueryHook('tags', getTags);
