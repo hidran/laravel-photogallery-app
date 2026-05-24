@@ -7,7 +7,6 @@ namespace App\Actions\Photo;
 use App\Contracts\ExifExtractor;
 use App\Contracts\PhotoStorage;
 use App\Enums\ProcessingStatus;
-use App\Events\PhotoUploaded;
 use App\Jobs\ProcessPhoto;
 use App\Models\Photo;
 use App\Models\Tag;
@@ -99,7 +98,6 @@ final class UploadPhotosAction
                         $this->tagAssigner->syncByNames($photo, $tagNames);
                     }
 
-                    event(new PhotoUploaded($photo));
                     $photos[] = $photo;
                     $jobs[] = new ProcessPhoto($photo);
                 }

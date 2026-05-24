@@ -7,7 +7,6 @@ namespace App\Jobs;
 use App\Contracts\ExifExtractor;
 use App\Contracts\ImageProcessor;
 use App\Enums\ProcessingStatus;
-use App\Events\PhotoProcessed;
 use App\Models\Photo;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
@@ -48,8 +47,6 @@ final class ProcessPhoto implements ShouldQueue
         }
 
         $this->photo->update($updateData);
-
-        event(new PhotoProcessed($this->photo));
     }
 
     public function failed(\Throwable $e): void

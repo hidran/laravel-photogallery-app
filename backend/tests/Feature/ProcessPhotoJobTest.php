@@ -5,13 +5,11 @@ declare(strict_types=1);
 use App\Contracts\ExifExtractor;
 use App\Contracts\ImageProcessor;
 use App\Enums\ProcessingStatus;
-use App\Events\PhotoProcessed;
 use App\Jobs\ProcessPhoto;
 use App\Models\Photo;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
@@ -33,8 +31,6 @@ test('ProcessPhoto job transitions status to completed', function () {
         'processing_status' => ProcessingStatus::Pending,
     ]);
 
-    Event::fake([PhotoProcessed::class]);
-
     ProcessPhoto::dispatchSync($photo);
 
     $photo->refresh();
@@ -44,8 +40,6 @@ test('ProcessPhoto job transitions status to completed', function () {
     expect($photo->large_path)->not->toBeNull();
     expect($photo->width)->toBeGreaterThan(0);
     expect($photo->height)->toBeGreaterThan(0);
-
-    Event::assertDispatched(PhotoProcessed::class);
 });
 
 test('ProcessPhoto job sets status to failed on error', function () {
