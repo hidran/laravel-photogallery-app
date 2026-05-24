@@ -6,22 +6,22 @@ namespace App\Models;
 
 use App\Concerns\HasUuidV7;
 use Database\Factories\AlbumFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[Fillable([
+    'user_id',
+    'name',
+    'description',
+    'cover_photo_id',
+])]
 final class Album extends Model
 {
     /** @use HasFactory<AlbumFactory> */
     use HasFactory, HasUuidV7;
-
-    protected $fillable = [
-        'user_id',
-        'name',
-        'description',
-        'cover_photo_id',
-    ];
 
     /**
      * @return BelongsTo<User, $this>

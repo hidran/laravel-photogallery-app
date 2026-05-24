@@ -7,46 +7,37 @@ namespace App\Models;
 use App\Concerns\HasUuidV7;
 use App\Enums\ProcessingStatus;
 use Database\Factories\PhotoFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+#[Fillable([
+    'user_id',
+    'album_id',
+    'title',
+    'description',
+    'filename',
+    'original_path',
+    'thumbnail_path',
+    'medium_path',
+    'large_path',
+    'width',
+    'height',
+    'file_size',
+    'mime_type',
+    'exif',
+    'batch_id',
+    'processing_status',
+    'processing_attempts',
+    'processing_error',
+])]
 final class Photo extends Model
 {
     /** @use HasFactory<PhotoFactory> */
     use HasFactory, HasUuidV7;
-
-    /**
-     * Mass-assignable columns.
-     *
-     * IMPORTANT: every API request that fills() this model MUST go through
-     * its FormRequest's validated() output (CLAUDE.md rule 6). The
-     * `processing_*` columns are present here so the upload action and the
-     * ProcessPhoto job can update() them, but no FormRequest may include
-     * those keys — they're job-internal state, not user input.
-     */
-    protected $fillable = [
-        'user_id',
-        'album_id',
-        'title',
-        'description',
-        'filename',
-        'original_path',
-        'thumbnail_path',
-        'medium_path',
-        'large_path',
-        'width',
-        'height',
-        'file_size',
-        'mime_type',
-        'exif',
-        'batch_id',
-        'processing_status',
-        'processing_attempts',
-        'processing_error',
-    ];
 
     protected function casts(): array
     {

@@ -6,20 +6,20 @@ namespace App\Models;
 
 use App\Concerns\HasUuidV7;
 use Database\Factories\TagFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
+#[Fillable([
+    'name',
+    'slug',
+])]
 final class Tag extends Model
 {
     /** @use HasFactory<TagFactory> */
     use HasFactory, HasUuidV7;
-
-    protected $fillable = [
-        'name',
-        'slug',
-    ];
 
     /**
      * Auto-fill slug from name when missing. Slug collisions are resolved
