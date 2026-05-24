@@ -54,12 +54,7 @@ final class ETag
     {
         $parameters = $request->route()?->parameters() ?? [];
 
-        foreach ($parameters as $parameter) {
-            if ($parameter instanceof Model && $parameter->updated_at !== null) {
-                return $parameter;
-            }
-        }
-
-        return null;
+        return array_find($parameters, fn ($parameter) => $parameter instanceof Model && $parameter->updated_at !== null
+        );
     }
 }
