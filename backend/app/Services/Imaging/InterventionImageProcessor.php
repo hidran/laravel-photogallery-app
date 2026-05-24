@@ -68,7 +68,7 @@ final class InterventionImageProcessor implements ImageProcessor
 
                 $encoded = $variant->encode(new JpegEncoder(quality: $spec['quality'], strip: true));
 
-                $path = $this->storage->storeVariant($photo->id, $key, $encoded->toString());
+                $path = $this->storage->storeVariant($photo->id, $key, $encoded->toStream());
 
                 $column = self::VARIANT_COLUMNS[$key];
                 $photo->{$column} = $path;

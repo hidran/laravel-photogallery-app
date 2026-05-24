@@ -43,9 +43,10 @@ final class DiskPhotoStorage implements PhotoStorage
     /**
      * Persist a generated variant (thumbnail|medium|large) on the public disk.
      *
+     * @param  string|resource  $contents  Binary string or open stream resource
      * @return string Relative path within photos disk
      */
-    public function storeVariant(string $photoId, string $variant, string $contents): string
+    public function storeVariant(string $photoId, string $variant, mixed $contents): string
     {
         $relativePath = "{$variant}/{$photoId}.jpg";
 
@@ -85,28 +86,6 @@ final class DiskPhotoStorage implements PhotoStorage
             }
 
             return $disk->url($photo->original_path);
-        }
-    }
-
-    /**
-     * Delete all files associated with a photo (original + 3 variants).
-     *
-     * Silently ignores missing files so callers don't need to guard.
-     */
-    public function purge(Photo $photo): void
-    {
-        if ($photo->original_path) {
-            Storage::disk('photos_private')->delete($photo->original_path);
-        }
-
-        $variantPaths = array_filter([
-            $photo->thumbnail_path,
-            $photo->medium_path,
-            $photo->large_path,
-        ]);
-
-        if ($variantPaths !== []) {
-            Storage::disk('photos')->delete($variantPaths);
         }
     }
 }

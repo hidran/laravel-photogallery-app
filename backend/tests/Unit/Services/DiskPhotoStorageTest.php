@@ -54,35 +54,17 @@ it('returns a fallback URL for signedOriginalUrl on local disk', function (): vo
     expect($url)->toContain($photo->original_path);
 });
 
-it('purges all files associated with a photo', function (): void {
-    $photo = new Photo;
-    $photo->original_path = 'originals/purge-id.jpg';
-    $photo->thumbnail_path = 'thumbnail/purge-id.jpg';
-    $photo->medium_path = 'medium/purge-id.jpg';
-    $photo->large_path = 'large/purge-id.jpg';
+it('stores a variant from a stream resource', function (): void {
+    $photoId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+    $contents = 'fake-image-bytes-from-stream';
+    $stream = fopen('php://temp', 'r+');
+    fwrite($stream, $contents);
+    rewind($stream);
 
-    Storage::disk('photos_private')->put($photo->original_path, 'orig');
-    Storage::disk('photos')->put($photo->thumbnail_path, 'thumb');
-    Storage::disk('photos')->put($photo->medium_path, 'med');
-    Storage::disk('photos')->put($photo->large_path, 'lg');
+    $path = $this->storage->storeVariant($photoId, 'thumbnail', $stream);
 
-    $this->storage->purge($photo);
-
-    Storage::disk('photos_private')->assertMissing($photo->original_path);
-    Storage::disk('photos')->assertMissing($photo->thumbnail_path);
-    Storage::disk('photos')->assertMissing($photo->medium_path);
-    Storage::disk('photos')->assertMissing($photo->large_path);
-});
-
-it('does not throw when purging a photo with missing files', function (): void {
-    $photo = new Photo;
-    $photo->original_path = 'originals/nonexistent.jpg';
-    $photo->thumbnail_path = 'thumbnail/nonexistent.jpg';
-    $photo->medium_path = null;
-    $photo->large_path = null;
-
-    // Should not throw
-    $this->storage->purge($photo);
-
-    Storage::disk('photos_private')->assertMissing('originals/nonexistent.jpg');
+    expect($path)->toBe("thumbnail/{$photoId}.jpg");
+    Storage::disk('photos')->assertExists($path);
+    expect(Storage::disk('photos')->get($path))->toBe($contents);
+    fclose($stream);
 });
